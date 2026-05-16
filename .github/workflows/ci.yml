@@ -1,0 +1,77 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck-and-build:
+    name: typecheck + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: install
+        run: npm ci --no-audit --no-fund
+
+      - name: typecheck
+        run: npm run typecheck
+
+      - name: build agent
+        run: npm --workspace apps/agent run build
+
+      - name: build web (standalone)
+        env:
+          NEXT_PUBLIC_AGENT_URL: https://placeholder.run.app
+          NEXT_TRACE_ROOT: ${{ github.workspace }}
+        run: npm --workspace apps/web run build
+
+      - name: verify dist + standalone exist
+        run: |
+          test -f apps/agent/dist/server.js
+          test -d apps/web/.next/standalone/apps/web
+          ls -la apps/agent/dist apps/web/.next/standalone
+
+  docker:
+    name: docker build (no push)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: typecheck-and-build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: build agent image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/agent/Dockerfile
+          push: false
+          tags: mnemos-agent:ci
+
+      - name: build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          tags: mnemos-web:ci
+          build-args: |
+            NEXT_PUBLIC_AGENT_URL=https://placeholder.run.app

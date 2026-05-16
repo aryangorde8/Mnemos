@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 760" font-family="'IBM Plex Sans', system-ui, sans-serif">
+  <defs>
+    <style>
+      .ink      { fill: #0b0a08; }
+      .surface  { fill: #14120e; }
+      .surface2 { fill: #1c1914; }
+      .rule     { stroke: #2a2620; stroke-width: 1; fill: none; }
+      .rule-strong { stroke: #3a342c; stroke-width: 1; fill: none; }
+      .accent   { stroke: #e84a35; stroke-width: 1.5; fill: none; }
+      .accent-dim { stroke: #e84a35; stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
+      .pill     { fill: #1c1914; stroke: #3a342c; stroke-width: 1; }
+      .display  { font-family: 'Instrument Serif', 'Iowan Old Style', serif; font-style: italic; fill: #f3ecdf; }
+      .body     { fill: #d8d2c5; font-size: 13px; }
+      .body-dim { fill: #9c9486; font-size: 12px; }
+      .label    { font-family: 'IBM Plex Mono', ui-monospace, monospace; fill: #9c9486; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; }
+      .chrome   { font-family: 'IBM Plex Mono', ui-monospace, monospace; fill: #6c645a; font-size: 11px; }
+      .heading  { fill: #f3ecdf; font-size: 16px; font-family: 'Instrument Serif', serif; font-style: italic; }
+      .glyph    { font-family: 'IBM Plex Mono', monospace; fill: #e84a35; font-size: 12px; }
+      .saffron  { fill: #e8c547; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e84a35"/>
+    </marker>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6c645a"/>
+    </marker>
+  </defs>
+
+  <!-- canvas -->
+  <rect class="ink" width="1240" height="760"/>
+
+  <!-- title -->
+  <text x="50" y="55" class="label">μν. — system architecture</text>
+  <text x="50" y="95" class="display" font-size="42">Mnemos</text>
+  <text x="200" y="95" class="body-dim" font-size="14">the memory agent</text>
+
+  <line x1="50" y1="115" x2="180" y2="115" stroke="#e84a35" stroke-width="1.5"/>
+
+  <!-- === Frontend layer === -->
+  <g transform="translate(50, 150)">
+    <rect class="surface" width="1140" height="120" stroke="#2a2620"/>
+    <text x="20" y="30" class="label">frontend · next.js 16 standalone · cloud run</text>
+    <text x="20" y="58" class="heading">/search · /ask · /briefings · /actions · /commitments</text>
+    <text x="20" y="82" class="body-dim">cmd+k command palette · reasoning stream (sse) · approval cards inline · editorial dark UI</text>
+    <text x="20" y="102" class="chrome">instrument serif · ibm plex sans · ibm plex mono · vermilion accent</text>
+  </g>
+
+  <!-- arrow web → agent -->
+  <line x1="620" y1="270" x2="620" y2="330" class="accent" marker-end="url(#arrow)"/>
+  <text x="635" y="305" class="chrome">https + sse</text>
+
+  <!-- === Agent layer === -->
+  <g transform="translate(50, 330)">
+    <rect class="surface" width="1140" height="170" stroke="#2a2620"/>
+    <text x="20" y="30" class="label">agent · node 22 + express 5 · cloud run</text>
+    <text x="20" y="58" class="heading">ReAct loop · Gemini 3 Pro · streaming + function-calling</text>
+
+    <!-- tool pills -->
+    <g transform="translate(20, 90)">
+      <g transform="translate(0,0)">
+        <rect class="pill" width="170" height="34" rx="2"/>
+        <text x="12" y="22" class="glyph">→</text>
+        <text x="30" y="22" class="body">search_memory</text>
+      </g>
+      <g transform="translate(180,0)">
+        <rect class="pill" width="180" height="34" rx="2"/>
+        <text x="12" y="22" class="glyph">→</text>
+        <text x="30" y="22" class="body">get_calendar_events</text>
+      </g>
+      <g transform="translate(370,0)">
+        <rect class="pill" width="200" height="34" rx="2"/>
+        <text x="12" y="22" class="glyph">→</text>
+        <text x="30" y="22" class="body">get_briefing_context</text>
+      </g>
+      <g transform="translate(580,0)">
+        <rect class="pill" width="150" height="34" rx="2"/>
+        <text x="12" y="22" class="glyph">→</text>
+        <text x="30" y="22" class="body">draft_email</text>
+      </g>
+      <g transform="translate(740,0)">
+        <rect class="pill" width="180" height="34" rx="2"/>
+        <text x="12" y="22" class="glyph">→</text>
+        <text x="30" y="22" class="body">list_commitments</text>
+      </g>
+      <g transform="translate(930,0)">
+        <rect class="pill" width="180" height="34" rx="2"/>
+        <text x="12" y="22" class="glyph">→</text>
+        <text x="30" y="22" class="body">schedule_meeting</text>
+      </g>
+    </g>
+
+    <!-- sse events row -->
+    <text x="20" y="148" class="chrome">sse events: start → thought → tool_call → observation → answer → citations → done</text>
+  </g>
+
+  <!-- arrows down to data layer -->
+  <line x1="280" y1="500" x2="280" y2="570" class="accent" marker-end="url(#arrow)"/>
+  <line x1="620" y1="500" x2="620" y2="570" class="accent-dim" marker-end="url(#arrow-dim)"/>
+  <line x1="960" y1="500" x2="960" y2="570" class="accent-dim" marker-end="url(#arrow-dim)"/>
+
+  <!-- === Data layer === -->
+  <!-- Atlas via MCP -->
+  <g transform="translate(50, 570)">
+    <rect class="surface2" width="450" height="160" stroke="#2a2620"/>
+    <text x="20" y="30" class="label">mongodb atlas · via mcp server</text>
+    <text x="20" y="60" class="heading">vector search · 768-dim cosine</text>
+    <g transform="translate(20, 80)">
+      <text class="body-dim" y="14">documents · raw source artifacts (6 sources)</text>
+      <text class="body-dim" y="32">chunks · embeddings + metadata</text>
+      <text class="body-dim" y="50">actions · proposed → approved → sent</text>
+      <text class="body-dim" y="68">briefings · saved 1-pagers</text>
+    </g>
+  </g>
+
+  <!-- Vertex -->
+  <g transform="translate(520, 570)">
+    <rect class="surface2" width="240" height="160" stroke="#2a2620"/>
+    <text x="20" y="30" class="label">vertex ai</text>
+    <text x="20" y="60" class="heading">Gemini 3 Pro</text>
+    <text x="20" y="82" class="body-dim">function calling + streaming</text>
+    <g transform="translate(20, 100)">
+      <text class="chrome" y="14">text-embedding-004</text>
+      <text class="chrome" y="32">768-d retrieval + query</text>
+    </g>
+  </g>
+
+  <!-- Simulated tools -->
+  <g transform="translate(780, 570)">
+    <rect class="surface2" width="410" height="160" stroke="#2a2620"/>
+    <text x="20" y="30" class="label">simulated send · stored in mongo</text>
+    <text x="20" y="60" class="heading">calendar / email side-effects</text>
+    <g transform="translate(20, 80)">
+      <text class="body-dim" y="14">draft_email writes to <tspan class="saffron">actions</tspan> · status: proposed</text>
+      <text class="body-dim" y="32">schedule_meeting writes to <tspan class="saffron">actions</tspan></text>
+      <text class="body-dim" y="50">user approves → status: sent (via /actions API)</text>
+      <text class="body-dim" y="68">audit trail = the ledger view at /actions</text>
+    </g>
+  </g>
+
+  <!-- labels on edges -->
+  <text x="290" y="540" class="chrome">$vectorSearch</text>
+  <text x="630" y="540" class="chrome">predict + generate</text>
+  <text x="975" y="540" class="chrome">insertOne</text>
+
+  <!-- footnote -->
+  <text x="50" y="751" class="chrome">apache 2.0 · github.com/aryangorde/mnemos · cloud build · artifact registry · ⌘k everywhere</text>
+</svg>

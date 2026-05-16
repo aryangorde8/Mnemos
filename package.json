@@ -1,0 +1,20 @@
+{
+  "name": "mnemos",
+  "version": "0.0.0",
+  "private": true,
+  "description": "An AI agent that takes multi-step actions on top of your professional memory.",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:agent": "npm --workspace apps/agent run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "build:agent": "npm --workspace apps/agent run build",
+    "typecheck": "npm --workspaces --if-present run typecheck"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "license": "Apache-2.0"
+}

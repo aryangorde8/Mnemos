@@ -1,0 +1,92 @@
+# Cloud Build pipeline for Mnemos.
+#
+# Build + deploy either service via a substitution:
+#   gcloud builds submit . --config=cloudbuild.yaml --substitutions=_TARGET=agent
+#   gcloud builds submit . --config=cloudbuild.yaml --substitutions=_TARGET=web,_NEXT_PUBLIC_AGENT_URL=https://mnemos-agent-xxx.a.run.app
+#
+# Required substitutions:
+#   _TARGET                 — "web" or "agent"
+#
+# Optional substitutions:
+#   _REGION                 — Cloud Run region (default us-central1)
+#   _NEXT_PUBLIC_AGENT_URL  — required when _TARGET=web
+#   _SERVICE_NAME           — override service name (defaults to mnemos-${_TARGET})
+
+substitutions:
+  _TARGET: agent
+  _REGION: us-central1
+  _NEXT_PUBLIC_AGENT_URL: ""
+  _SERVICE_NAME: ""
+
+steps:
+  - id: resolve
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        TARGET="${_TARGET}"
+        SVC="${_SERVICE_NAME}"
+        if [[ -z "$SVC" ]]; then SVC="mnemos-$TARGET"; fi
+        TAG="${_REGION}-docker.pkg.dev/$PROJECT_ID/mnemos/$SVC:$BUILD_ID"
+        echo "TARGET=$TARGET" > /workspace/.cb.env
+        echo "SERVICE=$SVC"  >> /workspace/.cb.env
+        echo "TAG=$TAG"      >> /workspace/.cb.env
+
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        source /workspace/.cb.env
+        if [[ "$TARGET" == "web" ]]; then
+          docker build \
+            -f apps/web/Dockerfile \
+            --build-arg NEXT_PUBLIC_AGENT_URL="${_NEXT_PUBLIC_AGENT_URL}" \
+            -t "$TAG" .
+        else
+          docker build -f apps/agent/Dockerfile -t "$TAG" .
+        fi
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        source /workspace/.cb.env
+        docker push "$TAG"
+
+  - id: deploy
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        source /workspace/.cb.env
+        EXTRA=()
+        if [[ "$TARGET" == "web" ]]; then
+          EXTRA+=(--memory=512Mi --concurrency=80 --timeout=60)
+          EXTRA+=(--set-env-vars="NEXT_PUBLIC_AGENT_URL=${_NEXT_PUBLIC_AGENT_URL}")
+        else
+          EXTRA+=(--memory=1Gi --concurrency=40 --timeout=600)
+        fi
+        gcloud run deploy "$SERVICE" \
+          --project="$PROJECT_ID" \
+          --region="${_REGION}" \
+          --image="$TAG" \
+          --platform=managed \
+          --allow-unauthenticated \
+          --port=8080 \
+          "${EXTRA[@]}"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+timeout: 1200s
