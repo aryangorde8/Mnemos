@@ -11,12 +11,15 @@ COPY apps/agent/package.json apps/agent/package.json
 RUN npm ci --no-audit --no-fund
 
 # 2. compile TypeScript → dist/
+# npm workspaces sometimes nests deps under apps/agent/node_modules instead of
+# hoisting them to /repo/node_modules — copy both so tsc resolves all imports.
 FROM node:22-bookworm-slim AS build
 WORKDIR /repo
-COPY --from=deps /repo/node_modules ./node_modules
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY apps/agent ./apps/agent
 COPY apps/web/package.json ./apps/web/package.json
+COPY --from=deps /repo/node_modules ./node_modules
+COPY --from=deps /repo/apps/agent/node_modules ./apps/agent/node_modules
 RUN npm --workspace apps/agent run build
 
 # 3. prune to production-only deps for runtime
@@ -28,7 +31,8 @@ COPY apps/web/package.json apps/web/package.json
 COPY apps/agent/package.json apps/agent/package.json
 RUN npm ci --omit=dev --no-audit --no-fund
 
-# 4. minimal runtime image
+# 4. minimal runtime image — mirror the workspace layout so Node resolves
+#    both hoisted (/app/node_modules) and nested (/app/apps/agent/node_modules) deps.
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
@@ -39,9 +43,11 @@ RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs node-runtime
 
 COPY --from=prod-deps --chown=node-runtime:nodejs /repo/node_modules ./node_modules
-COPY --from=build --chown=node-runtime:nodejs /repo/apps/agent/package.json ./package.json
-COPY --from=build --chown=node-runtime:nodejs /repo/apps/agent/dist ./dist
+COPY --from=prod-deps --chown=node-runtime:nodejs /repo/apps/agent/node_modules ./apps/agent/node_modules
+COPY --from=build --chown=node-runtime:nodejs /repo/apps/agent/package.json ./apps/agent/package.json
+COPY --from=build --chown=node-runtime:nodejs /repo/apps/agent/dist ./apps/agent/dist
 
 USER node-runtime
+WORKDIR /app/apps/agent
 
 CMD ["node", "dist/server.js"]
