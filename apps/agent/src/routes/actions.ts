@@ -11,6 +11,7 @@ import {
   type ActionStatus,
   type ProposalData,
 } from "../lib/actions.js";
+import { getCritique, getCritiqueByAction, publicCritique } from "../lib/critique.js";
 
 export const actionsRouter: Router = createRouter();
 
@@ -82,6 +83,34 @@ actionsRouter.post("/actions/:id/approve", async (req: Request, res: Response) =
 
 const rejectBody = z.object({
   reason: z.string().max(500).optional(),
+});
+
+actionsRouter.get("/actions/:id/critique", async (req: Request, res: Response) => {
+  const raw = req.params["id"];
+  const id = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : undefined;
+  if (!id) return res.status(400).json({ error: "missing_id" });
+  try {
+    const c = await getCritiqueByAction(id);
+    if (!c) return res.status(404).json({ error: "no_critique" });
+    return res.json(publicCritique(c));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(500).json({ error: "critique_lookup_failed", detail: msg });
+  }
+});
+
+actionsRouter.get("/critiques/:id", async (req: Request, res: Response) => {
+  const raw = req.params["id"];
+  const id = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : undefined;
+  if (!id) return res.status(400).json({ error: "missing_id" });
+  try {
+    const c = await getCritique(id);
+    if (!c) return res.status(404).json({ error: "not_found" });
+    return res.json(publicCritique(c));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(500).json({ error: "get_failed", detail: msg });
+  }
 });
 
 actionsRouter.post("/actions/:id/reject", async (req: Request, res: Response) => {

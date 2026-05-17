@@ -439,6 +439,95 @@
 }
 
 /* ============================================================
+   CRITIQUE CARD — Critic agent findings panel
+   ============================================================ */
+.critique {
+  border: 1px solid var(--color-rule);
+  background: var(--color-ink-1);
+  padding: 22px 28px 24px;
+  position: relative;
+  max-width: 720px;
+}
+.critique::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  background: var(--color-saffron);
+}
+.critique-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-rule);
+  padding-bottom: 12px;
+}
+.verdict-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.verdict-dot.approve { background: var(--color-paper-muted); }
+.verdict-dot.revise  { background: var(--color-saffron); animation: mnemos-pulse 1.8s ease-in-out infinite; }
+.verdict-dot.reject  { background: var(--color-vermilion); animation: mnemos-pulse 1.8s ease-in-out infinite; }
+
+.critique-findings {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.finding {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-rule);
+}
+.finding:first-child { border-top: 0; padding-top: 0; }
+.finding-num {
+  font-size: 0.78rem;
+  padding-top: 2px;
+}
+.finding-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.finding-claim {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--color-paper);
+  font-size: 1.02rem;
+  line-height: 1.4;
+  margin: 0 0 6px;
+  padding: 0;
+  border-left: 2px solid var(--color-rule-strong);
+  padding-left: 12px;
+  max-width: 580px;
+}
+.finding-issue {
+  font-size: 0.86rem;
+  color: var(--color-paper-dim);
+  line-height: 1.55;
+  margin: 6px 0;
+  max-width: 580px;
+}
+.finding-suggest {
+  font-size: 0.84rem;
+  color: var(--color-paper-muted);
+  line-height: 1.55;
+  margin: 8px 0 0;
+  max-width: 580px;
+}
+
+/* ============================================================
    DECISIVE BUTTON — mono uppercase, weighted hover
    ============================================================ */
 .btn-decisive {

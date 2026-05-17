@@ -34,6 +34,8 @@ export interface ActionRecord<P extends ProposalData = ProposalData> {
   runId?: string;
   origin: "agent" | "manual";
   model?: string;
+  // grounding context the primary agent passed in (for the Critic to audit against)
+  context?: string;
   createdAt: Date;
   decidedAt?: Date;
 }
@@ -49,6 +51,7 @@ export interface RecordOptions {
   query?: string;
   runId?: string;
   model?: string;
+  context?: string;
 }
 
 export async function recordAction(opts: RecordOptions): Promise<string> {
@@ -62,6 +65,7 @@ export async function recordAction(opts: RecordOptions): Promise<string> {
     ...(opts.query ? { query: opts.query } : {}),
     ...(opts.runId ? { runId: opts.runId } : {}),
     ...(opts.model ? { model: opts.model } : {}),
+    ...(opts.context ? { context: opts.context } : {}),
   };
   const ins = await col.insertOne(doc);
   return ins.insertedId.toString();

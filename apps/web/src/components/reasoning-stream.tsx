@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ApprovalCard } from "./approval-card";
+import { CritiqueCard, type PreloadedCritique } from "./critique-card";
 import { Cite } from "./editorial";
 
 export interface Citation {
@@ -36,6 +37,7 @@ export type StreamItem =
       error?: string;
       durationMs: number;
       actionId?: string;
+      critique?: PreloadedCritique & { actionId: string };
       at: number;
     }
   | { kind: "answer"; text: string; complete: boolean; at: number }
@@ -286,6 +288,11 @@ function RowBody({ item, live }: { item: StreamItem; live: boolean }) {
           {item.actionId && (
             <div className="mt-5">
               <ApprovalCard actionId={item.actionId} />
+            </div>
+          )}
+          {item.critique && (
+            <div className="mt-4">
+              <CritiqueCard actionId={item.critique.actionId} preloaded={item.critique} />
             </div>
           )}
         </div>

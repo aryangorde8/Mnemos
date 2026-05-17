@@ -116,6 +116,7 @@ Rules:
           ...(ctx?.query ? { query: ctx.query } : {}),
           ...(ctx?.runId ? { runId: ctx.runId } : {}),
           model: result.model,
+          ...(context ? { context } : {}),
         });
       } catch {
         // persistence is best-effort; surface the draft regardless

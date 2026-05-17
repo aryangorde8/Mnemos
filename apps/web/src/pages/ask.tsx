@@ -9,6 +9,7 @@ import {
   type StreamItem,
 } from "@/components/reasoning-stream";
 import { streamAsk } from "@/lib/sse";
+import type { CritiqueFinding, FindingSeverity } from "@/lib/api";
 
 interface AgentEnvelope<T = unknown> {
   event: string;
@@ -226,16 +227,22 @@ function handleEvent(
         result.data && typeof result.data["actionId"] === "string"
           ? (result.data["actionId"] as string)
           : undefined;
+      const name = String(data["name"] ?? "");
+      const critique =
+        name === "critique_draft" && result.ok && result.data
+          ? extractCritique(result.data)
+          : undefined;
       setItems((prev) => [
         ...sealOpen(prev),
         {
           kind: "observation",
           id: String(data["id"] ?? ""),
-          name: String(data["name"] ?? ""),
+          name,
           ok: result.ok,
           ...(result.summary ? { summary: result.summary } : {}),
           ...(result.error ? { error: result.error } : {}),
           ...(actionId ? { actionId } : {}),
+          ...(critique ? { critique } : {}),
           durationMs: Number(data["durationMs"] ?? 0),
           at,
         },
@@ -291,4 +298,58 @@ function sealOpen(prev: StreamItem[]): StreamItem[] {
     return [...prev.slice(0, -1), sealed];
   }
   return prev;
+}
+
+type RawFinding = {
+  severity?: unknown;
+  claim?: unknown;
+  issue?: unknown;
+  evidence?: unknown;
+  citation?: unknown;
+  suggestion?: unknown;
+};
+
+function extractCritique(d: Record<string, unknown>):
+  | (NonNullable<Extract<StreamItem, { kind: "observation" }>["critique"]>)
+  | undefined {
+  if (typeof d["actionId"] !== "string") return undefined;
+  const verdict = d["verdict"];
+  if (verdict !== "approve" && verdict !== "revise" && verdict !== "reject") return undefined;
+  const findingsRaw = Array.isArray(d["findings"]) ? (d["findings"] as RawFinding[]) : [];
+  const findings: CritiqueFinding[] = findingsRaw
+    .filter((f): f is RawFinding => typeof f === "object" && f !== null)
+    .map((f): CritiqueFinding => {
+      const sev: FindingSeverity =
+        f.severity === "high" ? "high"
+        : f.severity === "low" ? "low"
+        : "medium";
+      const ev: CritiqueFinding["evidence"] =
+        f.evidence === "supported" ? "supported"
+        : f.evidence === "unsupported" ? "unsupported"
+        : f.evidence === "contradicted" ? "contradicted"
+        : "missing";
+      return {
+        severity: sev,
+        claim: typeof f.claim === "string" ? f.claim : "",
+        issue: typeof f.issue === "string" ? f.issue : "",
+        evidence: ev,
+        ...(typeof f.citation === "string" ? { citation: f.citation } : {}),
+        ...(typeof f.suggestion === "string" ? { suggestion: f.suggestion } : {}),
+      };
+    });
+  const voiceRaw = d["voice"] as { score?: unknown; notes?: unknown } | undefined;
+  const voice = {
+    score: typeof voiceRaw?.score === "number" ? voiceRaw.score : 0,
+    notes: typeof voiceRaw?.notes === "string" ? voiceRaw.notes : "",
+  };
+  return {
+    actionId: d["actionId"] as string,
+    verdict,
+    summary: typeof d["summary"] === "string" ? d["summary"] : "",
+    findings,
+    voice,
+    ...(typeof d["counts"] === "object" && d["counts"] !== null
+      ? { counts: d["counts"] as { high: number; med: number; low: number } }
+      : {}),
+  };
 }

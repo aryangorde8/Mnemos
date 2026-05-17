@@ -5,6 +5,7 @@ import { getBriefingContextTool } from "./get-briefing-context.js";
 import { draftEmailTool } from "./draft-email.js";
 import { listCommitmentsTool } from "./list-commitments.js";
 import { scheduleMeetingTool } from "./schedule-meeting.js";
+import { critiqueDraftTool } from "./critique-draft.js";
 
 export const TOOLS: ToolDef[] = [
   searchMemoryTool,
@@ -13,6 +14,7 @@ export const TOOLS: ToolDef[] = [
   draftEmailTool,
   listCommitmentsTool,
   scheduleMeetingTool,
+  critiqueDraftTool,
 ];
 
 export const TOOL_REGISTRY: Map<string, ToolDef> = new Map(

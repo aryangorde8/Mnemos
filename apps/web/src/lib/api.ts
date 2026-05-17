@@ -295,3 +295,35 @@ export async function getBriefing(id: string): Promise<BriefingRecord | null> {
   if (!res.ok) return null;
   return (await res.json()) as BriefingRecord;
 }
+
+// ─── Critic ─────────────────────────────────────────────────────────────
+
+export type FindingSeverity = "high" | "medium" | "low";
+
+export interface CritiqueFinding {
+  severity: FindingSeverity;
+  claim: string;
+  issue: string;
+  evidence: "supported" | "unsupported" | "contradicted" | "missing";
+  citation?: string;
+  suggestion?: string;
+}
+
+export interface CritiqueRecord {
+  id: string;
+  actionId: string;
+  runId: string | null;
+  query: string | null;
+  verdict: "approve" | "revise" | "reject";
+  summary: string;
+  findings: CritiqueFinding[];
+  voice: { score: number; notes: string };
+  model: string | null;
+  createdAt: string;
+}
+
+export async function getCritiqueForAction(actionId: string): Promise<CritiqueRecord | null> {
+  const res = await fetch(`${AGENT}/actions/${actionId}/critique`, { cache: "no-store" });
+  if (!res.ok) return null;
+  return (await res.json()) as CritiqueRecord;
+}
