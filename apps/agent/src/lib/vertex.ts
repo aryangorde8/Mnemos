@@ -160,6 +160,9 @@ export interface GenerateOptions {
   temperature?: number;
   maxTokens?: number;
   responseMimeType?: "text/plain" | "application/json";
+  // Gemini 3.x consumes "thinking" tokens before emitting candidate tokens.
+  // Set to 0 for fast structured tasks (rerank, classify) where reasoning isn't needed.
+  thinkingBudget?: number;
 }
 
 export interface GenerateResult {
@@ -183,6 +186,9 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
       maxOutputTokens: opts.maxTokens ?? 2048,
       ...(opts.responseMimeType
         ? { responseMimeType: opts.responseMimeType }
+        : {}),
+      ...(opts.thinkingBudget !== undefined
+        ? { thinkingConfig: { thinkingBudget: opts.thinkingBudget } }
         : {}),
     },
   };

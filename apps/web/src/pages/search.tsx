@@ -292,13 +292,17 @@ function ResultsPanel({ response }: { response: SearchResponse }) {
       </div>
     );
   }
+  const phases = response.phases ?? [];
   return (
     <div>
       <div className="flex items-baseline justify-between border-y border-[color:var(--color-rule)] py-3">
         <span className="label">
-          {response.count} citations · ranked by cosine
+          {response.count} citations · hybrid retrieval
         </span>
-        <span className="chrome tabular-nums">vector search · {response.tookMs} ms</span>
+        <span className="chrome tabular-nums">
+          {phases.length > 0 ? phases.join(" → ") + " · " : ""}
+          {response.tookMs} ms
+        </span>
       </div>
       <div>
         {response.results.map((hit, i) => (

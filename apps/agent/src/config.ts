@@ -5,6 +5,7 @@ const schema = z.object({
   MONGODB_URI: z.string().default(""),
   MONGODB_DB: z.string().default("mnemos"),
   MONGODB_VECTOR_INDEX: z.string().default("mnemos_vector_index"),
+  MONGODB_TEXT_INDEX: z.string().default("mnemos_text_index"),
   GOOGLE_CLOUD_PROJECT: z.string().default(""),
   GOOGLE_CLOUD_LOCATION: z.string().default("us-central1"),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().default(""),

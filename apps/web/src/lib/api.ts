@@ -17,12 +17,15 @@ export interface SearchHit {
   ordinal: number;
   score: number;
   metadata: Record<string, unknown>;
+  fromVector?: boolean;
+  fromText?: boolean;
 }
 
 export interface SearchResponse {
   query: string;
   tookMs: number;
   count: number;
+  phases?: string[];
   results: SearchHit[];
 }
 
