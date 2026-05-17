@@ -330,3 +330,53 @@ export async function getCritiqueForAction(actionId: string): Promise<CritiqueRe
   if (!res.ok) return null;
   return (await res.json()) as CritiqueRecord;
 }
+
+// ─── Memory graph ────────────────────────────────────────────────────────
+
+export type EntityKind = "person" | "project" | "topic";
+
+export interface Entity {
+  id: string;
+  name: string;
+  key: string;
+  kind: EntityKind;
+  role: string | null;
+  mentions: number;
+  firstSeen: string | null;
+  lastSeen: string | null;
+  chunkIds: string[];
+  series: Array<{ date: string; count: number }>;
+}
+
+export interface Relation {
+  id: string;
+  from: string;
+  to: string;
+  kind: "owes" | "works_with" | "manages" | "discusses";
+  evidence: string;
+  chunkId: string | null;
+  date: string | null;
+}
+
+export interface GraphResponse {
+  stats: {
+    entities: { person: number; project: number; topic: number };
+    relations: number;
+  };
+  entities: {
+    person: Entity[];
+    project: Entity[];
+    topic: Entity[];
+  };
+  relations: Relation[];
+}
+
+export async function getGraph(): Promise<GraphResponse | null> {
+  try {
+    const res = await fetch(`${AGENT}/graph`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as GraphResponse;
+  } catch {
+    return null;
+  }
+}

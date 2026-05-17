@@ -17,6 +17,7 @@ interface Props {
 const NAV_COMMANDS: Array<{ id: string; label: string; hint: string; href: string }> = [
   { id: "ask", label: "open the agent", hint: "watch it reason", href: "/ask" },
   { id: "search", label: "search the vault", hint: "ranked vector recall", href: "/search" },
+  { id: "memory", label: "the memory graph", hint: "extracted people · projects · relations", href: "/memory" },
   { id: "briefings", label: "briefings · the morning paper", hint: "1-pagers for upcoming meetings", href: "/briefings" },
   { id: "commitments", label: "commitments · the ledger", hint: "promises in & out", href: "/commitments" },
   { id: "actions", label: "actions · the queue", hint: "approvals and history", href: "/actions" },

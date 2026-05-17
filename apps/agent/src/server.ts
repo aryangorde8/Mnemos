@@ -7,6 +7,7 @@ import { agentRouter } from "./routes/agent.js";
 import { actionsRouter } from "./routes/actions.js";
 import { commitmentsRouter } from "./routes/commitments.js";
 import { briefingsRouter } from "./routes/briefings.js";
+import { graphRouter } from "./routes/graph.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -37,6 +38,7 @@ app.use(agentRouter);
 app.use(actionsRouter);
 app.use(commitmentsRouter);
 app.use(briefingsRouter);
+app.use(graphRouter);
 
 app.listen(config.AGENT_PORT, () => {
   console.log(`[mnemos-agent] listening on :${config.AGENT_PORT}`);
