@@ -8,7 +8,8 @@ ENV CI=1
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/agent/package.json apps/agent/package.json
-RUN npm ci --no-audit --no-fund
+RUN npm ci --no-audit --no-fund \
+  && mkdir -p apps/agent/node_modules apps/web/node_modules
 
 # 2. compile TypeScript → dist/
 # npm workspaces sometimes nests deps under apps/agent/node_modules instead of
