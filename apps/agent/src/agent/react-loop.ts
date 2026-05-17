@@ -30,9 +30,7 @@ export async function* runAgent(
     turn++;
     const collected: ContentPart[] = [];
     let pendingText = "";
-    let toolCall:
-      | { name: string; args: Record<string, unknown> }
-      | null = null;
+    const toolCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
 
     try {
       for await (const chunk of streamGenerate({
@@ -43,20 +41,36 @@ export async function* runAgent(
         maxTokens: 2048,
       })) {
         if (chunk.text !== undefined && chunk.text.length > 0) {
-          pendingText += chunk.text;
           yield {
-            kind: toolCall ? "thought" : "thought",
+            kind: "thought",
             chunk: chunk.text,
             at: Date.now(),
           };
+          if (chunk.thoughtSignature) {
+            // A signed text part: flush any pending unsigned text, then push
+            // this part with its signature preserved (required by Gemini 3.x).
+            if (pendingText.length > 0) {
+              collected.push({ text: pendingText });
+              pendingText = "";
+            }
+            collected.push({
+              text: chunk.text,
+              thoughtSignature: chunk.thoughtSignature,
+            });
+          } else {
+            pendingText += chunk.text;
+          }
         }
         if (chunk.functionCall) {
           if (pendingText.length > 0) {
             collected.push({ text: pendingText });
             pendingText = "";
           }
-          toolCall = chunk.functionCall;
-          collected.push({ functionCall: chunk.functionCall });
+          toolCalls.push(chunk.functionCall);
+          collected.push({
+            functionCall: chunk.functionCall,
+            ...(chunk.thoughtSignature ? { thoughtSignature: chunk.thoughtSignature } : {}),
+          });
         }
       }
     } catch (err) {
@@ -69,7 +83,8 @@ export async function* runAgent(
       collected.push({ text: pendingText });
     }
 
-    if (!toolCall) {
+    // No tool calls → this is the final answer turn.
+    if (toolCalls.length === 0) {
       const finalText = collected
         .map((p) => p.text ?? "")
         .filter((t) => t.length > 0)
@@ -95,59 +110,61 @@ export async function* runAgent(
       return;
     }
 
+    // Record the full model turn (text + all function calls) verbatim.
     contents.push({ role: "model", parts: collected });
 
-    const callId = randomUUID().slice(0, 8);
-    const tool = TOOL_REGISTRY.get(toolCall.name);
-    yield {
-      kind: "tool_call",
-      id: callId,
-      name: toolCall.name,
-      args: toolCall.args,
-      at: Date.now(),
-    };
+    // Execute every tool call in order, collecting one functionResponse per call.
+    // Gemini 3.x requires the next user turn to contain a functionResponse for
+    // *every* functionCall in the model turn — same count, same order.
+    const responseParts: ContentPart[] = [];
+    for (const call of toolCalls) {
+      const callId = randomUUID().slice(0, 8);
+      const tool = TOOL_REGISTRY.get(call.name);
 
-    const t0 = Date.now();
-    let result;
-    if (!tool) {
-      result = {
-        ok: false,
-        error: `unknown tool: ${toolCall.name}`,
+      yield {
+        kind: "tool_call",
+        id: callId,
+        name: call.name,
+        args: call.args,
+        at: Date.now(),
       };
-    } else {
-      try {
-        result = await tool.handler(toolCall.args, { query: opts.query, runId });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        result = { ok: false, error: msg };
+
+      const t0 = Date.now();
+      let result;
+      if (!tool) {
+        result = { ok: false, error: `unknown tool: ${call.name}` };
+      } else {
+        try {
+          result = await tool.handler(call.args, { query: opts.query, runId });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          result = { ok: false, error: msg };
+        }
       }
-    }
-    const durationMs = Date.now() - t0;
+      const durationMs = Date.now() - t0;
 
-    if (result.citations && result.citations.length > 0) {
-      allCitations.push(...result.citations);
-    }
+      if (result.citations && result.citations.length > 0) {
+        allCitations.push(...result.citations);
+      }
 
-    yield {
-      kind: "observation",
-      id: callId,
-      name: toolCall.name,
-      result,
-      durationMs,
-      at: Date.now(),
-    };
+      yield {
+        kind: "observation",
+        id: callId,
+        name: call.name,
+        result,
+        durationMs,
+        at: Date.now(),
+      };
 
-    contents.push({
-      role: "user",
-      parts: [
-        {
-          functionResponse: {
-            name: toolCall.name,
-            response: trimForModel(result),
-          },
+      responseParts.push({
+        functionResponse: {
+          name: call.name,
+          response: trimForModel(result),
         },
-      ],
-    });
+      });
+    }
+
+    contents.push({ role: "user", parts: responseParts });
   }
 
   yield {

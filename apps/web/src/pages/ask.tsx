@@ -46,7 +46,7 @@ export default function AskPage() {
     } catch (err) {
       if (ac.signal.aborted) return;
       const msg = err instanceof Error ? err.message : String(err);
-      setItems((prev) => [...prev, { kind: "error", message: msg }]);
+      setItems((prev) => [...prev, { kind: "error", message: msg, at: Date.now() }]);
     } finally {
       setRunning(false);
     }
@@ -182,6 +182,7 @@ function handleEvent(
   setRunId: (id: string | null) => void,
 ) {
   const data = env.data as Record<string, unknown>;
+  const at = typeof data["at"] === "number" ? (data["at"] as number) : Date.now();
   switch (env.event) {
     case "start": {
       if (typeof data["runId"] === "string") setRunId(data["runId"]);
@@ -189,12 +190,12 @@ function handleEvent(
     }
     case "thought": {
       const chunk = typeof data["chunk"] === "string" ? data["chunk"] : "";
-      setItems((prev) => appendStream(prev, "thought", chunk));
+      setItems((prev) => appendStream(prev, "thought", chunk, at));
       return;
     }
     case "answer": {
       const chunk = typeof data["chunk"] === "string" ? data["chunk"] : "";
-      setItems((prev) => appendStream(prev, "answer", chunk));
+      setItems((prev) => appendStream(prev, "answer", chunk, at));
       return;
     }
     case "tool_call": {
@@ -206,6 +207,7 @@ function handleEvent(
           name: String(data["name"] ?? ""),
           args:
             (data["args"] as Record<string, unknown> | undefined) ?? {},
+          at,
         },
       ]);
       return;
@@ -235,13 +237,14 @@ function handleEvent(
           ...(result.error ? { error: result.error } : {}),
           ...(actionId ? { actionId } : {}),
           durationMs: Number(data["durationMs"] ?? 0),
+          at,
         },
       ]);
       return;
     }
     case "citations": {
       const list = (data["citations"] as Citation[] | undefined) ?? [];
-      setItems((prev) => [...sealOpen(prev), { kind: "citations", citations: list }]);
+      setItems((prev) => [...sealOpen(prev), { kind: "citations", citations: list, at }]);
       return;
     }
     case "done": {
@@ -251,6 +254,7 @@ function handleEvent(
           kind: "done",
           turns: Number(data["turns"] ?? 0),
           totalMs: Number(data["totalMs"] ?? 0),
+          at,
         },
       ]);
       return;
@@ -258,7 +262,7 @@ function handleEvent(
     case "error": {
       setItems((prev) => [
         ...sealOpen(prev),
-        { kind: "error", message: String(data["message"] ?? "unknown error") },
+        { kind: "error", message: String(data["message"] ?? "unknown error"), at },
       ]);
       return;
     }
@@ -269,13 +273,14 @@ function appendStream(
   prev: StreamItem[],
   kind: "thought" | "answer",
   chunk: string,
+  at: number,
 ): StreamItem[] {
   const last = prev[prev.length - 1];
   if (last && last.kind === kind && !last.complete) {
     const updated: StreamItem = { ...last, text: last.text + chunk };
     return [...prev.slice(0, -1), updated];
   }
-  return [...prev, { kind, text: chunk, complete: false }];
+  return [...prev, { kind, text: chunk, complete: false, at }];
 }
 
 function sealOpen(prev: StreamItem[]): StreamItem[] {

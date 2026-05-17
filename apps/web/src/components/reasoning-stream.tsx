@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ApprovalCard } from "./approval-card";
+import { Cite } from "./editorial";
 
 export interface Citation {
   chunkId: string;
@@ -18,12 +19,13 @@ export interface Citation {
 }
 
 export type StreamItem =
-  | { kind: "thought"; text: string; complete: boolean }
+  | { kind: "thought"; text: string; complete: boolean; at: number }
   | {
       kind: "tool_call";
       id: string;
       name: string;
       args: Record<string, unknown>;
+      at: number;
     }
   | {
       kind: "observation";
@@ -34,11 +36,12 @@ export type StreamItem =
       error?: string;
       durationMs: number;
       actionId?: string;
+      at: number;
     }
-  | { kind: "answer"; text: string; complete: boolean }
-  | { kind: "citations"; citations: Citation[] }
-  | { kind: "done"; turns: number; totalMs: number }
-  | { kind: "error"; message: string };
+  | { kind: "answer"; text: string; complete: boolean; at: number }
+  | { kind: "citations"; citations: Citation[]; at: number }
+  | { kind: "done"; turns: number; totalMs: number; at: number }
+  | { kind: "error"; message: string; at: number };
 
 export function ReasoningStream({
   items,
@@ -54,142 +57,280 @@ export function ReasoningStream({
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [items.length, lastChunkSig(items)]);
 
+  if (items.length === 0 && !running) {
+    return (
+      <div className="border-t border-[color:var(--color-rule)] pt-8">
+        <p className="chrome">
+          <span className="caret-thin" />
+          <span className="ml-2">awaiting prompt — type a question and press ↵</span>
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <section
-      aria-label="agent reasoning"
-      className="relative overflow-hidden border border-[color:var(--color-rule)] bg-[color:var(--color-ink-1)] shadow-[0_1px_0_0_var(--color-rule)_inset]"
-    >
-      <header className="flex items-center justify-between border-b border-[color:var(--color-rule)] bg-[color:var(--color-ink-2)] px-5 py-2.5">
+    <section aria-label="agent reasoning" className="relative">
+      {/* Stream header — minimal chrome */}
+      <header className="mb-6 flex items-baseline justify-between border-b border-[color:var(--color-rule)] pb-3">
         <div className="flex items-center gap-3">
-          <span
-            className={`block h-1.5 w-1.5 rounded-full ${
-              running
-                ? "pulse-dot bg-[color:var(--color-vermilion)]"
-                : "bg-[color:var(--color-paper-faint)]"
-            }`}
-          />
-          <span className="label">
-            reasoning stream {runId ? "· " + runId.slice(0, 8) : ""}
+          <span className={running ? "pulse-dot" : "pulse-dot pulse-dot-muted"} />
+          <span className="chrome" style={{ letterSpacing: "0.02em" }}>
+            {running ? "streaming" : "complete"}
+            {runId && (
+              <>
+                <span className="px-2 text-[color:var(--color-rule-strong)]">·</span>
+                <span>run {runId.slice(0, 8)}</span>
+              </>
+            )}
+            <span className="px-2 text-[color:var(--color-rule-strong)]">·</span>
+            <span>gemini-3.1-pro · vertex</span>
           </span>
         </div>
         <span className="chrome">
-          {running ? "live · gemini-3-pro" : "idle"}
+          {items.length} {items.length === 1 ? "node" : "nodes"}
         </span>
       </header>
 
-      <div className="max-h-[60vh] overflow-y-auto px-5 py-5 font-mono text-[0.84rem] leading-[1.55]">
-        {items.length === 0 ? (
-          <p className="text-[color:var(--color-paper-faint)]">
-            <span className="caret inline-block h-[1em] w-[2px] bg-[color:var(--color-vermilion)] align-[-2px]" />
-            <span className="ml-2">awaiting prompt…</span>
-          </p>
-        ) : null}
+      {/* Cinematic timeline */}
+      <div className="relative" style={{ paddingLeft: 96 }}>
+        <div className="stream-rule" style={{ left: 78 }} />
+
         {items.map((it, i) => (
-          <Line key={i} item={it} live={running && i === items.length - 1} />
+          <StreamRow
+            key={i}
+            item={it}
+            isLast={i === items.length - 1}
+            live={running && i === items.length - 1}
+          />
         ))}
+
         <div ref={bottomRef} />
       </div>
     </section>
   );
 }
 
-function Line({ item, live }: { item: StreamItem; live: boolean }) {
+function StreamRow({
+  item,
+  isLast,
+  live,
+}: {
+  item: StreamItem;
+  isLast: boolean;
+  live: boolean;
+}) {
+  const nodeState =
+    isLast && item.kind !== "answer" && item.kind !== "done" && item.kind !== "citations" && live
+      ? "active"
+      : "done";
+
+  // Special-case rendering for citations / done / error that don't get a node + time chip
+  if (item.kind === "citations") {
+    return (
+      <div className="rise mb-6 mt-2 flex flex-wrap gap-2">
+        {item.citations.map((c, i) => (
+          <Cite
+            key={c.chunkId}
+            n={i + 1}
+            title={c.title}
+            src={sourceLabel(c.source)}
+            excerpt={c.text}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (item.kind === "done") {
+    return (
+      <div
+        className="rise mt-4 flex items-center justify-between border-t border-[color:var(--color-rule)] pt-4 chrome"
+        style={{ marginLeft: -96 }}
+      >
+        <span>
+          stream complete · {(item.totalMs / 1000).toFixed(2)}s · {item.turns} turn
+          {item.turns === 1 ? "" : "s"}
+        </span>
+        <span className="text-[color:var(--color-paper-faint)]">— signed, the agent</span>
+      </div>
+    );
+  }
+
+  if (item.kind === "error") {
+    return (
+      <div
+        className="rise mt-3 border bg-[color:var(--color-ink-2)] p-3 mono"
+        style={{
+          borderColor: "var(--color-vermilion-deep)",
+          color: "var(--color-vermilion)",
+          marginLeft: -96,
+        }}
+      >
+        error · {item.message}
+      </div>
+    );
+  }
+
+  // Timeline row: time chip in gutter + node marker + content
+  return (
+    <div className="rise relative" style={{ minHeight: 84, paddingBottom: 6 }}>
+      {/* Stream node — sits on the rule */}
+      <div className={"stream-node " + nodeState} style={{ left: nodeState === "active" ? 74 : 76, top: 8 }} />
+
+      {/* Time chip in left gutter */}
+      <div
+        className="chrome tabular absolute"
+        style={{
+          left: -96,
+          top: 4,
+          width: 96,
+          fontSize: "0.66rem",
+          color: "var(--color-paper-faint)",
+          letterSpacing: 0,
+          textAlign: "right",
+          paddingRight: 12,
+        }}
+      >
+        {formatTime(item.at)}
+      </div>
+
+      {/* Content — kind label + body */}
+      <div style={{ paddingLeft: 28 }}>
+        <KindLabel kind={item.kind} />
+        <RowBody item={item} live={live} />
+      </div>
+    </div>
+  );
+}
+
+function KindLabel({ kind }: { kind: StreamItem["kind"] }) {
+  const labels: Record<string, { text: string; glyph: string; color: string }> = {
+    thought: { text: "thought", glyph: "·", color: "var(--color-vermilion)" },
+    tool_call: { text: "tool_call", glyph: "›", color: "var(--color-saffron)" },
+    observation: { text: "observation", glyph: "‹", color: "var(--color-paper-muted)" },
+    answer: { text: "answer", glyph: "◆", color: "var(--color-paper)" },
+  };
+  const meta = labels[kind] ?? { text: kind, glyph: "·", color: "var(--color-paper-faint)" };
+  return (
+    <div className="mb-2 flex items-baseline gap-2.5">
+      <span
+        className="mono"
+        style={{
+          fontSize: "0.7rem",
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: meta.color,
+          fontWeight: 500,
+        }}
+      >
+        <span style={{ marginRight: 6 }}>{meta.glyph}</span>
+        {meta.text}
+      </span>
+    </div>
+  );
+}
+
+function RowBody({ item, live }: { item: StreamItem; live: boolean }) {
   switch (item.kind) {
     case "thought":
       return (
-        <p className="mb-3 whitespace-pre-wrap text-[color:var(--color-paper-dim)]">
-          <span className="mr-2 select-none text-[color:var(--color-paper-faint)]">›</span>
+        <div
+          className="mono"
+          style={{
+            fontStyle: "italic",
+            color: "var(--color-paper-dim)",
+            fontSize: "0.86rem",
+            lineHeight: 1.55,
+            maxWidth: 720,
+          }}
+        >
           {item.text}
-          {live && !item.complete ? <Caret /> : null}
-        </p>
+          {live && !item.complete && <span className="caret-thin" />}
+        </div>
       );
     case "tool_call":
       return (
-        <div className="mb-3">
-          <p className="text-[color:var(--color-vermilion)]">
-            <span className="mr-2 select-none">→</span>
-            <span className="font-medium">{item.name}</span>
-            <span className="text-[color:var(--color-paper-faint)]">
-              ({summarizeArgs(item.args)})
-            </span>
-          </p>
+        <div>
+          <div
+            className="mono"
+            style={{
+              color: "var(--color-saffron)",
+              fontSize: "0.92rem",
+              marginBottom: 4,
+              fontWeight: 500,
+            }}
+          >
+            {item.name}
+            <span style={{ color: "var(--color-paper-muted)" }}>(…)</span>
+          </div>
+          <div className="chrome" style={{ paddingLeft: 0 }}>
+            {summarizeArgs(item.args)}
+          </div>
         </div>
       );
     case "observation":
       return (
-        <div className="mb-3">
-          <p
-            className={
-              item.ok
-                ? "text-[color:var(--color-saffron)]"
-                : "text-[color:var(--color-vermilion)]"
-            }
+        <div>
+          <div
+            className="mono"
+            style={{
+              color: item.ok ? "var(--color-paper-muted)" : "var(--color-vermilion)",
+              fontSize: "0.84rem",
+            }}
           >
-            <span className="mr-2 select-none">←</span>
-            <span className="font-medium">{item.name}</span>
-            <span className="text-[color:var(--color-paper-faint)]">
-              {" · "}
-              {item.ok ? item.summary ?? "ok" : item.error ?? "failed"}
-              {" · "}
-              {item.durationMs}ms
+            ← {item.name}
+            <span style={{ color: "var(--color-paper-faint)", marginLeft: 8 }}>
+              · {item.ok ? item.summary ?? "ok" : item.error ?? "failed"} · {item.durationMs}ms
             </span>
-          </p>
-          {item.actionId ? <ApprovalCard actionId={item.actionId} /> : null}
+          </div>
+          {item.actionId && (
+            <div className="mt-5">
+              <ApprovalCard actionId={item.actionId} />
+            </div>
+          )}
         </div>
       );
     case "answer":
       return (
-        <div className="mt-5 border-t border-[color:var(--color-rule)] pt-5">
-          <p className="label mb-3">answer</p>
-          <p
-            className="whitespace-pre-wrap text-[0.98rem] leading-[1.65] text-[color:var(--color-paper)]"
-            style={{ fontFamily: "var(--font-sans)" }}
-          >
-            {item.text}
-            {live && !item.complete ? <Caret /> : null}
-          </p>
+        <div
+          className="display"
+          style={{
+            fontSize: "1.42rem",
+            lineHeight: 1.4,
+            color: "var(--color-paper)",
+            maxWidth: 720,
+            letterSpacing: "-0.005em",
+          }}
+        >
+          {item.text}
+          {live && !item.complete && <span className="caret-thin" />}
         </div>
       );
-    case "citations":
-      return (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {item.citations.map((c) => (
-            <span
-              key={c.chunkId}
-              title={c.text ?? c.title}
-              className="group relative inline-flex cursor-default items-baseline gap-1.5 border border-[color:var(--color-rule-strong)] bg-[color:var(--color-ink-2)] px-2 py-1 text-[0.72rem] tracking-[0.02em] text-[color:var(--color-paper-dim)] hover:border-[color:var(--color-vermilion)] hover:bg-[color:var(--color-ink-1)]"
-            >
-              <span className="text-[color:var(--color-vermilion)]">[{c.source}]</span>
-              <span>{c.title}</span>
-              <span className="text-[color:var(--color-paper-faint)]">·{c.score.toFixed(3)}</span>
-              {c.text && (
-                <span className="pointer-events-none absolute bottom-full left-0 z-30 mb-1.5 hidden w-[300px] border border-[color:var(--color-rule-strong)] bg-[color:var(--color-ink)] p-3 font-mono text-[0.72rem] leading-[1.55] text-[color:var(--color-paper-dim)] shadow-lg group-hover:block">
-                  {c.text.length > 280 ? c.text.slice(0, 277) + "…" : c.text}
-                </span>
-              )}
-            </span>
-          ))}
-        </div>
-      );
-    case "done":
-      return (
-        <p className="mt-5 border-t border-[color:var(--color-rule)] pt-4 text-[color:var(--color-paper-faint)]">
-          done · {item.turns} turns · {item.totalMs}ms
-        </p>
-      );
-    case "error":
-      return (
-        <p className="mt-3 border border-[color:var(--color-vermilion-deep)]/60 bg-[color:var(--color-ink-2)] p-3 text-[color:var(--color-vermilion)]">
-          error · {item.message}
-        </p>
-      );
+    default:
+      return null;
   }
 }
 
-function Caret() {
-  return (
-    <span className="caret ml-1 inline-block h-[1em] w-[2px] bg-[color:var(--color-vermilion)] align-[-2px]" />
-  );
+function formatTime(ms: number): string {
+  if (!ms) return "—";
+  const d = new Date(ms);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  const cs = String(Math.floor(d.getMilliseconds() / 10)).padStart(2, "0");
+  return `${hh}:${mm}:${ss}.${cs}`;
+}
+
+function sourceLabel(s: Citation["source"]): string {
+  const map: Record<Citation["source"], string> = {
+    email: "email",
+    calendar: "cal",
+    meeting_notes: "note",
+    shared_doc: "doc",
+    slack: "slack",
+    notes: "note",
+  };
+  return map[s];
 }
 
 function summarizeArgs(args: Record<string, unknown>): string {
@@ -205,7 +346,7 @@ function summarizeArgs(args: Record<string, unknown>): string {
       out.push(`${k}: {…}`);
     }
   }
-  return out.join(", ");
+  return out.join(" · ");
 }
 
 function lastChunkSig(items: StreamItem[]): string {

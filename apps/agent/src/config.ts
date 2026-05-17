@@ -8,7 +8,9 @@ const schema = z.object({
   GOOGLE_CLOUD_PROJECT: z.string().default(""),
   GOOGLE_CLOUD_LOCATION: z.string().default("us-central1"),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().default(""),
-  VERTEX_GEMINI_MODEL: z.string().default("gemini-3-pro"),
+  VERTEX_GEMINI_MODEL: z.string().default("gemini-3.1-pro-preview"),
+  // Gemini 3.x preview is only on the global endpoint; embeddings still go to a regional one.
+  VERTEX_GEMINI_LOCATION: z.string().default("global"),
   VERTEX_EMBEDDING_MODEL: z.string().default("text-embedding-004"),
 });
 

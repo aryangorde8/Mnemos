@@ -1,1 +1,3497 @@
-[]
+[
+  {
+    "source": "email",
+    "title": "Q3 Planning",
+    "body": "Alex,\n\nLet's get the ball rolling on Q3 planning for Lantern. I want to see your initial thoughts on major themes by EOW next week. Keep it high level for now.",
+    "metadata": {
+      "date": "2026-05-05T10:15:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Priya Iyer",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Voice Memo - Q3 thoughts",
+    "body": "Okay, Q3 planning. Priya wants themes. Obvious ones are performance and dashboard UX refresh. Performance is getting noisy. The Acme Co. account is a big part of that. Then there's the platform work... Tomas is already banging the drum for Audit Logs. That's a huge tax on the team. Need to balance that against core Lantern work like improving the query builder. Where does the pricing change support fit in? That's another rock. Need to talk to Ben and Mei to get their initial take.",
+    "metadata": {
+      "date": "2026-05-06T09:02:00-04:00",
+      "threadKey": "q3-planning"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Q3 brainstorm",
+    "body": "Ben, Mei,\n\nI'm starting to spin up the Q3 roadmap. Can we find 30 mins tomorrow to jam on initial ideas before I put a draft doc together? I'll send an invite.",
+    "metadata": {
+      "date": "2026-05-06T11:20:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Alex Chen",
+      "to": [
+        "Ben Aoki",
+        "Mei Tanaka"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Q3 Brainstorm (Alex/Ben/Mei)",
+    "body": "Agenda: Initial thoughts and big rocks for the Lantern Q3 roadmap.",
+    "metadata": {
+      "date": "2026-05-07T14:30:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Mei Tanaka"
+      ],
+      "eventTime": "2026-05-07T14:30:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Q3 Brainstorm (Alex/Ben/Mei)",
+    "body": "Attendees: Alex Chen, Ben Aoki, Mei Tanaka\n\nDiscussion:\n- AC: Walked through early thoughts: performance, UX refresh, platform asks.\n- BA: The dashboard UX is feeling dated. We could do a targeted refresh. Also, the query builder flow is still a major source of user confusion.\n- MT: Performance issues are real, especially for our largest customers. We have a few epics (LAN-1988, LAN-2001) that could make a dent. The Audit Log work from Platform would be a significant effort, easily half the quarter for 2 engineers.\n\nDecisions:\n- We'll propose three potential themes: 1) Performance & Scale, 2) Core UX Refresh (Dashboards/Query Builder), 3) Customer Commitments (Acme, Pricing).\n\nAction Items:\n- AC: Start drafting the Q3 plan doc with these themes.\n- BA: Pull together some early mocks for the dashboard refresh concept.\n- MT: Do a quick sizing on the performance epics vs. the Audit Log work.",
+    "metadata": {
+      "date": "2026-05-07T15:05:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Mei Tanaka"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Urgent Feedback from Acme Co. // Performance Issues",
+    "body": "Alex - another one from Acme. Their head of analytics is getting frustrated with dashboard load times, says it's making it hard to justify the renewal, especially with the pricing change coming. They're our biggest champion there, so this is worrying.\n\n---- Forwarded message ----\nFrom: analyst@acme.com\nTo: Diego Salas\nSubject: Urgent Feedback from Acme Co. // Performance Issues\n\nDiego, load times on our main leadership dashboard are exceeding 90 seconds this week. This is becoming untenable for us.",
+    "metadata": {
+      "date": "2026-05-08T16:45:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Diego Salas",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Coffee? Q3 ideas",
+    "body": "Hey Alex, congrats on shipping the new integrations! Heard you're spinning up Q3 planning. I have some thoughts on how we can better align our roadmaps. You free for a coffee chat next week?",
+    "metadata": {
+      "date": "2026-05-09T13:10:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "DM to Alex Chen",
+    "body": "Here's that Figma link with the early dashboard refresh thoughts we talked about. It's rough, don't laugh. figma.com/file/abc123xyz",
+    "metadata": {
+      "date": "2026-05-11T15:03:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Ben Aoki",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Coffee Chat: Alex & Marcus",
+    "body": "Agenda: Q3 roadmap alignment.",
+    "metadata": {
+      "date": "2026-05-12T10:00:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Marcus Bell"
+      ],
+      "eventTime": "2026-05-12T10:00:00-04:00",
+      "eventLocation": "HQ — Blue Bottle Cafe"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Planning",
+    "body": "Thanks for the heads up. Before you get too far, I want this quarter to be tight. Give me 3 themes, max. For each theme, I want to see:\n\n- What problem it solves for which customer segment.\n- What specific business metric it moves (retention, expansion, etc.).\n- The tradeoffs. What are we explicitly NOT doing if we do this.\n\nLet's discuss in our 1:1 tomorrow.",
+    "metadata": {
+      "date": "2026-05-12T16:30:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Priya Iyer",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "1:1 Alex/Priya",
+    "body": "Agenda: Standing 1:1.",
+    "metadata": {
+      "date": "2026-05-13T11:00:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer"
+      ],
+      "eventTime": "2026-05-13T11:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: 1:1 Alex/Priya",
+    "body": "Attendees: Alex Chen, Priya Iyer\n\nDiscussion:\n- AC: Presented the three draft themes: Performance & Scale, Core UX Refresh, Customer Commitments.\n- PI: Likes the structure. Pushed on the 'Customer Commitments' theme - is it just Acme or are there others? Worried it's too reactive.\n- PI: On Performance, need to be specific. Is this for the top-10 customers like Acme ($480k ARR) or for everyone? What's the tradeoff vs. shipping the Audit Logs that Tomas wants?\n- AC: The tradeoff is direct. Mei sized Audit Logs at ~10-12 engineering weeks. That's the same as the core performance work (LAN-1988).\n\nDecisions:\n- Alex will frame the plan around 3 themes, but will make the tradeoffs explicit, especially Performance vs. Audit Logs.\n- The 'Customer Commitments' theme will be reframed as 'Enterprise Readiness' to be more strategic.\n\nAction Items:\n- AC: Get a draft of the Q3 plan doc created and shared before syncing with Sarah.",
+    "metadata": {
+      "date": "2026-05-13T11:28:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer"
+      ]
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Q3 2026 Planning: Lantern (DRAFT)",
+    "body": "Owner: Alex Chen\nStatus: Draft\nLast Updated: 13 May 2026\n\n**Objective:** For Q3 2026, the Lantern team will focus on driving enterprise retention and setting the foundation for future expansion by improving the core product experience for our largest customers.\n\n**Theme 1: Performance & Scale**\n*Problem:* Our largest customers (e.g., Acme Co.) are experiencing significant performance degradation, impacting usability and renewal risk.\n*Initiatives:* Address query optimization (LAN-1988), refactor dashboard rendering (LAN-2015).\n*Metric:* Reduce P95 dashboard load time by 50%.\n\n**Theme 2: Core UX Refresh**\n*Problem:* Key workflows, particularly in the query builder, are complex and create a steep learning curve for new users.\n*Initiatives:* Redesign query builder flow (with Ben), refresh dashboard UI.\n*Metric:* Increase weekly active users building new queries.\n\n**Theme 3: Enterprise Readiness**\n*Problem:* We lack key features required by large, regulated customers, which is a blocker for both retention and new sales.\n*Initiatives:* Support for upcoming pricing model changes, [TBD: Audit Logs vs other commitments].\n*Metric:* Unblock $200k in pending pipeline, mitigate Acme renewal risk.",
+    "metadata": {
+      "date": "2026-05-13T17:00:00-04:00",
+      "threadKey": "q3-planning"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Planning",
+    "body": "Alex, I saw you have a Q3 planning kickoff on the calendar for next week. Could you please send over the planning doc by EOD tomorrow? I need some time to digest it with Mei before we all meet. Written context first helps us have a much more productive conversation.",
+    "metadata": {
+      "date": "2026-05-14T09:33:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Sarah Okafor",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Planning",
+    "body": "Of course. Here is the link to the draft. It's still a bit rough, especially around Theme 3, but the main tradeoffs are outlined.\n\n[Link to Q3 2026 Planning: Lantern (DRAFT)]\n\nLooking forward to discussing with you and Mei.",
+    "metadata": {
+      "date": "2026-05-14T10:05:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Alex Chen",
+      "to": [
+        "Sarah Okafor"
+      ],
+      "cc": [
+        "Mei Tanaka"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Message in #lantern-team",
+    "body": "Heads up team, the first draft of the Q3 planning doc is available for comments. The major question is how we sequence the big performance work vs. some cross-cutting asks. Feel free to leave comments directly in the doc.",
+    "metadata": {
+      "date": "2026-05-14T10:10:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Team Sync",
+    "body": "Agenda: Regular sync, Q3 planning preview.",
+    "metadata": {
+      "date": "2026-05-15T13:00:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-15T13:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Lantern Team Sync",
+    "body": "Attendees: Alex Chen, Sarah Okafor, Ben Aoki, Mei Tanaka, Noor Abadi\n\nDiscussion:\n- AC: Quick overview of the Q3 draft plan and the key tradeoff decision between deep performance work and the company-wide push for audit logs.\n- MT: Confirmed that audit logs would be a major architectural undertaking and would directly compete for the same senior engineers needed for the performance work.\n- BA: Showed the Figma wireframes for the dashboard refresh. Team is excited about the direction.\n- SO: Emphasized the need for a clear decision on the audit log question before we can commit to a plan. We can't do both well.\n\nAction Items:\n- All: Add comments to the Q3 draft doc by EOD Monday.",
+    "metadata": {
+      "date": "2026-05-15T13:45:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Required: Audit Log API spec for Q3",
+    "body": "All,\n\nPer our platform roadmap, all product teams are required to implement the v1 Audit Log API in Q3. This is a critical dependency for our enterprise and security compliance goals for H2. I have attached the technical specification (v0.9) and expect product leads to factor this into their Q3 plans.\n\nPlease direct any questions to the #platform-eng channel.",
+    "metadata": {
+      "date": "2026-05-15T14:00:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Tomas Reinholz",
+      "to": [
+        "Alex Chen",
+        "Marcus Bell"
+      ],
+      "cc": [
+        "Priya Iyer",
+        "Sarah Okafor"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Quick q on audit logs vs. Lantern work",
+    "body": "Priya,\n\nYou saw Tomas's email. This formalizes the tradeoff. My strong preference is to prioritize the performance work for Acme and our other large customers, and push audit logs. The risk of Acme churning is immediate and high ($480k ARR), while the audit log benefit is less direct for us this quarter. Thoughts?",
+    "metadata": {
+      "date": "2026-05-15T14:12:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Alex Chen",
+      "to": [
+        "Priya Iyer"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Quick q on audit logs vs. Lantern work",
+    "body": "It's your call to propose, but you need to defend it with data. Show the ARR at risk vs. the potential gain from audit logs. I'll back a well-reasoned decision.",
+    "metadata": {
+      "date": "2026-05-15T14:25:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Priya Iyer",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Deal desk ask: new export format for United Health",
+    "body": "Hey Alex, I'm working on a big enterprise deal with United Health ($600k ACV). They're asking if we can support PDF exports with custom branding, as it's a requirement for their executive reporting. They need a commitment for Q3 delivery. Can we get this on the roadmap?",
+    "metadata": {
+      "date": "2026-05-16T11:55:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Layla Hassan",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Deal desk ask: new export format for United Health",
+    "body": "Layla,\n\nThanks for flagging. Q3 is looking very tight already. Let me talk to eng to get a sense of the effort for this. We may be able to scope it as a smaller part of the 'Enterprise Readiness' theme, but no promises. Will let you know.",
+    "metadata": {
+      "date": "2026-05-16T12:30:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Alex Chen",
+      "to": [
+        "Layla Hassan"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "DM to Alex Chen",
+    "body": "Hi Alex, I know we're focused on the query builder, but I recorded a quick loom with some related ideas for refreshing the main dashboard grid. No pressure to review, just wanted to share while it was fresh. loom.com/share/123abc456",
+    "metadata": {
+      "date": "2026-05-18T14:40:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Noor Abadi",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "DM to Alex Chen",
+    "body": "Hey man, just following up on our chat. Would be great to get that cross-team dependency for my 'Lifecycle' project on your Q3 plan. It's just a small API change but would be a huge unlock for us. Let me know!",
+    "metadata": {
+      "date": "2026-05-19T10:22:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Q3 Hiring needs for Lantern?",
+    "body": "Hi Alex, as we get closer to finalizing Q3 roadmaps, could you let me know if you anticipate any changes to your hiring needs for the Lantern team? I'm trying to get ahead of the pipeline.",
+    "metadata": {
+      "date": "2026-05-19T11:00:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Helena Park",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Hiring needs for Lantern?",
+    "body": "Helena, no changes for now. We have the approved senior role we're backfilling for Jorge. If the roadmap expands we might need another backend engineer, but let's hold for now until the plan is locked.",
+    "metadata": {
+      "date": "2026-05-19T11:14:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Alex Chen",
+      "to": [
+        "Helena Park"
+      ]
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Q3 2026 Planning: Lantern",
+    "body": "Owner: Alex Chen\nStatus: Proposed\nLast Updated: 20 May 2026\n\n**Objective:** For Q3 2026, the Lantern team will focus on driving enterprise retention by delivering critical performance improvements and enterprise-grade features.\n\n**Theme 1: Performance for Power Users**\n*Problem:* Our largest customers (e.g., Acme Co., $480k ARR) are experiencing performance degradation that puts renewals at risk.\n*Initiatives:* Address query optimization back-end (LAN-1988), refactor dashboard data fetching (LAN-2031).\n*Metric:* Reduce P95 dashboard load time by 50% for users with >100 assets.\n\n**Theme 2: Enterprise Readiness**\n*Problem:* We have blockers for retention (Acme) and new sales (United Health) related to specific enterprise needs.\n*Initiatives:* Implement support for the new pricing & packaging model. Scope and deliver custom PDF exports (LAN-2045).\n*Metric:* Mitigate Acme renewal risk, unblock $600k United Health deal.\n\n**Theme 3: Core Workflow Polish**\n*Problem:* Our query builder remains a point of friction for both new and existing users.\n*Initiatives:* Targeted UX improvements to query builder flow based on Ben's v2 designs.\n*Metric:* Reduce support tickets related to query construction by 25%.\n\n**Explicit Tradeoff: Audit Logs**\nWe are explicitly *deprioritizing* the platform-wide Audit Log initiative for Q3. The engineering effort (est. 10-12 weeks) is a direct conflict with the Performance theme, and we are prioritizing the immediate $480k renewal risk with Acme.",
+    "metadata": {
+      "date": "2026-05-20T18:00:00-04:00",
+      "threadKey": "q3-planning"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Q3 Planning with Eng Leads",
+    "body": "Agenda: Review proposed Q3 plan, discuss scope and tradeoffs, and get to a committed plan.",
+    "metadata": {
+      "date": "2026-05-21T14:00:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Mei Tanaka"
+      ],
+      "eventTime": "2026-05-21T14:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Q3 Planning with Eng Leads",
+    "body": "Attendees: Alex Chen, Sarah Okafor, Mei Tanaka\n\nDiscussion:\n- AC: Walked through the updated plan, focusing on the explicit tradeoff to delay Audit Logs in favor of Performance work.\n- SO: Agrees with the prioritization. Defending our existing revenue base is the right call. It will mean a tough conversation with Tomas, but she will handle it.\n- MT: Walked through a high-level architecture for the performance work (LAN-1988, LAN-2031). It's feasible in a quarter if the team is focused. The PDF export feature (LAN-2045) is an unknown; needs a proper spike.\n\nDecisions:\n- We are moving forward with the plan as proposed, prioritizing Performance and Enterprise Readiness over Audit Logs.\n- We will dedicate one engineer for a 1-week spike on LAN-2045 at the start of the quarter.\n\nAction Items:\n- AC: Finalize the doc and share with Sarah by EOD Friday (22 May).\n- SO: Talk to Tomas Reinholz to communicate the decision on Audit Logs.\n- MT: Create the spike ticket for LAN-2045.",
+    "metadata": {
+      "date": "2026-05-21T14:55:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Mei Tanaka"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Updated Q3 doc for review",
+    "body": "Ben, Mei,\n\nFollowing up on our sync today, I've incorporated the feedback and decision to prioritize performance. The doc is mostly final now, but let me know if you spot any last-minute issues before I send to Sarah tomorrow.\n\n[Link to Q3 2026 Planning: Lantern]",
+    "metadata": {
+      "date": "2026-05-21T17:30:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Alex Chen",
+      "to": [
+        "Ben Aoki",
+        "Mei Tanaka"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Updated Q3 doc for review",
+    "body": "Alex,\n\nLooks good. One note on the performance theme. For LAN-2031 (dashboard data fetching), we should call out the dependency on the platform team's caching service v2. I've attached a diagram outlining the interaction. If their delivery slips, our timeline is at risk. We should make that clear.",
+    "metadata": {
+      "date": "2026-05-22T09:12:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Mei Tanaka",
+      "to": [
+        "Alex Chen"
+      ],
+      "ticket": "LAN-2031"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "1:1 Alex/Sarah",
+    "body": "Agenda: Standing 1:1.",
+    "metadata": {
+      "date": "2026-05-22T11:30:00-04:00",
+      "threadKey": "q3-planning",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor"
+      ],
+      "eventTime": "2026-05-22T11:30:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "email",
+    "title": "[FINAL] Lantern Q3 2026 Plan for review",
+    "body": "Sarah,\n\nAs discussed, here is the final proposed plan for Lantern in Q3. I've incorporated the feedback from our meeting and added a note on the dependency risk for LAN-2031 based on Mei's input.\n\nHappy to discuss further, but I believe this represents a solid, defensible plan for the quarter.\n\n[Link to Q3 2026 Planning: Lantern]",
+    "metadata": {
+      "date": "2026-05-22T16:45:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Alex Chen",
+      "to": [
+        "Sarah Okafor"
+      ],
+      "cc": [
+        "Priya Iyer"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: [FINAL] Lantern Q3 2026 Plan for review",
+    "body": "Got it. Thanks, Alex. I'll review with the eng leads over the weekend and get back to you with any final questions on Monday.",
+    "metadata": {
+      "date": "2026-05-22T17:02:00-04:00",
+      "threadKey": "q3-planning",
+      "from": "Sarah Okafor",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Acme Co. pricing feedback",
+    "body": "Alex,\n\nForwarding this from the team at Acme. They're still pushing back hard on the Q3 price adjustment. Sounds like they feel they aren't getting enough value to justify it and are pointing to the analytics module as a key area of weakness.\n\nCould we maybe offer them a preview of Lantern to smooth things over?\n\nDiego Salas\nCS Lead, Acme Co. account",
+    "metadata": {
+      "date": "2026-05-05T10:15:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Diego Salas",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Acme Co. pricing feedback",
+    "body": "Thanks for flagging, Diego. Let's hold off on promising a preview. The launch timeline is tight. I'll sync with Priya about the account strategy. Let's set up time with them to hear them out directly.",
+    "metadata": {
+      "date": "2026-05-05T10:45:21-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen",
+      "to": [
+        "Diego Salas"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Meeting Notes: Acme Co. Sync",
+    "body": "Attendees: Alex Chen, Diego Salas, Michael Shaw (Acme), Sarah Jenkins (Acme)\n\nDiscussion:\n- Acme is holding firm on their pushback against the 15% Q3 price increase ($480k -> $552k ARR).\n- They state the current analytics tools are 'clunky' and 'insufficient for their reporting needs'.\n- They are not satisfied with the current roadmap promises and want to see concrete deliverables.\n- Mentioned a competitor's analytics suite during the call.\n\nDecisions:\n- No decision made. Escalating to Priya.\n\nAction Items:\n- (Alex) Synthesize feedback for Priya Iyer and propose a retention strategy.\n- (Diego) Send formal follow-up to Acme acknowledging their feedback and promising a review.",
+    "metadata": {
+      "date": "2026-05-06T14:30:00-04:00",
+      "threadKey": "project-lantern",
+      "participants": [
+        "Alex Chen",
+        "Diego Salas"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct Message",
+    "body": "hey got 15 min to grab coffee? wanna pick your brain on the Lantern data model",
+    "metadata": {
+      "date": "2026-05-06T15:05:10-04:00",
+      "threadKey": "project-lantern",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct Message",
+    "body": "swamped this week prepping for a design review. can you drop a note in #pm-sync?",
+    "metadata": {
+      "date": "2026-05-06T15:05:45-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen",
+      "to": [
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Candidate Debrief: Sr. Product Designer (R. Sterling)",
+    "body": "Agenda: Discuss final interview loop feedback for Sr. PD candidate.",
+    "metadata": {
+      "date": "2026-05-07T16:00:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Helena Park",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Helena Park",
+        "Sarah Okafor"
+      ],
+      "eventTime": "2026-05-07T16:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Lantern v2 mockups for feedback",
+    "body": "Alex, Sarah,\n\nSome mid-fidelity v2 concepts for the core workspace. Focus is on the new dashboard layout and widget configuration.\n\nLet me know what you think before we build this out for the full v3.\n\nFigma: [https://www.figma.com/file/T2E4N0P.../Lantern-v2-concepts]\n\nBen",
+    "metadata": {
+      "date": "2026-05-07T17:21:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Ben Aoki",
+      "to": [
+        "Alex Chen",
+        "Sarah Okafor"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Lantern v2 mockups for feedback",
+    "body": "I recorded a quick Loom walking through some of the filter interaction states. Let me know if you have questions.\n\n[https://www.loom.com/share/1a2b3c4d5e6f]",
+    "metadata": {
+      "date": "2026-05-08T11:45:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Noor Abadi",
+      "to": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Sarah Okafor"
+      ]
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Lantern Q3 PRD (DRAFT)",
+    "body": "Problem Statement\nOur current analytics suite is powerful but has a steep learning curve and feels disconnected from core user workflows. Customers like Acme Co. have cited this as a major point of friction. We need a unified, intuitive workspace for users to build, view, and share insights.\n\nGoals\n1.  Launch a new analytics workspace, 'Lantern', by end of Q2 2026.\n2.  Improve user satisfaction with analytics by 20% (measured by in-app survey).\n3.  Create a flexible foundation for future analytics features (e.g., forecasting, anomaly detection).\n\nKey Features (V1)\n-   Customizable dashboard grid\n-   New charting library with expanded visualization types\n-   Global and widget-level filtering\n-   Workspace sharing and permissions\n-   Saved Views [TBD on scope]",
+    "metadata": {
+      "date": "2026-05-08T16:00:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Lantern v2 mockups for feedback",
+    "body": "Thanks Ben, Noor. The direction looks promising. Team will review during our next planning session.\n\nAlex, let's sync on priorities before we go to a high-fidelity v3. Need to make sure we aren't over-promising for the Q2 launch.",
+    "metadata": {
+      "date": "2026-05-09T10:11:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Sarah Okafor",
+      "to": [
+        "Ben Aoki",
+        "Alex Chen",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Message in #design-lantern",
+    "body": "Heads up, Lantern v3 coming your way shortly. It's... a lot.\n[https://www.figma.com/file/Z9Y8X7W.../Lantern-v3-PROPOSED]",
+    "metadata": {
+      "date": "2026-05-12T13:55:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Ben Aoki",
+      "to": [
+        "#design-lantern"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Lantern v3 Designs for Review",
+    "body": "Team,\n\nAttached are the v3 designs for the Lantern workspace, ready for engineering review. This version includes the full expression of the 'Saved Views' feature, which allows users to save and share specific dashboard configurations with complex, multi-source filter states.\n\nFigma: [https://www.figma.com/file/Z9Y8X7W.../Lantern-v3-PROPOSED]\n\nLooking forward to discussing.\n\nBen Aoki\nDesign Lead, Lantern",
+    "metadata": {
+      "date": "2026-05-12T14:10:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Ben Aoki",
+      "to": [
+        "lantern-team@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Lantern v3 Designs for Review",
+    "body": "The multi-source saved views as designed will require significant query layer refactoring. The current architecture is not built to handle pre-computation for this many permutations of filter states across different data models. This will not be trivial.\n\nSee attached diagram for the required service interactions. This touches a lot more than just the Lantern backend. Related tickets: LAN-2031 (Query performance for large datasets), LAN-2044 (Filter state persistence mechanism).\n\nMei",
+    "metadata": {
+      "date": "2026-05-12T14:25:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Mei Tanaka",
+      "to": [
+        "Ben Aoki",
+        "lantern-team@helio.com"
+      ],
+      "ticket": "LAN-2031"
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Message in #eng-lantern",
+    "body": "As per my email, this is the architectural change required for the Saved Views feature as designed in v3. The red lines indicate new service dependencies we would need to build or modify. This has major performance and scheduling implications. `architecture-diagram-saved-views.png`",
+    "metadata": {
+      "date": "2026-05-12T14:28:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Mei Tanaka",
+      "to": [
+        "#eng-lantern"
+      ],
+      "ticket": "LAN-2044"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Lantern v3 concerns",
+    "body": "Alex -\n\nCan you write up a 1-pager on the goals for 'saved views' and the user impact? Need it before the design review so we can weigh the eng cost Mei flagged. We need to be very clear on the 'why' before we commit to this level of effort.\n\n- Sarah",
+    "metadata": {
+      "date": "2026-05-13T09:30:15-04:00",
+      "threadKey": "project-lantern",
+      "from": "Sarah Okafor",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: 1:1 Alex/Ben",
+    "body": "Topic: Mei's feedback on v3\n- Ben feels the saved views feature is the core differentiator for Lantern. Without it, it's just a 'prettier dashboard'.\n- He believes the UX is critical for power users and enterprise accounts (like Acme).\n- He asked if engineering could 'phase the backend work' or 'build a simpler version first'.\n- I pushed back, noting that a 'simpler' version might not solve the core user problem and could introduce throwaway work. He seems frustrated but understands the constraints.",
+    "metadata": {
+      "date": "2026-05-13T11:00:00-04:00",
+      "threadKey": "project-lantern",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: 1:1 Alex/Sarah",
+    "body": "Topic: Prep for Lantern Review\n- Sarah reviewed Mei's diagram and is concerned. Her estimate is this adds 6-8 weeks of work for 2 engineers, putting the 30 June launch at high risk.\n- She wants to see the 1-pager on user impact but is already leaning heavily toward cutting Saved Views for V1.\n- She emphasized clarity: 'If we commit, we resource it properly. If we can't, we cut it cleanly. No half-measures.'\n- She trusts my call on the product trade-off but wants a clear rationale to take back to her team.",
+    "metadata": {
+      "date": "2026-05-13T12:30:00-04:00",
+      "threadKey": "project-lantern",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor"
+      ]
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Project Brief: Lantern Saved Views",
+    "body": "User Problem\nPower users and teams who collaborate on analysis need a way to create, save, and share specific cuts of data. Today, they do this by manually re-applying a complex set of filters every time they enter the app, or by sharing screenshots. This is inefficient and error-prone.\n\nProposed Solution\nThe 'Saved Views' feature will allow a user to configure a dashboard with a specific set of global and widget-level filters and save this configuration as a unique, shareable view. Other users can then load this view to see the exact same data cut.\n\nBusiness & User Impact\n-   For users: Drastically reduces time-to-insight for recurring analysis. Enables more effective collaboration.\n-   For business: Unlocks stickiness and enterprise readiness. Directly addresses feedback from key accounts (Acme Co.) and is a key competitive differentiator.\n-   Risk: As flagged by engineering, the technical implementation for cross-source filter states is complex and may jeopardize the Q3 launch timeline.",
+    "metadata": {
+      "date": "2026-05-13T15:00:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Brief on Saved Views",
+    "body": "Sarah,\n\nHere's that brief on the 'why' for saved views. Let me know if this is what you need for tomorrow's review.\n\nDoc: [helio.docs/lantern-saved-views-brief]\n\nAlex",
+    "metadata": {
+      "date": "2026-05-13T15:02:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen",
+      "to": [
+        "Sarah Okafor"
+      ],
+      "cc": [
+        "Ben Aoki",
+        "Mei Tanaka"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern - Design & Eng Review",
+    "body": "Agenda: Review v3 designs and align on scope for Q2 launch.",
+    "metadata": {
+      "date": "2026-05-14T13:00:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-14T13:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Meeting Notes: Lantern - Design & Eng Review",
+    "body": "Attendees: Alex Chen, Sarah Okafor, Ben Aoki, Mei Tanaka, Noor Abadi\n\nDiscussion:\n-   Ben presented v3 designs, focusing on the user value of Saved Views.\n-   Mei presented the engineering concerns, estimating the feature as-designed would add ~8 weeks of work and require platform team involvement, making the 30 June deadline impossible.\n-   We discussed a 'V1' of Saved Views (e.g., global filters only), but agreed it doesn't solve the core user problem and adds risk of throwaway code.\n\nDecisions:\n-   The core conflict is clear: Launch on 30 June with core Lantern workspace OR delay the launch to Q3/Q4 to include Saved Views.\n\nAction Items:\n-   (Alex) Write up the trade-off options with a formal recommendation. Due EOD 15 May.",
+    "metadata": {
+      "date": "2026-05-14T14:00:00-04:00",
+      "threadKey": "project-lantern",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct Message",
+    "body": "Tough meeting. I get the engineering constraints, but it's a gut punch for the experience. Let me know what you decide. Here's the Figma link again just in case you need to stare into the abyss.\n[https://www.figma.com/file/Z9Y8X7W.../Lantern-v3-PROPOSED]",
+    "metadata": {
+      "date": "2026-05-14T14:15:22-04:00",
+      "threadKey": "project-lantern",
+      "from": "Ben Aoki",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Lantern v3 Designs for Review",
+    "body": "All,\n\nThe Platform team notes that the proposed query changes in LAN-2044 will have downstream impacts on the ETL pipeline schedulers and the data lake hydration process. We must be consulted before any architecture is finalized. The performance implications Mei noted are accurate and potentially understated.\n\nPlease include me on the next review.\n\n-Tomas Reinholz, Eng Lead, Platform",
+    "metadata": {
+      "date": "2026-05-15T09:05:17-04:00",
+      "threadKey": "project-lantern",
+      "from": "Tomas Reinholz",
+      "to": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Mei Tanaka",
+        "Priya Iyer"
+      ],
+      "cc": [
+        "Ben Aoki",
+        "eng-leads@helio.com",
+        "product-leads@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Meeting Notes: Lantern - Design & Eng Review",
+    "body": "What are the options? Need your recommendation by EOD. Bullets.",
+    "metadata": {
+      "date": "2026-05-15T09:12:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Priya Iyer",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Voice memo to self",
+    "body": "Okay, so... Priya wants bullets. Sarah wants a doc. Ben wants the full design. Mei is right about the perf risk. And Tomas is being Tomas, which actually helps my case. Cutting saved views is the only real option to hit the date. Can't risk a delay, especially with the Acme account already wobbly. The play is to frame this as a strategic, phased release, not a cut feature. 'Phase 1: Core Workspace' by June 30. 'Phase 2: Advanced Views' in Q4. It's the responsible call.",
+    "metadata": {
+      "date": "2026-05-15T13:00:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Lantern Q3 Launch: Scope Trade-offs",
+    "body": "Objective: Decide on Lantern scope to ensure a successful, on-time launch by 30 June 2026.\n\nBackground: The 'Saved Views' feature, while high-value, has been identified as high-risk by Engineering (see LAN-2031, LAN-2044) and the Platform team. Estimates suggest it would delay the launch by 6-8 weeks.\n\nOption A: Delay Launch\n-   Description: Delay the entire Lantern launch to late Q3 to include the full 'Saved Views' feature.\n-   Pros: Launch with a stronger competitive feature set.\n-   Cons: Misses public Q2 deadline. Delays value delivery for all other Lantern features. Risks team morale and momentum. Leaves accounts like Acme waiting longer.\n\nOption B: Phased Launch (Recommended)\n-   Description: Descope 'Saved Views' from the initial launch. Launch the core Lantern workspace on 30 June. Commit to 'Saved Views' as a fast-follow, targeting Q4.\n-   Pros: Hits the 30 June deadline. Delivers significant user value on time. Mitigates technical risk. Allows Engineering to architect Saved Views properly without rushing.\n-   Cons: Initial launch has a smaller feature set. Requires careful stakeholder and customer messaging.\n\nRecommendation: Pursue Option B. The risk of delay from Option A is too high. A successful, on-time launch of the core workspace will build momentum and give us a stable foundation to add Saved Views in Q4.",
+    "metadata": {
+      "date": "2026-05-15T16:10:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Lantern Q3 Launch - Recommended Path",
+    "body": "Priya -\n\nHere is the trade-off doc and recommendation you asked for. Link: [helio.docs/lantern-q3-tradeoffs]\n\nTl;dr: I'm recommending we descope Saved Views from the initial launch to guarantee the 30 June date and mitigate technical risk.\n\n-   Launch core Lantern workspace by 30 June.\n-   Fast-follow with Saved Views in Q4.\n-   Use the interim to properly architect the query layer with Eng/Platform.\n\nThis is the most responsible path to deliver value and manage risk. Let me know if you agree.\n\nAlex",
+    "metadata": {
+      "date": "2026-05-15T16:30:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen",
+      "to": [
+        "Priya Iyer"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Lantern Q3 Launch - Recommended Path",
+    "body": "This is the right call. Send the update to the team. Set up time with me next week to discuss comms plan for stakeholders.",
+    "metadata": {
+      "date": "2026-05-16T09:02:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Priya Iyer",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Lantern Q3 Launch - Recommended Path",
+    "body": "Team -\n\nWe have a decision. We're moving Saved Views to a Q4 fast-follow to protect the June 30 launch. This was a tough trade-off, but it's the right one to ensure we ship a high-quality product on time.\n\nMy priority is to deliver the core, valuable experience of the new workspace first, and then build on that foundation. This gives us the time to build Saved Views right.\n\nI'll set up time next week to walk through the updated roadmap. Appreciate everyone's candid input that got us to this clear decision.\n\nAlex",
+    "metadata": {
+      "date": "2026-05-16T09:45:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen",
+      "to": [
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "cc": [
+        "Tomas Reinholz"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct Message",
+    "body": "Thanks for driving this to a decision. Good call. The team will appreciate the clarity.",
+    "metadata": {
+      "date": "2026-05-16T09:55:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Sarah Okafor",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Meeting Notes: Candidate Debrief: Sr. PD (R. Sterling)",
+    "body": "Attendees: Alex Chen, Ben Aoki, Helena Park, Sarah Okafor\n\nFeedback:\n-   Alex: Strong hire. Asked great questions about process and trade-offs.\n-   Ben: Strong hire. Portfolio showed excellent systems thinking.\n-   Sarah: Hire. Good culture fit, seemed collaborative.\n\nDecision:\n-   Unanimous decision to extend an offer.\n\nAction Items:\n-   (Helena) Prepare offer package and extend on Monday.",
+    "metadata": {
+      "date": "2026-05-16T11:00:00-04:00",
+      "threadKey": "project-lantern",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Helena Park",
+        "Sarah Okafor"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Deal Desk - Redwood Inc. - Lantern Question",
+    "body": "Hey Alex, Redwood is in final stages, they're asking for a firm release date on the new analytics workspace. Can I tell them June 30th? They are a $350k ARR deal.",
+    "metadata": {
+      "date": "2026-05-16T14:20:13-04:00",
+      "threadKey": "project-lantern",
+      "from": "Layla Hassan",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Deal Desk - Redwood Inc. - Lantern Question",
+    "body": "Yes, you can commit to the core workspace for June 30. Do not mention 'saved views' or advanced filtering. Frame it as 'a brand new, customizable analytics workspace.' Let's connect on Monday to go over the messaging guide.",
+    "metadata": {
+      "date": "2026-05-16T14:28:04-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen",
+      "to": [
+        "Layla Hassan"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Q3 Roadmap - Final Scope Review",
+    "body": "Agenda: Walk through the revised Q3 launch plan and Q4 fast-follow items.",
+    "metadata": {
+      "date": "2026-05-19T11:00:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-19T11:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "quick coffee",
+    "body": "catch up",
+    "metadata": {
+      "date": "2026-05-20T15:00:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Marcus Bell",
+      "participants": [
+        "Marcus Bell",
+        "Alex Chen"
+      ],
+      "eventTime": "2026-05-20T15:00:00-04:00",
+      "eventLocation": "HQ - Kitchen"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Priya/Alex 1:1 - Lantern Comms Plan",
+    "body": "Agenda: Finalize stakeholder comms and customer messaging for the phased Lantern launch.",
+    "metadata": {
+      "date": "2026-05-22T10:30:00-04:00",
+      "threadKey": "project-lantern",
+      "from": "Alex Chen",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer"
+      ],
+      "eventTime": "2026-05-22T10:30:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Coffee?",
+    "body": "Hey Alex,\n\nBeen a while. You free to grab a coffee sometime this week? Would love to catch up.\n\nBest,\nMarcus",
+    "metadata": {
+      "date": "2026-05-05T10:15:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Coffee?",
+    "body": "This week is slammed with Q3 roadmap finalization. Maybe next week?",
+    "metadata": {
+      "date": "2026-05-06T09:02:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Alex Chen",
+      "to": [
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Voice Memo",
+    "body": "Need to block out more focus time. Feels like everyone wants to 'pick my brain' about the Lantern roadmap. Marcus is pinging again for coffee, need to push him out a bit. The Acme Co. pricing pushback is taking all my cycles.",
+    "metadata": {
+      "date": "2026-05-07T18:30:00-04:00",
+      "threadKey": "marcus-coffee"
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct message with Marcus Bell",
+    "body": "Hey Alex! Following up on that coffee. How's this week look for a quick brain pick on your roadmap?",
+    "metadata": {
+      "date": "2026-05-12T11:21:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct message with Marcus Bell",
+    "body": "Hey Marcus, sorry, still buried. Let me get through this week's Acme Co. fire drill and find some time.",
+    "metadata": {
+      "date": "2026-05-12T11:45:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Alex Chen",
+      "to": [
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Alex/Marcus sync",
+    "body": "Agenda: Quick chat on roadmap alignment.",
+    "metadata": {
+      "date": "2026-05-15T14:00:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Marcus Bell",
+      "participants": [
+        "Alex Chen",
+        "Marcus Bell"
+      ],
+      "eventTime": "2026-05-19T10:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct message with Marcus Bell",
+    "body": "Got your invite for Monday. Can we do async? What's top of mind?",
+    "metadata": {
+      "date": "2026-05-16T09:10:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Alex Chen",
+      "to": [
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct message with Marcus Bell",
+    "body": "Easier to jam in person. Just 15 mins to talk through some dependencies I'm seeing.",
+    "metadata": {
+      "date": "2026-05-16T09:12:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "[Declined] Alex/Marcus sync",
+    "body": "Hi Marcus,\n\nI have to decline for Monday, my morning is completely booked with Q3 finalization prep. Can we do Thursday (22nd) at 2pm instead? My calendar is free then.\n\nThanks,\nAlex",
+    "metadata": {
+      "date": "2026-05-16T09:35:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Alex Chen",
+      "to": [
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: [Declined] Alex/Marcus sync",
+    "body": "Works for me! Will send a new invite.",
+    "metadata": {
+      "date": "2026-05-16T09:38:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Alex/Marcus sync",
+    "body": "Agenda: Roadmap alignment chat.",
+    "metadata": {
+      "date": "2026-05-16T09:40:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Marcus Bell",
+      "participants": [
+        "Alex Chen",
+        "Marcus Bell"
+      ],
+      "eventTime": "2026-05-22T14:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Pre-read for our chat on Thursday",
+    "body": "Hey Alex,\n\nLooking forward to it. Just to give you some context, wanted to share the one-pager for my team's 'Orion' project. Thinking about potential overlaps with Lantern's data export capabilities. No need to read in detail, just a heads-up.\n\nCheers,\nMarcus\n\nAttachment: Orion_Project_OnePager_v1.2.pdf",
+    "metadata": {
+      "date": "2026-05-19T16:05:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Pre-read for our chat on Thursday",
+    "body": "Ugh, 'Orion'. Knew he was going to ask for an API. Need to prep talking points with Sarah/Mei on platform constraints.\n\n---------- Forwarded message ---------\nFrom: Marcus Bell <m.bell@helio.com>\nDate: Tue, May 19, 2026 at 4:05 PM\nSubject: Pre-read for our chat on Thursday\nTo: Alex Chen <a.chen@helio.com>\n\nHey Alex,\n\nLooking forward to it. Just to give you some context...",
+    "metadata": {
+      "date": "2026-05-19T17:50:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Alex Chen",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Heads up: Marcus / 'Orion' project",
+    "body": "Sarah, Mei -\n\nI'm meeting with Marcus on Thursday. He's asking about potential overlaps between his 'Orion' project and Lantern, specifically around data exports. His pre-read is attached.\n\nCan you give it a quick look? I suspect he's going to ask for a dedicated API endpoint, and I want to be prepared to discuss the technical lift and whether it aligns with our platform strategy. Let's try to sync before Thursday if you see any red flags.\n\nThanks,\nAlex",
+    "metadata": {
+      "date": "2026-05-20T10:11:00-04:00",
+      "threadKey": "marcus-coffee",
+      "from": "Alex Chen",
+      "to": [
+        "Sarah Okafor",
+        "Mei Tanaka"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Planning Kickoff",
+    "body": "Sounds good. Appreciate the heads-up on the eng resourcing constraints. I'll get you and the team a full product brief to review by EOD Friday, 22 May. That should give us enough time to debate before the quarter starts.\n\n-Alex",
+    "metadata": {
+      "date": "2026-05-06T11:24:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Alex Chen",
+      "to": [
+        "Sarah Okafor"
+      ],
+      "cc": [
+        "Priya Iyer",
+        "Ben Aoki"
+      ]
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Lantern Q3 2026 Product Brief (DRAFT)",
+    "body": "Owner: Alex Chen\nLast updated: 8 May 2026\nStatus: Drafting\n\n## 1. Problem & Opportunity\nWhat customer or business problem are we trying to solve?\n\n## 2. Goals & Objectives\nWhat are the measurable success metrics? (e.g., Increase X by Y%)\n\n## 3. Proposed Scope\nWhat specific features or changes are we proposing?\n\n## 4. Non-Goals\nWhat is explicitly out of scope for this quarter?\n\n## 5. Dependencies\nWhich teams do we depend on? (e.g., Platform)",
+    "metadata": {
+      "date": "2026-05-08T16:03:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Urgent: Concerns re: Q3 pricing changes",
+    "body": "Alex, see below. This is from the VP of Analytics at Acme Co. They're our biggest advocate there and are threatening to escalate. They feel blindsided by the seat-based pricing adjustment scheduled for their renewal. Can we connect on this ASAP?",
+    "metadata": {
+      "date": "2026-05-09T09:15:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Diego Salas",
+      "to": [
+        "Alex Chen"
+      ],
+      "cc": [
+        "Priya Iyer"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Lantern Product/Design/Eng Sync",
+    "body": "- Attendees: Alex Chen, Sarah Okafor, Ben Aoki, Mei Tanaka, Noor Abadi\n- Status Check on Q2:\n  - LAN-2031 (Dashboard Export): Ben shared the latest Figma mocks. Noor will record a Loom walking through the user flow for async review.\n  - LAN-2045 (Query Caching): Mei flagged a potential blocker with the Platform team's new service. Will follow up with Tomas.\n- Q3 Planning:\n  - Alex mentioned he's started work on the initial product brief.\n  - Goal is to circulate a draft the week of the 18th for review.\n- AIs:\n  - Alex: Share link to Q3 doc once it's ready for comments.\n  - Mei: Sync with Tomas Reinholz on LAN-2045.",
+    "metadata": {
+      "date": "2026-05-11T14:30:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Acme Co. Pricing Strategy Sync",
+    "body": "- Attendees: Alex Chen, Priya Iyer, Diego Salas, Layla Hassan\n- Summary: Acme Co. ($480k ARR) is a flight risk due to the upcoming pricing model change. They want to stay on the old user-pack model.\n- Discussion:\n  - Priya: What's the cost of carving out an exception? What's the risk of other customers finding out?\n  - Layla: Globex Corp is in late-stage negotiation and we pitched them the new model. An exception for Acme could kill that deal if word gets out.\n  - Alex: The core issue is they feel the value of the 'Lantern' workspace doesn't justify per-seat pricing for their 200+ casual users.\n- Decisions:\n  - We will not offer a full rollback to the old model.\n- Action Items:\n  - Alex: Propose a revised offer for Acme. Explore a limited 'viewer' seat type as a potential middle ground. Needs to be scoped for Q3 feasibility. [Due EOW]",
+    "metadata": {
+      "date": "2026-05-12T10:00:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer",
+        "Diego Salas",
+        "Layla Hassan"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct Message with Marcus Bell",
+    "body": "hey, got 15 for a coffee chat this week? want to pick your brain on the Lantern roadmap before you lock it in.",
+    "metadata": {
+      "date": "2026-05-12T11:48:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Planning Kickoff",
+    "body": "Hey Alex, just checking in on the Q3 doc. Let me know if you need any engineering context from me or Mei as you're pulling it together. Happy to be a sounding board.",
+    "metadata": {
+      "date": "2026-05-13T14:10:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Sarah Okafor",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "q3",
+    "body": "send me your top 3 bets for q3. what are the tradeoffs for each. bullet points.",
+    "metadata": {
+      "date": "2026-05-13T16:55:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Priya Iyer",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: q3",
+    "body": "Priya,\n\nHere are the three potential themes. Still refining.\n\n- Bet 1: Enterprise Readiness (Viewer Seats)\n  - Pro: Directly addresses Acme Co. retention issue, unblocks other enterprise deals.\n  - Con: Reactive, low product-led growth, high eng cost to refactor permissions.\n\n- Bet 2: Charting & Visualization Overhaul\n  - Pro: Top requested feature area from user feedback, boosts core product value.\n  - Con: Doesn't solve the Acme Co. problem, may require hiring another designer.\n\n- Bet 3: AI-Powered Query Suggestions\n  - Pro: Big market differentiator, potential for new pricing tier in the future.\n  - Con: High technical risk, long time-to-value, dependent on Platform team's new ML infra.\n\nAlex",
+    "metadata": {
+      "date": "2026-05-14T10:21:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Alex Chen",
+      "to": [
+        "Priya Iyer"
+      ]
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Q3 Brain Dump",
+    "body": "Okay, memo to self. It's Thursday and I'm behind on the Q3 doc. The Acme situation is sucking up all my time. Priya is pushing on the 'viewer seats' idea but it feels like a reactive, one-customer solution that will eat the whole quarter. The team wants to do the visualization overhaul. I want to do the AI stuff. Sarah checked in yesterday. I need to get something on paper that doesn't feel like a total compromise. The core problem is our persona is shifting up-market and the product isn't keeping up on enterprise features or core analytics depth.",
+    "metadata": {
+      "date": "2026-05-14T18:30:00-04:00",
+      "threadKey": "sarah-q3-doc"
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Lantern Q3 2026 Product Brief (DRAFT)",
+    "body": "Owner: Alex Chen\nLast updated: 15 May 2026\nStatus: Drafting\n\n## 1. Problem & Opportunity\nOur current per-seat pricing model is creating friction with larger customers who have many infrequent users (e.g., executives). This is putting major renewals, like Acme Co. ($480k ARR), at risk and creating headwinds for new business.\n\nSimultaneously, our core analytics experience lacks the depth of visualization and customization that power users expect, limiting our ability to expand within existing accounts.\n\n## 2. Goals & Objectives\n- Primary: Retain Acme Co. by providing a viable solution for their casual users by the end of Q3.\n- Secondary: Increase MAU of the Lantern workspace by 15%.\n\n## 3. Proposed Scope\n- [TBD - Leaning toward Enterprise Readiness theme]\n\n## 4. Open Questions\n- Can we scope a 'Viewer Seat' in a way that solves the enterprise pricing problem without cannibalizing our core user licenses?\n- What is the engineering effort required? Need input from Mei.\n- How do we balance this with much-needed improvements to the core charting experience?",
+    "metadata": {
+      "date": "2026-05-15T11:15:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Message in #lantern-pod",
+    "body": "Figma for LAN-2031 (Dashboard Export) is ready for review. The IA feels a bit messy with the new chart types we're considering for Q3. Take a look when you can. https://www.figma.com/file/abc123def456",
+    "metadata": {
+      "date": "2026-05-15T15:02:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Ben Aoki",
+      "to": [
+        "#lantern-pod"
+      ],
+      "ticket": "LAN-2031"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Early thoughts on Q3 technical direction",
+    "body": "Alex, Sarah,\n\nI've been reviewing our current permissions service in light of the 'viewer seat' discussions. It is not architected to support role-based entitlements at the feature level. Adding this capability would be a significant Q3 project.\n\nSee attached diagram for a proposed microservice approach. This would be a prerequisite for any granular permissioning work.\n\n[architecture_v1.png]\n\n-Mei",
+    "metadata": {
+      "date": "2026-05-15T17:45:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Mei Tanaka",
+      "to": [
+        "Alex Chen",
+        "Sarah Okafor"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Deal Desk Request: Globex Corp",
+    "body": "Alex - Globex Corp is asking if we can commit to SAML 2.0 support in Q3. Their legal team is making it a requirement for a $320k deal. Any chance we can squeeze this in? It falls under the 'Enterprise Readiness' theme...",
+    "metadata": {
+      "date": "2026-05-16T09:32:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Layla Hassan",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Planning Kickoff",
+    "body": "Hey Alex, following up on the Q3 doc. The engineering team is blocking out time for story mapping the week of the 26th, so getting that doc by next Friday (22nd) is critical for us to be prepared. Any update on your side?",
+    "metadata": {
+      "date": "2026-05-16T11:05:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Sarah Okafor",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct Message with Sarah Okafor",
+    "body": "Got it. Still pulling together a few threads but will have it for you. Dropped a meeting on the calendar for next Friday to review.",
+    "metadata": {
+      "date": "2026-05-16T11:31:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Alex Chen",
+      "to": [
+        "Sarah Okafor"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "PM candidate feedback - Jane Doe",
+    "body": "Helena,\n\nPassing on Jane. Strong background but didn't seem to have the deep B2B analytics experience we need for this role. Let's keep looking.\n\nThanks,\nAlex",
+    "metadata": {
+      "date": "2026-05-16T12:45:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Alex Chen",
+      "to": [
+        "Helena Park"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Deprecation Notice: Old Event Bus (ACTION REQUIRED)",
+    "body": "All Engineering & Product Leads,\n\nPlease be advised that the legacy event bus, `event-bus-v1`, will be fully deprecated at the start of Q3 (July 1, 2026). All services currently publishing to or consuming from this bus must be migrated to `event-bus-v2`.\n\nAs per our tracking, the 'Lantern' service has three (3) remaining consumers that need to be updated: [Consumer A, Consumer B, Consumer C]. Failure to migrate will result in loss of functionality.\n\nPlease update your Q3 roadmaps accordingly to allocate resources for this migration. Documentation can be found here: [Confluence Link]\n\n-Tomas",
+    "metadata": {
+      "date": "2026-05-16T14:00:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Tomas Reinholz",
+      "to": [
+        "Alex Chen",
+        "Sarah Okafor"
+      ],
+      "cc": [
+        "Priya Iyer",
+        "Mei Tanaka",
+        "Ben Aoki",
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Review: Lantern Q3 Product Brief",
+    "body": "Agenda: Walk through the v1 of the Q3 product brief and gather feedback for the final version.",
+    "metadata": {
+      "date": "2026-05-16T11:32:00-04:00",
+      "threadKey": "sarah-q3-doc",
+      "from": "Alex Chen",
+      "participants": [
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka"
+      ],
+      "eventTime": "2026-05-22T15:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Urgent: Query on Q3 2026 Pricing Notification",
+    "body": "Alex,\n\nSee below from Bob Kincaid, our main contact in procurement at Acme. They're our biggest account in the manufacturing vertical and are not happy about the pricing update. They're referencing an 18% increase based on their projected usage. Can you advise on how we should handle this?\n\nThanks,\nDiego\n\n--- Forwarded Message ---\nFrom: Bob Kincaid <b.kincaid@acme.co>\nDate: Fri, 9 May 2026 10:15:11 -0400\nTo: Diego Salas <diego.salas@helio.com>\nSubject: Urgent: Query on Q3 2026 Pricing Notification\n\nDiego,\n\nWe received a notification regarding a structural change to our pricing for the upcoming quarter. Our finance team's initial analysis projects an increase of approximately $86,000 to our annual costs, which is not something we budgeted for.\n\nGiven our long-standing partnership and our current contract (C-10034), we did not expect a change of this magnitude. We need to understand the justification for this and discuss our options, as this is not tenable for us.\n\nBob Kincaid\nVP, Procurement\nAcme Co.",
+    "metadata": {
+      "date": "2026-05-09T11:02:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "diego.salas@helio.com",
+      "to": [
+        "alex.chen@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Slack message in #pm-team",
+    "body": "hey got a sec? diego just flagged the acme renewal. this pricing thing is a problem. they're a $480k account.",
+    "metadata": {
+      "date": "2026-05-09T11:05:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "Layla Hassan",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Urgent: Query on Q3 2026 Pricing Notification",
+    "body": "Alex, Diego,\n\nWe need to get them an exception. This is Acme Co. They're our flagship logo in the Northeast and a major case study. Renewal is Oct 1st, we can't risk it over this. I'm happy to run point with the deal desk but need product's backing to grant a legacy exception.",
+    "metadata": {
+      "date": "2026-05-10T14:20:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "layla.hassan@helio.com",
+      "to": [
+        "alex.chen@helio.com",
+        "diego.salas@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Urgent: Query on Q3 2026 Pricing Notification",
+    "body": "Got it. Let me look into their usage data and the specifics of their contract. I want to understand what's driving the 18% jump before we commit to a path.",
+    "metadata": {
+      "date": "2026-05-12T09:33:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "alex.chen@helio.com",
+      "to": [
+        "layla.hassan@helio.com",
+        "diego.salas@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Urgent: Query on Q3 2026 Pricing Notification",
+    "body": "Alex - what's the plan here? I need a recommendation by EOD Tuesday with tradeoffs. Bullets please.",
+    "metadata": {
+      "date": "2026-05-12T09:45:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "priya.iyer@helio.com",
+      "to": [
+        "alex.chen@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Acme Pricing Sync",
+    "body": "Agenda: Align on response to Acme Co. pricing escalation.",
+    "metadata": {
+      "date": "2026-05-12T11:00:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "alex.chen@helio.com",
+      "participants": [
+        "alex.chen@helio.com",
+        "priya.iyer@helio.com",
+        "layla.hassan@helio.com",
+        "diego.salas@helio.com"
+      ],
+      "eventTime": "2026-05-14T14:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Slack DM to Marcus Bell",
+    "body": "Hey Marcus, quick q - have any of your big accounts pushed back on the new pricing model? Specifically anyone in the F500 space. Trying to get a sense of how the Acme situation compares.",
+    "metadata": {
+      "date": "2026-05-13T10:15:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "Alex Chen",
+      "to": [
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Slack DM from Marcus Bell",
+    "body": "Yeah a few. Complicated. The ones who are heavy on custom event ingestion are seeing the biggest jumps. Let's grab coffee next week and I can walk you through it.",
+    "metadata": {
+      "date": "2026-05-13T10:16:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Quick Sync on Pricing Pushback",
+    "body": "Hey Alex,\n\nFollowing up on slack. Let's get that 1:1 on the books to discuss large account pricing strategy. I have some thoughts on how we can position this better. I'm free Tuesday or Wednesday morning.\n\nBest,\nMarcus",
+    "metadata": {
+      "date": "2026-05-13T16:05:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "marcus.bell@helio.com",
+      "to": [
+        "alex.chen@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Acme Pricing Sync - Notes",
+    "body": "Attendees:\n- Alex Chen\n- Priya Iyer\n- Layla Hassan\n- Diego Salas\n\nDiscussion:\n- Layla emphasized the strategic importance of Acme Co. and the risk to the $480k renewal in October.\n- Diego confirmed the customer contact (Bob Kincaid) is influential and the complaint is serious.\n- Alex presented initial data: Acme's usage of a specific high-cost analytics feature is 5x the average for accounts their size, which is driving the price increase.\n- Priya stated we cannot make one-off exceptions without a framework. Setting a precedent is the primary concern.\n\nDecisions:\n- A full rollback (grandfathering) is off the table for now.\n- We need to present a structured recommendation with clear options.\n\nAction Items:\n- [AI] Alex Chen: Draft a 1-page recommendation doc with 3 options: (1) Hold firm on pricing, (2) Offer a one-time service credit, (3) Offer a partial, tiered discount. Due EOD Friday, May 16.",
+    "metadata": {
+      "date": "2026-05-14T14:35:00-04:00",
+      "threadKey": "acme-pricing",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer",
+        "Layla Hassan",
+        "Diego Salas"
+      ]
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Voice Memo - 14 May",
+    "body": "Acme situation is a mess. Priya wants options, Layla wants a cave-in. Risk is losing $480k ARR, but the precedent is worse. The data shows their usage is an outlier. They're basically using one expensive feature as an ETL pipeline, which was never the intent. Need to find a middle ground. Maybe a one-time credit for 'platform investment' tied to them migrating off that workflow? That might be the angle for Option 2.",
+    "metadata": {
+      "date": "2026-05-14T18:00:00-04:00",
+      "threadKey": "acme-pricing"
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Acme Co. Pricing Exception - Recommendation",
+    "body": "Doc ID: PM-LAN-2026-017\nAuthor: Alex Chen\nDate: 15 May 2026\n\n**1. Summary**\nAcme Co. (C-10034, $480k ARR) has formally objected to the Q3 pricing model change, which results in an 18% ($86k) increase to their annual rate. This document outlines three potential responses and recommends a path forward.\n\n**2. Background**\nThe price increase is driven by Acme's high consumption of compute-intensive custom event processing, a pattern that is 5x higher than other enterprise accounts. Their current contract renews on October 1, 2026. Sales (Layla Hassan) and CS (Diego Salas) assess the renewal as 'at-risk' if we hold firm without concessions.\n\n**3. Options Analysis**\n*   **Option 1: Hold Firm.** Communicate the value of the platform and enforce the new pricing. \n    *   Pros: Maintains pricing integrity, avoids setting a precedent.\n    *   Cons: High risk of losing a $480k ARR customer and reference logo.\n\n*   **Option 2: One-Time Service Credit.** Offer a one-time credit of $40,000 (approx. 50% of the increase) for their first year on the new plan, positioned as a 'strategic partnership investment' to help them transition. \n    *   Pros: Mitigates immediate churn risk, shows goodwill, avoids a permanent discount structure.\n    *   Cons: Still erodes margin, may only delay the problem.\n\n*   **Option 3: Grandfather Pricing.** Allow Acme to remain on the legacy pricing model for the duration of their next contract term.\n    *   Pros: Guarantees renewal.\n    *   Cons: Sets a major precedent for other large accounts, undermines the entire pricing initiative, significant revenue loss over time.\n\n**4. Recommendation**\nWe recommend pursuing **Option 2**. It offers the best balance of retaining a strategic customer while directionally enforcing our new pricing model. The credit should be contingent on a joint 'efficiency review' where we help them optimize their usage, reducing their long-term cost burden and our own COGS.",
+    "metadata": {
+      "date": "2026-05-15T15:00:00-04:00",
+      "threadKey": "acme-pricing"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Draft: Acme Co. Recommendation",
+    "body": "Priya,\n\nHere's the draft recommendation doc for the Acme situation, per our discussion. File is at: `sharepoint/product/pricing/Acme_Recommendation_Draft_v1.docx`\n\nLet me know if this is on the right track before I share more widely.\n\nThanks,\nAlex",
+    "metadata": {
+      "date": "2026-05-15T15:05:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "alex.chen@helio.com",
+      "to": [
+        "priya.iyer@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Draft: Acme Co. Recommendation",
+    "body": "Looks good. Sharpen Option 2. What's the exact dollar amount of the credit? $40k is fine but justify it. What's the engineering cost of the 'efficiency review' you mention? Add that. Send the final by EOD today.",
+    "metadata": {
+      "date": "2026-05-15T16:30:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "priya.iyer@helio.com",
+      "to": [
+        "alex.chen@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Final Recommendation: Acme Co. Pricing",
+    "body": "All,\n\nAttached is the final recommendation document regarding the Acme Co. pricing escalation. The formal proposal is to proceed with Option 2: offering a one-time service credit to mitigate the increase.\n\nPlease review ahead of our decision meeting on Tuesday.\n\nDoc link: `sharepoint/product/pricing/Acme_Recommendation_Final.docx`\n\nAlex",
+    "metadata": {
+      "date": "2026-05-16T17:50:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "alex.chen@helio.com",
+      "to": [
+        "priya.iyer@helio.com",
+        "layla.hassan@helio.com",
+        "diego.salas@helio.com"
+      ],
+      "cc": [
+        "sarah.okafor@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Acme Co. Pricing Decision",
+    "body": "Agenda: Final decision on Acme Co. pricing exception based on recommendation doc.",
+    "metadata": {
+      "date": "2026-05-16T17:55:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "alex.chen@helio.com",
+      "participants": [
+        "alex.chen@helio.com",
+        "priya.iyer@helio.com",
+        "layla.hassan@helio.com",
+        "diego.salas@helio.com",
+        "sarah.okafor@helio.com"
+      ],
+      "eventTime": "2026-05-19T11:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "email",
+    "title": "[DEAL-DESK] Exception Request: Acme Co (C-10034)",
+    "body": "Requesting a non-standard pricing exception for Acme Co. (C-10034) for their Oct 1 2026 renewal.\n\nCustomer: Acme Co.\nARR: $480,000\nRequest: One-time service credit of $40,000.\nJustification: Strategic customer retention, mitigates churn risk from Q3 pricing model change. \n\nProduct recommendation doc is attached. Awaiting final approval in meeting on Tue May 19.\n\nThanks,\nLayla",
+    "metadata": {
+      "date": "2026-05-17T13:00:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "layla.hassan@helio.com",
+      "to": [
+        "deal-desk@helio.com"
+      ],
+      "cc": [
+        "alex.chen@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Final Recommendation: Acme Co. Pricing",
+    "body": "Thx for sharing the doc, Alex. Read it over.\n\nThe 'efficiency review' and potential migration work you mention isn't trivial. If we go down this path, I'll need a formal ticket (e.g., LAN-2031) to have my team scope the work properly. Mei Tanaka can advise on the architecture for a more sustainable solution for them. We need to make sure this 'credit' doesn't become a hidden eng project.\n\n-Sarah",
+    "metadata": {
+      "date": "2026-05-18T10:11:00-04:00",
+      "threadKey": "acme-pricing",
+      "ticket": "LAN-2031",
+      "from": "sarah.okafor@helio.com",
+      "to": [
+        "alex.chen@helio.com"
+      ],
+      "cc": [
+        "priya.iyer@helio.com",
+        "layla.hassan@helio.com",
+        "diego.salas@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Acme Co. Pricing Decision - Notes",
+    "body": "Attendees:\n- Alex Chen\n- Priya Iyer\n- Layla Hassan\n- Diego Salas\n- Sarah Okafor\n\nDiscussion:\n- Alex presented the 3 options from the recommendation doc.\n- Sarah raised concerns about the engineering cost of the 'efficiency review' in Option 2, requesting it be formally tracked.\n- Layla confirmed that a $40k credit would likely be enough to secure the renewal.\n\nDecisions:\n- The team has decided to move forward with Option 2: Offer a one-time $40,000 service credit.\n- The offer is conditional on a joint technical review to optimize Acme's usage.\n\nAction Items:\n- [AI] Layla Hassan: Communicate the decision and offer to Acme Co. by EOD May 20.\n- [AI] Alex Chen: Create a ticket (LAN-2031) for Engineering to scope the 'efficiency review' work. Due: May 23.",
+    "metadata": {
+      "date": "2026-05-19T11:40:00-04:00",
+      "threadKey": "acme-pricing",
+      "ticket": "LAN-2031",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer",
+        "Layla Hassan",
+        "Diego Salas",
+        "Sarah Okafor"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Decision on Acme Co. Pricing",
+    "body": "Team,\n\nFollowing our meeting, the decision is to move forward with Option 2 from the recommendation doc. We will offer Acme Co. a one-time $40,000 service credit, contingent on a joint efficiency review.\n\nLayla, please take the lead on communicating this to the customer. Let us know how the conversation goes.\n\nSarah, I will create ticket LAN-2031 for the scoping work as we discussed.\n\nThanks everyone for the input.\n\nAlex",
+    "metadata": {
+      "date": "2026-05-19T12:05:00-04:00",
+      "threadKey": "acme-pricing",
+      "ticket": "LAN-2031",
+      "from": "alex.chen@helio.com",
+      "to": [
+        "layla.hassan@helio.com",
+        "diego.salas@helio.com",
+        "priya.iyer@helio.com",
+        "sarah.okafor@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Decision on Acme Co. Pricing",
+    "body": "For tracking purposes, any credits issued against future platform work must be logged in our central finance tracker. The form is located at `http://intranet/finance/credit-form`.\n\nPlease ensure this is completed by the EOW so it can be reconciled against the Q2-end forecast.\n\nThank you,\n\nTomas Reinholz\nEng Lead, Platform",
+    "metadata": {
+      "date": "2026-05-20T09:14:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "tomas.reinholz@helio.com",
+      "to": [
+        "alex.chen@helio.com",
+        "layla.hassan@helio.com",
+        "diego.salas@helio.com",
+        "priya.iyer@helio.com",
+        "sarah.okafor@helio.com"
+      ],
+      "cc": [
+        "platform-team@helio.com",
+        "finance-ops@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Update on Q3 Pricing",
+    "body": "Alex, Priya,\n\nGood news and bad news. They've accepted the credit. The renewal is safe. \n\nHowever, Bob Kincaid is firm on wanting a direct conversation with product leadership to discuss the 'strategic partnership' and avoid future surprises. See below. How do you want to handle this?\n\nDiego\n\n--- Forwarded Message ---\nFrom: Bob Kincaid <b.kincaid@acme.co>\nDate: Wed, 21 May 2026 15:30:11 -0400\nTo: Layla Hassan <layla.hassan@helio.com>\nCc: Diego Salas <diego.salas@helio.com>\nSubject: Re: Update on Q3 Pricing\n\nLayla,\n\nWe will accept the service credit as a show of good faith. Please proceed with the paperwork.\n\nHowever, this incident has highlighted a need for a deeper conversation about our partnership. I would like to schedule a call with your VP of Product in the coming weeks to ensure our long-term needs are aligned with your roadmap. Please have someone from that team reach out to my office to coordinate.\n\nBob",
+    "metadata": {
+      "date": "2026-05-21T15:45:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "diego.salas@helio.com",
+      "to": [
+        "alex.chen@helio.com",
+        "priya.iyer@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Acme Co. Q3 QBR Planning",
+    "body": "Agenda: Internal pre-planning for the Acme Co. Q3 QBR. Key topic: long-term usage optimization and roadmap alignment.",
+    "metadata": {
+      "date": "2026-05-21T16:00:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "alex.chen@helio.com",
+      "participants": [
+        "alex.chen@helio.com",
+        "priya.iyer@helio.com",
+        "layla.hassan@helio.com",
+        "diego.salas@helio.com"
+      ],
+      "eventTime": "2026-06-05T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Lantern: Weekly Product-Design Sync",
+    "body": "Attendees:\n- Alex Chen\n- Ben Aoki\n- Noor Abadi\n\nDiscussion:\n- Noor shared a Loom walking through progress on the dashboard filter persistence (LAN-1985). Feedback was positive.\n- Ben shared a Figma link for new chart variant explorations.\n- Alex provided an update on the Q3 roadmap, noting a potential resource need for some technical discovery work related to a large customer (Acme).\n- Ben: \"So, I hear we're building custom dashboards for Acme now?\"\n- Alex clarified it's a usage optimization review, not new feature work, but may lead to future roadmap items for better cost controls.\n\nAction Items:\n- [AI] Alex: Finalize ticket LAN-2031 for the Acme review so Ben can assign design resources if needed.",
+    "metadata": {
+      "date": "2026-05-22T10:30:00-04:00",
+      "threadKey": "acme-pricing",
+      "ticket": "LAN-2031",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Decision on Acme Co. Pricing",
+    "body": "Alex,\n\nFYI, the call with Bob was tense but we got there. They accepted the credit.\n\nThey're pushing hard for that call with you and Priya to discuss the 'strategic partnership'. I'm trying to hold them off and roll it into the formal QBR, but they see this as a separate issue. Let me know how you want me to play it.\n\nLayla",
+    "metadata": {
+      "date": "2026-05-22T14:12:00-04:00",
+      "threadKey": "acme-pricing",
+      "from": "layla.hassan@helio.com",
+      "to": [
+        "alex.chen@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Pipeline update for Junior PM role (Helio-412)",
+    "body": "Hi Alex,\n\nQuick update on the Junior PM pipeline for the Lantern team:\n\n- Camila Reyes: Strong profile, ex-Looker, seems to have solid data chops. I think she's worth fast-tracking.\n- Anand Krishna: Mixed background, some startup experience but jumped around a bit. My initial screen was okay, but not a slam dunk.\n- Yuki Sato: Very junior, but from a great university program. Might be a good long-term bet.\n\nProfiles are attached in Greenhouse. Let me know who you want to prioritize for screens.\n\nBest,\nHelena",
+    "metadata": {
+      "date": "2026-05-05T10:15:11-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Helena Park",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Pipeline update for Junior PM role (Helio-412)",
+    "body": "Camila looks strong, let's fast track to an onsite loop. No need for another screen from me.\n\nAnand's experience seems scattered. What's your read on his B2B analytics knowledge specifically?",
+    "metadata": {
+      "date": "2026-05-06T09:28:45-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Alex Chen",
+      "to": [
+        "Helena Park"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Pipeline update for Junior PM role (Helio-412)",
+    "body": "My read on Anand is similar, he was a bit vague on the B2B side. I can set up a final 30min screen with you if you'd like to make the final call.\n\nAgree on Camila. I'll start putting together the onsite panel. Let's schedule a quick prep call tomorrow to align on the interview loop structure.",
+    "metadata": {
+      "date": "2026-05-06T11:03:19-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Helena Park",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Camila Reyes Onsite Prep",
+    "body": "Agenda: Align on interview loop and focus areas for the Junior PM role.",
+    "metadata": {
+      "date": "2026-05-07T14:00:00-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Alex Chen",
+        "Helena Park"
+      ],
+      "eventTime": "2026-05-07T14:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Camila Reyes Onsite Plan",
+    "body": "Attendees: Alex Chen, Helena Park\n\nDiscussion:\n- Confirmed fast-track for Camila. Target onsite for week of May 19.\n- Alex wants a focus on product sense, data interpretation, and collaboration with eng/design.\n\nInterview Loop Plan:\n- Alex Chen: Product Sense & Strategy (case study on pricing change impact)\n- Sarah Okafor: Execution & Eng Collab (technical feasibility questions)\n- Ben Aoki & Noor Abadi: Design Collab & User Empathy (portfolio review, Figma critique)\n- Priya Iyer: Exec Review & Culture Fit (Helio values, career goals)\n\nAction Items:\n- [Helena] to schedule the full loop with the panel.\n- [Alex] to finalize and share the case study prompt with the interviewers.",
+    "metadata": {
+      "date": "2026-05-07T14:25:30-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Alex Chen",
+        "Helena Park"
+      ]
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Junior PM Interview Guide - Lantern Team",
+    "body": "Hiring Profile: Junior PM, Lantern Team\n\nWe are looking for a candidate who is strong in first-principles thinking, demonstrates high user empathy, and can navigate technical conversations. They should be data-literate and capable of owning small-to-medium features from discovery to launch.\n\nCase Study Prompt (for Product Sense interview):\n\nContext: Helio is planning to introduce a new pricing tier in Q3 that limits access to certain advanced analytics features, currently available to all customers. Acme Co., a key customer, has expressed strong opposition to this change. \n\nQuestion: As the PM for the Lantern workspace, how would you analyze the potential impact of this change? What data would you look at? How would you frame the problem and potential solutions for leadership?\n\nEvaluation Criteria:\n- Problem Structuring: Can they break down the ambiguous problem?\n- Data & Metrics: Do they identify relevant quantitative and qualitative inputs?\n- Customer Empathy: Do they consider the user (Acme) perspective vs. just the business need?\n- Tradeoffs: Can they articulate the pros and cons of different paths forward?",
+    "metadata": {
+      "date": "2026-05-08T16:10:00-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Junior PM Interview Guide - Lantern Team",
+    "body": "All,\n\nThe hiring loop for PM candidate Camila Reyes is being scheduled for the week of the 19th. Please review the attached guide, specifically the Lantern-focused case study we'll be using.\n\nLet me know if you have any questions about the focus areas.\n\nAlex",
+    "metadata": {
+      "date": "2026-05-09T11:45:00-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Alex Chen",
+      "to": [
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Ben Aoki"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Onsite Interview: Camila Reyes for Junior PM (Helio-412) - Mon May 19",
+    "body": "Team,\n\nPlease see the confirmed schedule for Camila's onsite this coming Monday. The resume and interview guide are in Greenhouse (link below). Please ensure you block time to submit feedback directly after your interview.\n\nSchedule:\n10:00 - 11:00: Product Sense w/ Alex Chen\n11:00 - 12:00: Eng Collab w/ Sarah Okafor\n12:00 - 13:00: Lunch\n13:00 - 14:00: Design Collab w/ Ben Aoki & Noor Abadi\n14:00 - 14:45: Exec Review w/ Priya Iyer\n15:00 - 15:30: Debrief Prep (Hiring Committee only)\n\nThanks,\nHelena",
+    "metadata": {
+      "date": "2026-05-12T15:20:14-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Helena Park",
+      "to": [
+        "Alex Chen",
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Interview: Alex Chen & Camila Reyes (Product Sense)",
+    "body": "Agenda: Helio-412 Junior PM interview. Focus on case study.",
+    "metadata": {
+      "date": "2026-05-19T10:00:00-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Alex Chen",
+        "Camila Reyes"
+      ],
+      "eventTime": "2026-05-19T10:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Interview: Sarah Okafor & Camila Reyes (Execution & Eng Collab)",
+    "body": "Agenda: Helio-412 Junior PM interview. Focus on technical collaboration.",
+    "metadata": {
+      "date": "2026-05-19T11:00:00-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Sarah Okafor",
+        "Camila Reyes"
+      ],
+      "eventTime": "2026-05-19T11:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Interview: Ben Aoki/Noor Abadi & Camila Reyes (Design Collab)",
+    "body": "Agenda: Helio-412 Junior PM interview. Focus on design process and critique.",
+    "metadata": {
+      "date": "2026-05-19T13:00:00-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Ben Aoki",
+        "Noor Abadi",
+        "Camila Reyes"
+      ],
+      "eventTime": "2026-05-19T13:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Interview: Priya Iyer & Camila Reyes (Exec Review)",
+    "body": "Agenda: Helio-412 Junior PM interview. Focus on strategy and culture.",
+    "metadata": {
+      "date": "2026-05-19T14:00:00-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Priya Iyer",
+        "Camila Reyes"
+      ],
+      "eventTime": "2026-05-19T14:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct Message",
+    "body": "[Ben Aoki] Just finished with Camila. She's sharp. Handled the prototype critique really well. Figma feedback was on point.\n[Alex Chen] Great to hear. My session was strong too. Thanks for doing this.",
+    "metadata": {
+      "date": "2026-05-19T14:05:23-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Ben Aoki",
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "ACTION: Submit feedback for Camila Reyes",
+    "body": "Hi team,\n\nJust a reminder to please submit your scorecards in Greenhouse for Camila Reyes by EOD today. This will allow us to have a productive debrief tomorrow morning.\n\nThanks,\nHelena",
+    "metadata": {
+      "date": "2026-05-19T16:30:00-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Helena Park",
+      "to": [
+        "Alex Chen",
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct Message",
+    "body": "[Marcus Bell] Heard the PM candidate onsite went well. Find our next superstar?\n[Alex Chen] Early days, but she was good. Debrief tomorrow.",
+    "metadata": {
+      "date": "2026-05-19T17:12:41-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Marcus Bell",
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Debrief: Camila Reyes (Junior PM)",
+    "body": "Attendees: Alex Chen, Priya Iyer, Sarah Okafor, Ben Aoki, Helena Park\n\nSummary:\n- Unanimously positive feedback from all interviewers.\n- Alex: Strong on the case study, quickly grasped the business/customer tension. Structured thinking.\n- Sarah: Asked great questions about our dev process and API limitations. No red flags on eng collaboration.\n- Ben: Excellent product sense during the design critique. Gave actionable feedback.\n- Priya: Very polished. Good grasp of B2B SaaS landscape. Asked thoughtful questions about our strategy.\n\nDecision: Strong Hire. Proceed to offer stage.\n\nAction Items:\n- [Alex] to write up the final recommendation for the offer packet. Due EOD Wed.\n- [Helena] to begin prepping the compensation package based on a PM1 level.",
+    "metadata": {
+      "date": "2026-05-20T10:28:15-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Helena Park"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Camila Reyes",
+    "body": "Good debrief. Send me your written summary for the packet. Need to decide on level and comp.\n\nWhat are your thoughts?\n- Bullets please.",
+    "metadata": {
+      "date": "2026-05-20T10:45:01-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Priya Iyer",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Voice memo",
+    "body": "Camila killed it. Everyone loves her. Need to write up that summary for Priya tonight. I think she's a solid PM1, maybe top of band given the ex-Looker experience. Must not forget to formally reject Anand in Greenhouse. And tell Helena to pause on Yuki for now, no need to string her along.",
+    "metadata": {
+      "date": "2026-05-20T18:05:00-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Camila Reyes",
+    "body": "Attached. Summary below.\n\n- Strong PM1 candidate. Clearly exceeds bar for the role.\n- Comes from a direct competitor (Looker) with excellent, relevant training in analytics space.\n- Demonstrated strong product sense, technical literacy, and customer empathy throughout the loop.\n- Recommend offer at top of PM1 band to be competitive and signal our excitement. We should move fast.",
+    "metadata": {
+      "date": "2026-05-21T09:00:55-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Alex Chen",
+      "to": [
+        "Priya Iyer"
+      ],
+      "cc": [
+        "Helena Park"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Hiring Sync: Anand Krishna / Yuki Sato",
+    "body": "Attendees: Alex Chen, Helena Park\n\nTopic: Status of other Junior PM candidates.\n\nDiscussion:\n- Anand Krishna: Alex conducted a final screen call. Confirmed Helena's initial read - good communicator but lacked depth on B2B analytics and data modeling. Not a fit for this specific role.\n- Yuki Sato: Resume is promising, but still very early in career. Might be a fit for a true entry-level APM role in the future, but not this one.\n\nDecisions:\n- Anand Krishna: No Hire. [Helena] to send rejection.\n- Yuki Sato: Keep Warm. [Helena] to add to long-term prospect list for future roles, no further action at this time.",
+    "metadata": {
+      "date": "2026-05-21T11:20:00-04:00",
+      "threadKey": "hiring-pm",
+      "participants": [
+        "Alex Chen",
+        "Helena Park"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Offer for Camila Reyes",
+    "body": "Alex,\n\nThe offer packet for Camila is with finance for final approval. Looks good to go. Thanks for the quick turnaround on the feedback and summary doc.\n\nI've closed out Anand in Greenhouse and will keep Yuki on my list for future roles.\n\nWill let you know as soon as the verbal offer is extended and how she responds.\n\nHelena",
+    "metadata": {
+      "date": "2026-05-22T13:45:00-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Helena Park",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Offer for Camila Reyes",
+    "body": "Great, keep me posted.",
+    "metadata": {
+      "date": "2026-05-22T13:46:10-04:00",
+      "threadKey": "hiring-pm",
+      "from": "Alex Chen",
+      "to": [
+        "Helena Park"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Q3 Planning: Platform Dependency for Audit Log Service (PLT-880)",
+    "body": "All,\n\nAs Q3 roadmap planning is being finalized, I want to formally flag the Platform team's initiative to refactor the core audit logging service (PLT-880). This will introduce breaking changes and require all dependent services, including Lantern, to migrate to the new v2 API.\n\nTo de-risk Q4, we are strongly recommending that all teams prioritize this migration work in Q3. The current service will be deprecated by EOY.\n\nPlease ensure you are allocating engineering resources accordingly. We estimate this as a 4-week effort for a senior engineer.\n\n-Tomas",
+    "metadata": {
+      "date": "2026-05-05T09:15:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Tomas Reinholz <tomas.reinholz@helio.com>",
+      "to": [
+        "eng-leads@helio.com",
+        "product-leads@helio.com"
+      ],
+      "cc": [],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Q3 Planning: Platform Dependency for Audit Log Service (PLT-880)",
+    "body": "Alex,\n\nHave you seen this? A 4-week effort for the audit log migration seems high. The proposed architecture in PLT-880 has some non-trivial implications for how we currently handle event streams in Lantern. We should discuss.\n\n-Mei",
+    "metadata": {
+      "date": "2026-05-05T11:02:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Mei Tanaka <mei.tanaka@helio.com>",
+      "to": [
+        "Alex Chen <alex.chen@helio.com>"
+      ],
+      "cc": [],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Planning: Platform Dependency for Audit Log Service (PLT-880)",
+    "body": "Tomas,\n\nThanks for flagging. For the Lantern team, Q3 is already committed to the new Reporting Suite and the Acme Co. performance dashboards (LAN-2031).\n\nA 4-week migration is a significant ask that would put those committed deliverables at risk. Can this migration be deferred to Q4? The value prop for Lantern is not immediately clear.\n\n-Alex",
+    "metadata": {
+      "date": "2026-05-06T14:20:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Alex Chen <alex.chen@helio.com>",
+      "to": [
+        "Tomas Reinholz <tomas.reinholz@helio.com>"
+      ],
+      "cc": [
+        "eng-leads@helio.com",
+        "product-leads@helio.com"
+      ],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Planning: Platform Dependency for Audit Log Service (PLT-880)",
+    "body": "Alex,\n\nRespectfully, deferring this work introduces significant technical debt and risk. This is not just a feature, it's a foundational effort to improve security and scalability across the entire Helio platform. Leaving Lantern on the v1 API creates a growing maintenance burden for my team and a potential security surface we are explicitly trying to close.\n\nThe value prop is platform stability, which benefits all teams, including yours.\n\nPriya, Sarah – looping you in for visibility on this cross-team dependency. We need to find a path to get this done in Q3.\n\n-Tomas",
+    "metadata": {
+      "date": "2026-05-06T16:51:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Tomas Reinholz <tomas.reinholz@helio.com>",
+      "to": [
+        "Alex Chen <alex.chen@helio.com>"
+      ],
+      "cc": [
+        "eng-leads@helio.com",
+        "product-leads@helio.com",
+        "Priya Iyer <priya.iyer@helio.com>",
+        "Sarah Okafor <sarah.okafor@helio.com>"
+      ],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct message with Sarah Okafor",
+    "body": "hey alex, saw the thread from tomas. he's not wrong about the risk, but blowing up your roadmap isn't the way to solve it. let's sync with priya and figure out our response. can you put together a quick doc on the tradeoffs?",
+    "metadata": {
+      "date": "2026-05-07T10:11:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Sarah Okafor",
+      "to": [
+        "Alex Chen"
+      ],
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor"
+      ]
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Voice memo to self",
+    "body": "Note to self re: audit logs. Tomas is turning this into a crusade, cc'ing the world. It's platform work masquerading as a security apocalypse. The real issue is he wants to clear his own team's backlog. I need to frame this for Priya purely in terms of Q3 roadmap impact. What gets cut if this gets added? The Acme dashboard work, most likely. That's a non-starter.",
+    "metadata": {
+      "date": "2026-05-07T18:30:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "[Draft] Tradeoffs: PLT-880 Audit Log Migration in Q3",
+    "body": "To: Priya Iyer, Sarah Okafor\nFrom: Alex Chen\nDate: May 8, 2026\n\nThis document outlines the tradeoffs of incorporating the Platform team's audit log migration (PLT-880) into the Lantern team's Q3 roadmap.\n\n**Background:**\nThe Platform team is deprecating the v1 audit log service and requires all teams to migrate to a new v2 API. They have requested this work be completed in Q3 to de-risk EOY deadlines. The initial estimate for the Lantern team is 4 engineering weeks.\n\n**Option 1: Complete PLT-880 Migration in Q3**\n*   **Pros:**\n    *   Aligns with Platform team's timeline.\n    *   Eliminates technical debt and future migration pressure in Q4.\n    *   Stays on a supported, more secure service.\n*   **Cons (Impact on Lantern Roadmap):**\n    *   The 4-week estimate consumes ~30% of our Q3 backend engineering capacity.\n    *   The Acme Co. performance dashboard project (LAN-2031), a key customer commitment, would be delayed until Q4.\n    *   New Reporting Suite features would be descoped significantly.\n\n**Option 2: Defer PLT-880 Migration to Q4**\n*   **Pros:**\n    *   Allows Lantern team to deliver on existing Q3 customer and business commitments (Acme dashboards, Reporting Suite).\n    *   Provides more time to properly scope and resource the migration work.\n*   **Cons:**\n    *   Creates friction with the Platform team.\n    *   Requires Lantern to operate on a deprecated service for an additional quarter, accepting the stated (though unquantified) security/stability risk.\n    *   Adds pressure to an already busy Q4 roadmap.\n\n**Recommendation:**\nMy recommendation is Option 2. The direct, committed revenue and customer satisfaction tied to the Acme Co. work outweighs the internal platform-driven deadline for PLT-880. We can formally slot the migration into the Q4 plan.",
+    "metadata": {
+      "date": "2026-05-08T15:00:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Alex Chen",
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Tradeoffs for PLT-880 Audit Log work in Q3",
+    "body": "Priya, Sarah,\n\nPer our chat, here is the tradeoff analysis for pulling the PLT-880 work into Q3.\n\nDoc link: [Draft] Tradeoffs: PLT-880 Audit Log Migration in Q3\n\nMy strong bias is to protect the Acme work and push this to Q4. Let me know what you think.\n\n-Alex",
+    "metadata": {
+      "date": "2026-05-08T15:05:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Alex Chen <alex.chen@helio.com>",
+      "to": [
+        "Priya Iyer <priya.iyer@helio.com>",
+        "Sarah Okafor <sarah.okafor@helio.com>"
+      ],
+      "cc": [],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Tradeoffs for PLT-880 Audit Log work in Q3",
+    "body": "Thx. Clear tradeoffs.\n\n- Acme work can't slip.\n- Platform's concerns are valid but not quantified.\n\nSet up a 30min with you, me, Sarah, and Tomas. Let's get to a decision.",
+    "metadata": {
+      "date": "2026-05-09T09:32:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Priya Iyer <priya.iyer@helio.com>",
+      "to": [
+        "Alex Chen <alex.chen@helio.com>"
+      ],
+      "cc": [
+        "Sarah Okafor <sarah.okafor@helio.com>"
+      ],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Q3 Roadmap: Audit Log Dependency (PLT-880)",
+    "body": "Agenda: Align on timing for the PLT-880 migration for the Lantern team.",
+    "metadata": {
+      "date": "2026-05-09T10:00:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Alex Chen",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Tomas Reinholz"
+      ],
+      "eventTime": "2026-05-12T11:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Q3 Roadmap - Audit Log Dependency",
+    "body": "Date: 12 May 2026\n\n**Attendees:**\n* Alex Chen\n* Priya Iyer\n* Sarah Okafor\n* Tomas Reinholz\n\n**Discussion:**\n*   Alex presented the tradeoff doc: doing PLT-880 in Q3 would require slipping the Acme Co. dashboard project.\n*   Priya stated that the Acme commitment is non-negotiable.\n*   Tomas reiterated the security and maintenance risks of keeping Lantern on the v1 audit log API through Q4.\n*   Sarah questioned the 4-week estimate from Platform, suggesting it feels high without a proper technical breakdown from the Lantern team's perspective. Mei has also flagged this.\n\n**Decisions:**\n*   A final decision on Q3 vs Q4 is DEFERRED.\n*   The 4-week estimate needs to be validated before a final decision can be made.\n\n**Action Items:**\n*   **AI-1 (Alex/Sarah):** Organize a technical deep-dive session between Lantern (Mei) and Platform engineers to produce a more grounded estimate for the migration. Due EOW.",
+    "metadata": {
+      "date": "2026-05-12T11:35:00-04:00",
+      "threadKey": "audit-log",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Tomas Reinholz"
+      ],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Q3 Roadmap: Audit Log Dependency (PLT-880)",
+    "body": "All,\n\nTo summarize today's discussion, we are in agreement that the PLT-880 migration is critical. The primary open question is the level of effort required from the Lantern team.\n\nMy team will support the technical deep-dive to refine the estimate. However, I want to be clear that any significant delay past Q3 continues to introduce platform-wide risk, which is a tradeoff we are making explicitly.\n\n-Tomas",
+    "metadata": {
+      "date": "2026-05-12T12:05:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Tomas Reinholz <tomas.reinholz@helio.com>",
+      "to": [
+        "Alex Chen <alex.chen@helio.com>",
+        "Priya Iyer <priya.iyer@helio.com>",
+        "Sarah Okafor <sarah.okafor@helio.com>"
+      ],
+      "cc": [],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Tech Sync: PLT-880 Audit Log Migration Scoping",
+    "body": "Agenda: Technical deep dive and effort estimation for Lantern migration to v2 audit log API.",
+    "metadata": {
+      "date": "2026-05-13T09:45:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Sarah Okafor",
+      "participants": [
+        "Sarah Okafor",
+        "Mei Tanaka",
+        "Tomas Reinholz",
+        "Alex Chen"
+      ],
+      "eventTime": "2026-05-15T14:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct message with Marcus Bell",
+    "body": "hey alex, just saw an invite for an \"Audit Log Migration Scoping\" meeting. you getting pulled into platform drama? grab coffee next week and we can trade war stories.",
+    "metadata": {
+      "date": "2026-05-14T11:23:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ],
+      "participants": [
+        "Alex Chen",
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Tech Sync PLT-880",
+    "body": "Date: 15 May 2026\n\n**Attendees:**\n* Sarah Okafor\n* Mei Tanaka\n* Tomas Reinholz\n* Alex Chen\n\n**Discussion:**\n*   Tomas's team walked through the v2 API spec and the motivation for the changes (structured logging, better indexing for security searches).\n*   Mei asked detailed questions about event batching and error handling, which seem to be the primary points of complexity for Lantern's implementation.\n*   The current v1 client in Lantern has a lot of custom logic that would need to be re-thought, not just replaced.\n*   Mei believes the core migration is straightforward, but building a robust, fault-tolerant implementation for Lantern's high-throughput event stream is the complex part.\n\n**Outcome:**\n*   The original 4-week estimate is likely too high for a basic migration, but too low for a truly robust one.\n*   Mei will draft a short tech spec with two options: a 'quick-and-dirty' migration (~1.5 weeks) and a 'right way' migration (~3 weeks).\n\n**Action Items:**\n*   **AI-1 (Mei):** Draft 1-pager tech spec with two migration approaches and their respective risks/benefits. Due Mon, May 19.",
+    "metadata": {
+      "date": "2026-05-15T15:01:00-04:00",
+      "threadKey": "audit-log",
+      "participants": [
+        "Sarah Okafor",
+        "Mei Tanaka",
+        "Tomas Reinholz",
+        "Alex Chen"
+      ],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Direct message with Mei Tanaka",
+    "body": "Hey Mei, thanks for driving that discussion. Super helpful. Any private thoughts on Tomas's approach? Just between us.",
+    "metadata": {
+      "date": "2026-05-16T10:30:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Alex Chen",
+      "to": [
+        "Mei Tanaka"
+      ],
+      "participants": [
+        "Alex Chen",
+        "Mei Tanaka"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "My thoughts on PLT-880 sync",
+    "body": "Alex,\n\nReplying here instead of Slack. My take is that the Platform team has optimized for their own development convenience and is pushing the integration complexity downstream to client teams. The v2 API is clean, but it's ignorant of real-world use cases like ours.\n\nThe 'quick' migration path he seemed to favor is risky. It would make us vulnerable to data loss during high-load periods.\n\nI've started a diagram to illustrate the architectural differences and why the more robust approach is necessary for Lantern. I will include this in my 1-pager.\n\nLink: [diagram_lantern_audit_v2.png]\n\n-Mei",
+    "metadata": {
+      "date": "2026-05-16T11:15:00-04:00",
+      "threadKey": "audit-log",
+      "from": "Mei Tanaka <mei.tanaka@helio.com>",
+      "to": [
+        "Alex Chen <alex.chen@helio.com>"
+      ],
+      "cc": [],
+      "ticket": "PLT-880"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Prep for 1:1 w/ Priya (May 19)",
+    "body": "Date: 16 May 2026 (for meeting on 19 May)\n\n**Topics:**\n*   **Acme Co. renewal:** Diego flagged more pricing pushback. Need a strategy. Layla is asking for a concession.\n*   **Q3 Roadmap / PLT-880:**\n    *   Tech sync is done. New estimate is pending from Mei (1.5w vs 3w).\n    *   Tomas is still pushing hard for Q3. He's framing it as a security issue.\n    *   Mei's analysis shows the 'quick' path is risky for Lantern's data integrity.\n    *   My position remains: Protect Acme work. The 'right way' 3-week migration can be our top priority for Q4.\n*   **PM hiring:** Helena has two new candidates for the open PM role. Reviewing profiles this weekend.",
+    "metadata": {
+      "date": "2026-05-16T16:45:00-04:00",
+      "threadKey": "audit-log",
+      "participants": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-04T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-04T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Lantern Daily Standup 2026-05-04",
+    "body": "Attendees: Alex, Sarah, Ben, Mei, Noor\n\n- Mei: Continuing work on query optimization (LAN-1988). No blockers.\n- Ben: Finalizing mocks for date picker improvements. Will share in #design-lantern today.\n- Noor: Working on Loom for async feedback on the new dashboard layout.\n- Alex: Q3 roadmap review with Priya this afternoon. Will relay any feedback.",
+    "metadata": {
+      "date": "2026-05-04T10:15:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Coffee?",
+    "body": "Hey Alex, been a minute! Let's catch up on Q3 planning. Got 15 mins for a coffee chat next week?",
+    "metadata": {
+      "date": "2026-05-04T11:20:00-04:00",
+      "threadKey": "background",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Weekly: Product Team Sync",
+    "body": "Agenda: Round-robin updates, cross-team dependencies.",
+    "metadata": {
+      "date": "2026-05-04T12:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Alex Chen",
+        "Marcus Bell"
+      ],
+      "eventTime": "2026-05-04T13:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Product Team Sync 2026-05-04",
+    "body": "Attendees: Priya, Alex, Marcus\n\n- Marcus: 'Pathfinder' team is seeing usage metrics dip. Planning a few experiments to test re-engagement.\n- Alex: Lantern Q3 roadmap is in draft. Focus on enterprise readiness and performance.\n- Priya: Asked both to add success metrics to their Q3 plans by EOW.\n\nAI (Alex): Add success metrics to Lantern Q3 doc.\nAI (Marcus): Add success metrics to Pathfinder Q3 doc.",
+    "metadata": {
+      "date": "2026-05-04T14:02:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Alex Chen",
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-05T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-05T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Lunch order",
+    "body": "> @channel - I'm ordering from Sweetgreen, anyone want in? Putting it in at 11:45.\n\nYes please! Usual for me. Venmoing.",
+    "metadata": {
+      "date": "2026-05-05T11:35:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen",
+      "participants": [
+        "Alex Chen",
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Coffee?",
+    "body": "Hey Marcus, definitely. I'll send over an invite.",
+    "metadata": {
+      "date": "2026-05-05T14:10:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen",
+      "to": [
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Coffee: Alex / Marcus",
+    "body": "Catch up.",
+    "metadata": {
+      "date": "2026-05-05T14:11:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Marcus Bell"
+      ],
+      "eventTime": "2026-05-12T15:00:00-04:00",
+      "eventLocation": "HQ — Kitchen"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "1:1 Alex/Priya",
+    "body": "Weekly check-in.",
+    "metadata": {
+      "date": "2026-05-05T15:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer"
+      ],
+      "eventTime": "2026-05-05T16:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Reminder re: Mixpanel",
+    "body": "Voice note to self: Check the renewal date for the Mixpanel contract. I think it's in Q3, need to budget for it if we're keeping the enterprise plan.",
+    "metadata": {
+      "date": "2026-05-05T17:30:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-06T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-06T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Lantern Daily Standup 2026-05-06",
+    "body": "Attendees: Alex, Sarah, Mei, Noor (Ben OOO)\n\n- Mei: Found an issue with caching layers, working with Platform on it. Ticket PLAT-412.\n- Noor: Loom for dashboard v2 is ready, will post in channel.\n- Sarah: Syncing with Mei on the caching issue. It might have a minor impact on LAN-1988 timeline.\n- Alex: No updates.",
+    "metadata": {
+      "date": "2026-05-06T10:16:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "[JIRA] Issue Updated (LAN-2031) - Add 'last updated' sort option to tables",
+    "body": "A comment was added to LAN-2031:\n\nBen Aoki: @Alex Chen here's the figma link for the new sort icon states: figma.com/file/xyz...",
+    "metadata": {
+      "date": "2026-05-06T11:05:00-04:00",
+      "threadKey": "background",
+      "from": "JIRA",
+      "to": [
+        "Alex Chen",
+        "Ben Aoki"
+      ],
+      "ticket": "LAN-2031"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Weekly: Lantern Design Sync",
+    "body": "Reviewing this week's mocks and prototypes.",
+    "metadata": {
+      "date": "2026-05-06T13:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-06T14:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Lantern Design Sync 2026-05-06",
+    "body": "Attendees: Alex, Noor (Ben OOO)\n\n- Noor walked through the v2 dashboard layout prototype (Loom link shared async).\n- Discussion around filter interaction. Current model feels a bit clunky.\n- Alex: The primary goal is speed and clarity. Let's not add too many new UI patterns.\n\nAI (Noor): Explore a simplified filter interaction model. Due next sync.",
+    "metadata": {
+      "date": "2026-05-06T14:31:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Reminder: Open Enrollment Ends May 20th",
+    "body": "Hi team,\n\nThis is a friendly reminder that the window to make changes to your benefits plan for the upcoming year closes on Wednesday, May 20th.\n\nPlease log in to the benefits portal to confirm your selections.\n\nThanks,\nNina Chen, HR",
+    "metadata": {
+      "date": "2026-05-07T09:03:00-04:00",
+      "threadKey": "background",
+      "from": "Nina Chen",
+      "to": [
+        "company-all@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-07T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-07T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Fwd: Urgent Deal Desk Request: SkyCorp - Tier clarification",
+    "body": "Alex - Can you confirm if the 'export API' is part of our Enterprise tier or if it can be an add-on for Pro? SkyCorp is asking and we need to get their renewal quote out today. Contract value is $120k.\n\n---\nBegin forwarded message:\nFrom: Layla Hassan\nSubject: Urgent Deal Desk Request: SkyCorp - Tier clarification",
+    "metadata": {
+      "date": "2026-05-07T11:15:00-04:00",
+      "threadKey": "background",
+      "from": "Layla Hassan",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Urgent Deal Desk Request: SkyCorp - Tier clarification",
+    "body": "It's Enterprise only. We can't unbundle it. Holds true for Acme Co as well.",
+    "metadata": {
+      "date": "2026-05-07T11:18:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen",
+      "to": [
+        "Layla Hassan"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Helio All-Hands",
+    "body": "Company-wide updates and Q&A.",
+    "metadata": {
+      "date": "2026-05-07T16:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "all-employees@helio.com"
+      ],
+      "eventTime": "2026-05-07T17:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-08T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-08T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Lantern Daily Standup 2026-05-08",
+    "body": "Attendees: Alex, Sarah, Ben, Mei, Noor\n\n- Mei: Caching issue resolved. PLAT-412 is closed. Back on track for LAN-1988.\n- Ben: Date picker mocks are finalized.\n- Noor: Simplified filter exploration is promising, will have something for review Monday.\n- Sarah: Sprint goals are looking good for this week. Good work team.",
+    "metadata": {
+      "date": "2026-05-08T10:14:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Recording & notes: Helio All-Hands (May 7)",
+    "body": "Hi everyone,\n\nFor those who couldn't make it, the recording of yesterday's All-Hands is now available.\n\nLink: [zoom.us/rec/xyz]\n\nKey highlights are also summarized in the shared doc here: [Helio Q2 2026 All-Hands Recap]",
+    "metadata": {
+      "date": "2026-05-08T10:30:00-04:00",
+      "threadKey": "background",
+      "from": "Internal Comms",
+      "to": [
+        "company-all@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "Helio Q2 2026 All-Hands Recap",
+    "body": "This document summarizes the key topics from the May 7, 2026 All-Hands meeting.\n\nCEO Update: Our CEO reviewed Q1 performance against goals, highlighting a 15% beat on our new ARR target. He also discussed the competitive landscape and our focus for H2: enterprise readiness and international expansion.\n\nProduct & Eng Update: Priya Iyer (VP Product) and the VP of Engineering gave an overview of the Q2 product delivery highlights, including major releases from the Pathfinder and Lantern teams. They previewed the Q3 focus on platform stability and closing key enterprise feature gaps.\n\nPeople & Culture: Nina Chen (HR) announced the upcoming performance review cycle and reminded everyone about the Open Enrollment deadline (May 20). She also welcomed the 5 new hires who started in April.\n\nQ&A: Questions from the team covered topics ranging from the return-to-office policy (still optional), the status of the SOC2 audit (in progress), and the date of the summer party (TBD).",
+    "metadata": {
+      "date": "2026-05-08T10:31:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Weekly: Eng Leadership Sync",
+    "body": "Topics: Sprint velocity, cross-team blockers, hiring update.",
+    "metadata": {
+      "date": "2026-05-08T10:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Alex Chen",
+        "Tomas Reinholz"
+      ],
+      "eventTime": "2026-05-08T11:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Eng Leadership Sync 2026-05-08",
+    "body": "Attendees: Priya, Sarah, Alex, Tomas\n\n- Sarah: Lantern team velocity is stable. Caching issue from this week was resolved quickly.\n- Tomas: Platform team is getting a lot of interrupts. We need to formalize the intake process. He will draft a proposal.\n- Priya: Asked about the impact of interrupts on the Q3 platform roadmap.\n- Alex: No major issues from product side. Hiring pipeline for Sr PM is moving slowly.\n\nAI (Tomas): Draft proposal for Platform team intake process.",
+    "metadata": {
+      "date": "2026-05-08T11:55:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Alex Chen",
+        "Tomas Reinholz"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Lost item",
+    "body": "Has anyone seen a black Helio-branded water bottle? I think I left it in the Ada Room after the 11am sync.",
+    "metadata": {
+      "date": "2026-05-08T12:30:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Caching dependency inquiry - PLAT-412",
+    "body": "All,\n\nPlease note that per our team's runbook, all inquiries regarding platform services should be directed through a JIRA ticket assigned to the 'PLATFORM' component. Direct emails to the team lead to context-switching and will not be prioritized.\n\nThis ensures proper tracking and routing of all requests.\n\nThank you,\nTomas Reinholz\nEng Lead, Platform",
+    "metadata": {
+      "date": "2026-05-08T15:00:00-04:00",
+      "threadKey": "background",
+      "from": "Tomas Reinholz",
+      "to": [
+        "Mei Tanaka"
+      ],
+      "cc": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Priya Iyer"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Caching dependency inquiry - PLAT-412",
+    "body": "Noted.",
+    "metadata": {
+      "date": "2026-05-08T15:05:00-04:00",
+      "threadKey": "background",
+      "from": "Sarah Okafor",
+      "to": [
+        "Tomas Reinholz"
+      ],
+      "cc": [
+        "Mei Tanaka",
+        "Alex Chen",
+        "Priya Iyer"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-11T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-11T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Lantern Daily Standup 2026-05-11",
+    "body": "Attendees: Alex, Sarah, Ben, Mei, Noor\n\n- Start of new sprint.\n- Ben: Kicking off design for LAN-2045 (bulk actions).\n- Mei: Starting implementation of date picker improvements (LAN-2031).\n- Noor: Sharing simplified filter prototype today.",
+    "metadata": {
+      "date": "2026-05-11T10:15:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Weekly: Product Team Sync",
+    "body": "Agenda: Round-robin updates, cross-team dependencies.",
+    "metadata": {
+      "date": "2026-05-11T12:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Alex Chen",
+        "Marcus Bell"
+      ],
+      "eventTime": "2026-05-11T13:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Product Team Sync 2026-05-11",
+    "body": "Attendees: Priya, Alex, Marcus\n\n- Marcus: Pathfinder experiments are live. Early data is inconclusive.\n- Alex: Lantern Q3 success metrics have been added to the roadmap doc. Shared with Priya for review.\n- Priya: Reviewed metrics. Asked for clarification on the 'enterprise readiness' metric. Wants it to be more specific.\n\nAI (Alex): Refine 'enterprise readiness' success metric to be more quantitative. E.g., 'support for 3 new SSO providers' instead of 'improved auth'.",
+    "metadata": {
+      "date": "2026-05-11T13:58:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Alex Chen",
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Your IT Request TICKET#89234 has been resolved",
+    "body": "Your request 'New monitor stand' has been marked as resolved.\n\nResolution notes: Monitor stand was delivered to your desk.\n\n-The Helio IT Team",
+    "metadata": {
+      "date": "2026-05-11T15:20:00-04:00",
+      "threadKey": "background",
+      "from": "Jared (IT Helpdesk)",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Your IT Request TICKET#89234 has been resolved",
+    "body": "Thanks Jared!",
+    "metadata": {
+      "date": "2026-05-11T15:21:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen",
+      "to": [
+        "Jared (IT Helpdesk)"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-12T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-12T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Candidate for Senior PM role",
+    "body": "Hi Alex,\n\nHere is a promising candidate for the Sr. PM role we discussed. Experience looks relevant (B2B SaaS, analytics space).\n\nLet me know if you'd like me to schedule a phone screen.\n\n- Helena\n[resume_j_doe.pdf attached]",
+    "metadata": {
+      "date": "2026-05-12T11:30:00-04:00",
+      "threadKey": "background",
+      "from": "Helena Park",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Candidate for Senior PM role",
+    "body": "Thanks Helena. Yes, looks good. Please proceed with the screen.",
+    "metadata": {
+      "date": "2026-05-12T11:45:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen",
+      "to": [
+        "Helena Park"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "1:1 Alex/Priya",
+    "body": "Weekly check-in.",
+    "metadata": {
+      "date": "2026-05-12T15:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer"
+      ],
+      "eventTime": "2026-05-12T16:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Q4 idea",
+    "body": "Voice note to self: Idea for Q4... what if we did some direct performance benchmarking against key competitors? Could be a powerful marketing claim. Would need to get data from the platform team on query execution times. And maybe a sales-enablement one-pager.",
+    "metadata": {
+      "date": "2026-05-12T18:00:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-13T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-13T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Lantern Daily Standup 2026-05-13",
+    "body": "Attendees: Alex, Sarah, Ben, Mei, Noor\n\n- Mei: Date picker implementation is going smoothly. Should be ready for QA by Friday.\n- Ben: Bulk actions design is proving tricky. The number of states is high. Exploring a simpler flow.\n- Alex: Reminded team about All Hands this Thursday.",
+    "metadata": {
+      "date": "2026-05-13T10:16:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Re: Coffee?",
+    "body": "Hey - running 5 mins late for our coffee chat. Grabbing water.",
+    "metadata": {
+      "date": "2026-05-13T14:55:00-04:00",
+      "threadKey": "background",
+      "from": "Marcus Bell",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Weekly: Lantern Design Sync",
+    "body": "Reviewing this week's mocks and prototypes.",
+    "metadata": {
+      "date": "2026-05-13T13:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-13T14:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Lantern Design Sync 2026-05-13",
+    "body": "Attendees: Alex, Ben, Noor\n\n- Noor: Presented final prototype for simplified filters. Alex approved. Ready for eng handoff.\n- Ben: Walked through challenges with bulk actions design. Team agreed to descoped the initial version to only support 'bulk delete' and add other actions later.\n\nAI (Ben): Update designs for bulk actions to only include 'delete'.\nAI (Alex): Create new JIRA tickets for future bulk actions (e.g., 'bulk tag', 'bulk archive') and add to backlog.",
+    "metadata": {
+      "date": "2026-05-13T14:40:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Office Lunch Survey - We want your feedback!",
+    "body": "Hey Helio crew,\n\nAs we plan our food offerings, we'd love to know what you'd like to see more of. Please take 2 minutes to fill out this survey about your preferences for our catered lunches.\n\n[Survey Link]\n\nThanks!\n- Office Vibe Committee",
+    "metadata": {
+      "date": "2026-05-13T16:00:00-04:00",
+      "threadKey": "background",
+      "from": "Office Vibe Committee",
+      "to": [
+        "nyc-office@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-14T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-14T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Hiring Sync: Sr. PM",
+    "body": "Check in on pipeline for the open role.",
+    "metadata": {
+      "date": "2026-05-14T12:15:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Helena Park",
+        "Priya Iyer"
+      ],
+      "eventTime": "2026-05-14T14:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "email",
+    "title": "PTO Request: May 26",
+    "body": "Requesting PTO for Tuesday, May 26.",
+    "metadata": {
+      "date": "2026-05-14T15:00:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen",
+      "to": [
+        "Priya Iyer"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: PTO Request: May 26",
+    "body": "Approved.",
+    "metadata": {
+      "date": "2026-05-14T15:02:00-04:00",
+      "threadKey": "background",
+      "from": "Priya Iyer",
+      "to": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Helio All-Hands",
+    "body": "Company-wide updates and Q&A.",
+    "metadata": {
+      "date": "2026-05-14T16:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "all-employees@helio.com"
+      ],
+      "eventTime": "2026-05-14T17:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-15T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-15T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Lantern Daily Standup 2026-05-15",
+    "body": "Attendees: Alex, Sarah, Ben, Mei, Noor\n\n- Sprint ends today.\n- Mei: LAN-2031 is in QA.\n- Ben: Updated designs for LAN-2045 (bulk delete) are in JIRA.\n- Sarah: Sprint goals met. Good work team. Have a great weekend.",
+    "metadata": {
+      "date": "2026-05-15T10:14:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Weekly: Eng Leadership Sync",
+    "body": "Topics: Sprint velocity, cross-team blockers, hiring update.",
+    "metadata": {
+      "date": "2026-05-15T10:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Alex Chen",
+        "Tomas Reinholz"
+      ],
+      "eventTime": "2026-05-15T11:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "meeting_notes",
+    "title": "Notes: Eng Leadership Sync 2026-05-15",
+    "body": "Attendees: Priya, Sarah, Alex, Tomas\n\n- Sarah: Lantern sprint was successful. Next sprint planning is complete.\n- Tomas: Shared draft of Platform intake process doc for feedback. Wants comments by EOD Monday.\n- Alex: Mentioned that Jorge is back from parental leave on the 28th.\n- Priya: Asked everyone to ensure their teams complete the mandatory security training by the end of the month.",
+    "metadata": {
+      "date": "2026-05-15T11:56:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Alex Chen",
+        "Tomas Reinholz"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "FWD: Mandatory Security Awareness Training",
+    "body": "Team, a reminder from Priya's sync this morning. Please get this done by EOM.\n\n---\nBegin forwarded message:\nFrom: IT Security\nSubject: Mandatory Security Awareness Training\nDate: May 12, 2026\n\nAll employees are required to complete the annual security awareness training by May 31, 2026...",
+    "metadata": {
+      "date": "2026-05-15T12:30:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen",
+      "to": [
+        "lantern-team@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Platform intake doc",
+    "body": "@tomas.reinholz Thanks for sharing the intake doc. Left a few comments. Overall looks like a good step toward clarifying the process.",
+    "metadata": {
+      "date": "2026-05-15T14:22:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "notes",
+    "title": "Gift for Jorge",
+    "body": "Voice note to self: Jorge is back on the 28th. I need to remember to send a baby gift from the team before he gets back. Maybe one of those fancy sleep sacks. Check with Sarah to coordinate.",
+    "metadata": {
+      "date": "2026-05-15T16:45:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen"
+    }
+  },
+  {
+    "source": "email",
+    "title": "Interesting read on B2B product strategy",
+    "body": "Priya, Marcus - thought you might find this article on ecosystem-led growth interesting. Some parallels to our platform strategy.\n\n[Link to HBR article]",
+    "metadata": {
+      "date": "2026-05-16T11:00:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen",
+      "to": [
+        "Priya Iyer",
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "email",
+    "title": "Re: Interesting read on B2B product strategy",
+    "body": "Thx",
+    "metadata": {
+      "date": "2026-05-16T11:30:00-04:00",
+      "threadKey": "background",
+      "from": "Priya Iyer",
+      "to": [
+        "Alex Chen",
+        "Marcus Bell"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-18T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-18T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Weekly: Product Team Sync",
+    "body": "Agenda: Round-robin updates, cross-team dependencies.",
+    "metadata": {
+      "date": "2026-05-18T12:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Alex Chen",
+        "Marcus Bell"
+      ],
+      "eventTime": "2026-05-18T13:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-19T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-19T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "1:1 Alex/Priya",
+    "body": "Weekly check-in.",
+    "metadata": {
+      "date": "2026-05-19T15:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Priya Iyer"
+      ],
+      "eventTime": "2026-05-19T16:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-20T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-20T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Weekly: Lantern Design Sync",
+    "body": "Reviewing this week's mocks and prototypes.",
+    "metadata": {
+      "date": "2026-05-20T13:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Ben Aoki",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-20T14:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "email",
+    "title": "FINAL REMINDER: Open Enrollment Ends TODAY",
+    "body": "This is your final reminder that the benefits Open Enrollment window closes at 5pm ET today, May 20th.\n\nNo changes will be possible after this time.\n\n-Nina Chen, HR",
+    "metadata": {
+      "date": "2026-05-20T09:05:00-04:00",
+      "threadKey": "background",
+      "from": "Nina Chen",
+      "to": [
+        "company-all@helio.com"
+      ]
+    }
+  },
+  {
+    "source": "slack",
+    "title": "Figma access",
+    "body": "@benaoki can you grant me edit access to the 'Q3 Exploration' figma file? just need to add some comments.",
+    "metadata": {
+      "date": "2026-05-20T11:00:00-04:00",
+      "threadKey": "background",
+      "from": "Alex Chen",
+      "to": [
+        "Ben Aoki"
+      ]
+    }
+  },
+  {
+    "source": "shared_doc",
+    "title": "[DRAFT] Lunch & Learn Proposal: An Introduction to 'Lantern'",
+    "body": "Proposal: To host a 45-minute Lunch & Learn session for the Sales and Customer Success teams.\n\nObjective: Provide a foundational understanding of the 'Lantern' analytics workspace, its key features, and the ideal customer profile it serves. This session aims to empower our GTM teams to better identify opportunities and speak confidently about Lantern's value proposition.\n\nProposed Agenda:\n1. What is Lantern and who is it for? (5 min)\n2. Live Demo of Core Features (20 min)\n   - Dashboard creation\n   - Query builder\n   - Key integrations\n3. The Q3 Roadmap: What's Coming Next (10 min)\n4. Q&A (10 min)\n\nRequest: Looking for a sponsor from Sales/CS leadership to help drive attendance. Seeking feedback on this proposal before scheduling.",
+    "metadata": {
+      "date": "2026-05-21T10:00:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen"
+      ]
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-21T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-21T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Lantern Daily Standup",
+    "body": "Daily check-in on sprint progress.",
+    "metadata": {
+      "date": "2026-05-22T09:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Alex Chen",
+        "Sarah Okafor",
+        "Ben Aoki",
+        "Mei Tanaka",
+        "Noor Abadi"
+      ],
+      "eventTime": "2026-05-22T10:00:00-04:00",
+      "eventLocation": "Zoom"
+    }
+  },
+  {
+    "source": "calendar",
+    "title": "Weekly: Eng Leadership Sync",
+    "body": "Topics: Sprint velocity, cross-team blockers, hiring update.",
+    "metadata": {
+      "date": "2026-05-22T10:45:00-04:00",
+      "threadKey": "background",
+      "participants": [
+        "Priya Iyer",
+        "Sarah Okafor",
+        "Alex Chen",
+        "Tomas Reinholz"
+      ],
+      "eventTime": "2026-05-22T11:00:00-04:00",
+      "eventLocation": "HQ — Ada Room"
+    }
+  }
+]

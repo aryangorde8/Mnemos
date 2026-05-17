@@ -143,62 +143,104 @@ function Column({
   commitments: Commitment[];
   empty: string;
 }) {
+  const arrow = tone === "vermilion" ? "→ you owe" : "← owed to you";
   return (
     <section>
-      <div className="flex items-baseline justify-between">
-        <h2 className="display text-[1.6rem] italic leading-none text-[color:var(--color-paper)]">
-          {label}
-        </h2>
-        <span className="label">{commitments.length}</span>
+      <div className="flex items-baseline justify-between mb-6">
+        <span
+          className="display-i"
+          style={{
+            fontSize: "1.8rem",
+            color: tone === "vermilion" ? "var(--color-vermilion)" : "var(--color-saffron)",
+          }}
+        >
+          {arrow}
+        </span>
+        <span className="chrome tabular">
+          {commitments.length} {tone === "vermilion" ? "open" : "expected"}
+        </span>
       </div>
-      <span
-        className={`mt-3 block h-px w-12 ${
-          tone === "vermilion"
-            ? "bg-[color:var(--color-vermilion)]"
-            : "bg-[color:var(--color-saffron)]"
-        }`}
-      />
       {commitments.length === 0 ? (
-        <p className="mt-6 max-w-[40ch] text-[0.92rem] leading-relaxed text-[color:var(--color-paper-faint)]">
+        <p
+          className="mt-2"
+          style={{
+            maxWidth: "40ch",
+            fontSize: "0.92rem",
+            lineHeight: 1.55,
+            color: "var(--color-paper-faint)",
+          }}
+        >
           {empty}
         </p>
       ) : (
-        <ul className="mt-6 space-y-4">
+        <div className="space-y-0">
           {commitments.map((c) => (
             <CommitmentRow key={c.chunkId} c={c} tone={tone} />
           ))}
-        </ul>
+        </div>
       )}
     </section>
   );
 }
 
 function CommitmentRow({ c, tone }: { c: Commitment; tone: "vermilion" | "saffron" | "muted" }) {
-  const dot =
-    tone === "vermilion"
-      ? "bg-[color:var(--color-vermilion)]"
-      : tone === "saffron"
-        ? "bg-[color:var(--color-saffron)]"
-        : "bg-[color:var(--color-rule-strong)]";
+  const arrowColor =
+    tone === "vermilion" ? "var(--color-vermilion)"
+    : tone === "saffron" ? "var(--color-saffron)"
+    : "var(--color-paper-muted)";
   const date = formatDate(c.date);
+  const who = extractWho(c.title);
+
   return (
-    <li className="grid grid-cols-[10px_1fr_auto] items-baseline gap-x-3">
-      <span className={`mt-2 inline-block h-1 w-1 rounded-full ${dot}`} aria-hidden />
-      <div className="min-w-0">
-        <p className="text-[0.95rem] leading-[1.55] text-[color:var(--color-paper-dim)]">
-          {c.excerpt ?? c.title}
-        </p>
-        <p className="mt-1 chrome">
-          <span>{c.source.replace("_", " ")}</span>
-          <span className="px-1.5 text-[color:var(--color-rule-strong)]">·</span>
-          <span className="text-[color:var(--color-paper-muted)]">{c.title}</span>
-        </p>
+    <div className="ledger-row group">
+      <div className="flex items-baseline justify-between">
+        <span
+          className="mono"
+          style={{ fontSize: "0.9rem", color: arrowColor }}
+        >
+          {tone === "vermilion" ? "→" : tone === "saffron" ? "←" : "·"} {who}
+        </span>
+        <span className="chrome tabular" style={{ fontSize: "0.7rem" }}>
+          {date}
+        </span>
       </div>
-      <span className="font-mono text-[0.78rem] tabular-nums text-[color:var(--color-paper-faint)]">
-        {date}
-      </span>
-    </li>
+      <div
+        className="display mt-1.5"
+        style={{
+          fontSize: "1.08rem",
+          color: "var(--color-paper)",
+          lineHeight: 1.4,
+        }}
+      >
+        {c.excerpt ?? c.title}
+      </div>
+      {/* Hover anchor — reveals the source quote */}
+      <div
+        className="rise mt-2.5 hidden p-3 group-hover:block"
+        style={{
+          borderLeft: `2px solid ${arrowColor}`,
+          background: "var(--color-ink-1)",
+        }}
+      >
+        <div className="chrome mb-1">
+          anchor · {c.source.replace("_", " ")} · {c.title}
+        </div>
+        <div
+          className="display-i"
+          style={{ fontSize: "1rem", color: "var(--color-paper-dim)" }}
+        >
+          "{c.excerpt ?? c.title}"
+        </div>
+      </div>
+    </div>
   );
+}
+
+function extractWho(title: string): string {
+  // Try to extract a name from a title like "Re: Q3 plan from Sarah Okafor"
+  const m = title.match(/from\s+([A-Z][a-z]+\s+[A-Z][a-z]+)/);
+  if (m) return m[1] ?? title;
+  return title.length > 36 ? title.slice(0, 33) + "…" : title;
 }
 
 function formatDate(iso: string | null): string {

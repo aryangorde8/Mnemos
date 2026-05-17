@@ -128,8 +128,8 @@ if (totalSpec !== 247) {
 }
 
 const PROJECT = process.env.GOOGLE_CLOUD_PROJECT;
-const LOCATION = process.env.GOOGLE_CLOUD_LOCATION ?? "us-central1";
-const MODEL = process.env.VERTEX_GEMINI_MODEL ?? "gemini-3-pro";
+const LOCATION = process.env.VERTEX_GEMINI_LOCATION ?? process.env.GOOGLE_CLOUD_LOCATION ?? "global";
+const MODEL = process.env.VERTEX_GEMINI_MODEL ?? "gemini-3.1-pro-preview";
 const FIXTURE_PATH = resolve(process.cwd(), "scripts/fixtures/alex-data.json");
 const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
 
@@ -186,8 +186,9 @@ Return ONLY valid JSON of shape:
 No markdown fences. No prose outside the JSON.
 `.trim();
 
+  const host = LOCATION === "global" ? "aiplatform.googleapis.com" : `${LOCATION}-aiplatform.googleapis.com`;
   const url =
-    `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${LOCATION}` +
+    `https://${host}/v1/projects/${PROJECT}/locations/${LOCATION}` +
     `/publishers/google/models/${MODEL}:generateContent`;
   const client = await auth.getClient();
   const access = await client.getAccessToken();

@@ -15,10 +15,17 @@ async function token(): Promise<string> {
 function endpoint(
   model: string,
   verb: "generateContent" | "streamGenerateContent" | "predict",
+  location?: string,
 ): string {
+  const loc = location ?? config.GOOGLE_CLOUD_LOCATION;
+  // The global endpoint uses a non-prefixed host: aiplatform.googleapis.com
+  const host =
+    loc === "global"
+      ? `aiplatform.googleapis.com`
+      : `${loc}-aiplatform.googleapis.com`;
   return (
-    `https://${config.GOOGLE_CLOUD_LOCATION}-aiplatform.googleapis.com/v1` +
-    `/projects/${config.GOOGLE_CLOUD_PROJECT}/locations/${config.GOOGLE_CLOUD_LOCATION}` +
+    `https://${host}/v1` +
+    `/projects/${config.GOOGLE_CLOUD_PROJECT}/locations/${loc}` +
     `/publishers/google/models/${model}:${verb}`
   );
 }
@@ -37,6 +44,9 @@ export interface ContentPart {
   text?: string;
   functionCall?: { name: string; args: Record<string, unknown> };
   functionResponse?: { name: string; response: Record<string, unknown> };
+  // Gemini 3.x emits an opaque `thoughtSignature` on parts that came from
+  // its thinking pass. When echoing a model turn back, we must preserve it.
+  thoughtSignature?: string;
 }
 
 export interface Content {
@@ -47,6 +57,7 @@ export interface Content {
 export interface StreamChunk {
   text?: string;
   functionCall?: { name: string; args: Record<string, unknown> };
+  thoughtSignature?: string;
   finishReason?: string;
 }
 
@@ -65,7 +76,8 @@ export async function* streamGenerate(
     throw new Error("vertex: GOOGLE_CLOUD_PROJECT not configured");
   }
   const url =
-    endpoint(config.VERTEX_GEMINI_MODEL, "streamGenerateContent") + "?alt=sse";
+    endpoint(config.VERTEX_GEMINI_MODEL, "streamGenerateContent", config.VERTEX_GEMINI_LOCATION) +
+    "?alt=sse";
   const body = {
     contents: opts.contents,
     ...(opts.system
@@ -120,13 +132,17 @@ export async function* streamGenerate(
         if (!cand) continue;
         for (const part of cand.content?.parts ?? []) {
           if (part.text !== undefined) {
-            yield { text: part.text };
+            yield {
+              text: part.text,
+              ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
+            };
           } else if (part.functionCall) {
             yield {
               functionCall: {
                 name: part.functionCall.name,
                 args: part.functionCall.args ?? {},
               },
+              ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
             };
           }
         }
@@ -156,7 +172,7 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
   if (!isVertexConfigured()) {
     throw new Error("vertex: GOOGLE_CLOUD_PROJECT not configured");
   }
-  const url = endpoint(config.VERTEX_GEMINI_MODEL, "generateContent");
+  const url = endpoint(config.VERTEX_GEMINI_MODEL, "generateContent", config.VERTEX_GEMINI_LOCATION);
   const body = {
     contents: [{ role: "user", parts: [{ text: opts.prompt }] }],
     ...(opts.system

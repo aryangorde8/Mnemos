@@ -1,23 +1,24 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ready } from "@/lib/api";
+import { ready, ingestStats } from "@/lib/api";
+import { StatusPill } from "@/components/editorial";
 
 type ReadyState = { atlas: boolean; vertex: boolean; agent: boolean } | null;
+type StatsState = { docs: number; chunks: number } | null;
 
 export default function Dashboard() {
   const [status, setStatus] = useState<ReadyState>(null);
+  const [stats, setStats] = useState<StatsState>(null);
 
   useEffect(() => {
     let cancelled = false;
     async function poll() {
-      const r = await ready();
+      const [r, s] = await Promise.all([ready(), ingestStats()]);
       if (cancelled) return;
-      if (r) {
-        setStatus({ atlas: r.atlas === "configured", vertex: r.vertex === "configured", agent: true });
-      } else {
-        setStatus({ atlas: false, vertex: false, agent: false });
-      }
+      if (r) setStatus({ atlas: r.atlas === "configured", vertex: r.vertex === "configured", agent: true });
+      else setStatus({ atlas: false, vertex: false, agent: false });
+      if (s) setStats({ docs: s.documents, chunks: s.chunks });
     }
     poll();
     const id = setInterval(poll, 8000);
@@ -27,75 +28,109 @@ export default function Dashboard() {
   return (
     <>
       <Head>
-        <title>Mnemos — the empty vault</title>
+        <title>Mnemos — the memory agent</title>
       </Head>
       <main className="relative min-h-dvh w-full overflow-hidden">
-        <TopBar />
+        <TopBar status={status} />
         <LeftRail />
-        <BottomBar atlasOk={status?.atlas} />
+        <BottomBar atlasOk={status?.atlas} stats={stats} />
 
-        <section className="relative z-10 mx-auto flex min-h-dvh max-w-[1240px] flex-col items-stretch justify-center px-10 pb-28 pt-24 md:px-16">
-          <div className="rise delay-1 flex items-center gap-3">
-            <span className="block h-px w-10 bg-[color:var(--color-vermilion)]" />
-            <span className="label">01 · The empty vault</span>
+        <section className="relative z-10 mx-auto max-w-[1240px] px-10 pb-32 pt-32 md:px-16">
+          {/* Hero kicker */}
+          <div className="rise label">
+            ── day {hackathonDay()} · the rapid agent hackathon · mongodb partner track
           </div>
 
+          {/* Hero headline */}
           <h1
-            className="rise delay-2 display mt-7 max-w-[18ch] text-[clamp(2.6rem,7.6vw,6.4rem)] leading-[0.96]"
-            style={{ color: "var(--color-paper)" }}
+            className="display rise delay-1 mt-7"
+            style={{
+              fontSize: "clamp(2.8rem, 7.4vw, 6.6rem)",
+              lineHeight: 0.94,
+              letterSpacing: "-0.02em",
+              color: "var(--color-paper)",
+              maxWidth: "22ch",
+            }}
           >
-            Mnemos <em className="italic" style={{ color: "var(--color-paper)" }}>remembers</em>
+            The first agent that takes
             <br />
-            what you forget
-            <span style={{ color: "var(--color-paper-muted)" }}> —</span>
+            <em
+              className="display-i"
+              style={{ color: "var(--color-paper)" }}
+            >
+              multi-step actions
+            </em>{" "}
+            <span style={{ color: "var(--color-paper-dim)" }}>on top</span>
             <br />
-            <span style={{ color: "var(--color-paper-dim)" }}>and</span>{" "}
-            <em className="italic" style={{ color: "var(--color-vermilion)" }}>acts</em>{" "}
-            <span style={{ color: "var(--color-paper-dim)" }}>on it.</span>
+            <span style={{ color: "var(--color-paper-dim)" }}>of your professional memory.</span>
           </h1>
 
-          <div className="rise delay-3 mt-12 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <Link
-              href="/ask"
-              className="group inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--color-rule-strong)] bg-[color:var(--color-ink-2)] px-2.5 py-1.5 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-[color:var(--color-paper-dim)] shadow-[inset_0_-1px_0_rgba(0,0,0,0.4)] transition-colors hover:border-[color:var(--color-vermilion)] hover:text-[color:var(--color-paper)]"
-            >
-              <span className="text-[0.85em]">⌘</span>
-              <span>K</span>
-            </Link>
-            <Link
-              href="/ask"
-              className="chrome transition-colors hover:text-[color:var(--color-paper-dim)]"
-            >
-              open the agent · watch it reason
-            </Link>
-            <span aria-hidden className="chrome text-[color:var(--color-rule-strong)]">/</span>
-            <Link
-              href="/search"
-              className="chrome transition-colors hover:text-[color:var(--color-paper-dim)]"
-            >
-              just search the vault
-            </Link>
-            <span aria-hidden className="chrome text-[color:var(--color-rule-strong)]">/</span>
-            <Link
-              href="/actions"
-              className="chrome transition-colors hover:text-[color:var(--color-paper-dim)]"
-            >
-              review the ledger
-            </Link>
+          {/* Sub-paragraph */}
+          <p
+            className="rise delay-2 mt-9"
+            style={{
+              maxWidth: 640,
+              fontSize: "1.02rem",
+              color: "var(--color-paper-muted)",
+              lineHeight: 1.6,
+            }}
+          >
+            Mnemos ingests your corpus once — every email, calendar event, meeting note, shared doc,
+            slack message, and stray jot. From then on it retrieves, reasons in a live stream, and
+            proposes concrete actions that wait for one&#8209;click approval. Not search. Not notes.
+          </p>
+
+          {/* CTA row */}
+          <div className="rise delay-3 mt-9 flex flex-wrap items-center gap-x-4 gap-y-3">
+            <Link href="/ingest" className="btn-decisive primary">begin ingest</Link>
+            <Link href="/ask" className="btn-decisive">ask the agent</Link>
+            <span className="chrome ml-3">
+              press <span style={{ color: "var(--color-paper)" }}>⌘K</span> anywhere to ask
+            </span>
           </div>
 
-          <div className="rise delay-4 mt-20 grid grid-cols-1 gap-px overflow-hidden border border-[color:var(--color-rule)] bg-[color:var(--color-rule)] md:grid-cols-3">
-            <Tile href="/search" heading="Memory" body="Every email, calendar event, doc, and note — semantically chunked, vector-indexed, and recallable in a single keystroke." index="i." />
-            <Tile href="/ask" heading="Reasoning" body="A live stream of the agent's thoughts, tool calls, and observations. No black boxes — you watch it think." index="ii." />
-            <Tile href="/actions" heading="Action" body="Drafts, schedules, replies, declines. Every multi-step action waits at your approval before it ships." index="iii." />
+          <hr className="hair mt-16" />
+
+          {/* Three editorial tiles */}
+          <div className="grid grid-cols-1 md:grid-cols-3">
+            {TILES.map((t, i) => (
+              <Tile key={t.title} tile={t} last={i === TILES.length - 1} />
+            ))}
+          </div>
+          <hr className="hair" />
+
+          {/* Status pills row */}
+          <div className="rise delay-5 mt-12 flex flex-wrap items-center gap-3">
+            <StatusPill
+              label="Atlas"
+              value={status?.atlas ? "connected" : "offline"}
+              state={status === null ? "pending" : status.atlas ? "on" : "off"}
+              latency={status?.atlas ? 12 : undefined}
+              seed={1}
+            />
+            <StatusPill
+              label="Vertex"
+              value={status?.vertex ? "connected" : "awaiting creds"}
+              state={status === null ? "pending" : status.vertex ? "on" : "off"}
+              latency={status?.vertex ? 86 : undefined}
+              seed={2}
+            />
+            <StatusPill
+              label="Agent"
+              value={status?.agent ? "live" : "offline"}
+              state={status === null ? "pending" : status.agent ? "on" : "off"}
+              latency={status?.agent ? 4 : undefined}
+              seed={3}
+            />
           </div>
 
-          <div className="rise delay-5 mt-12 flex flex-wrap items-center gap-x-8 gap-y-2 chrome">
-            <StatusPill label="Atlas" ok={status?.atlas} />
-            <span aria-hidden>·</span>
-            <StatusPill label="Vertex" ok={status?.vertex} />
-            <span aria-hidden>·</span>
-            <StatusPill label="Agent" ok={status?.agent} />
+          {/* Sign-off */}
+          <div className="mt-16 flex flex-wrap items-baseline justify-between gap-y-2">
+            <span className="chrome">
+              corpus: <span className="tabular">{stats ? `${stats.docs} / 247` : "0 / 247"}</span>{" "}
+              documents{stats && stats.chunks > 0 ? ` · ${stats.chunks} chunks` : " · vault offline until ingest"}
+            </span>
+            <span className="chrome">— signed, the agent.</span>
           </div>
         </section>
       </main>
@@ -103,21 +138,103 @@ export default function Dashboard() {
   );
 }
 
-function TopBar() {
+const TILES = [
+  {
+    num: "01",
+    glyph: "❡",
+    title: "Memory",
+    italic: "ingested.",
+    body: "A unified vault of mail, calendar, notes, slack and shared docs — stored as vectors in MongoDB Atlas, queryable in milliseconds.",
+    href: "/search",
+  },
+  {
+    num: "02",
+    glyph: "⌗",
+    title: "Reasoning",
+    italic: "streamed.",
+    body: "Watch Gemini 3 Pro think out loud over a server-sent event stream. Every thought, every retrieval, every citation — in order.",
+    href: "/ask",
+  },
+  {
+    num: "03",
+    glyph: "✎",
+    title: "Action",
+    italic: "proposed.",
+    body: "The agent drafts the email, schedules the meeting, books the follow-up. You approve in one click. Nothing happens without you.",
+    href: "/actions",
+  },
+];
+
+function Tile({ tile, last }: { tile: (typeof TILES)[number]; last: boolean }) {
   return (
-    <header className="absolute inset-x-0 top-0 z-20 border-b border-[color:var(--color-rule)]/70 backdrop-blur-[2px]">
+    <Link
+      href={tile.href}
+      className="rise focusable group relative block"
+      style={{
+        padding: "36px 32px 32px",
+        borderRight: last ? "none" : "1px solid var(--color-rule)",
+        borderTop: "1px solid var(--color-rule)",
+      }}
+    >
+      {/* Hover hairline */}
+      <span
+        className="absolute left-8 right-8 top-0 block h-px origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100"
+        style={{ background: "var(--color-vermilion)" }}
+      />
+      <div className="mb-8 flex items-baseline justify-between">
+        <span className="label">{tile.num}</span>
+        <span
+          className="display-i"
+          style={{ fontSize: "2.4rem", color: "var(--color-ink-3)", lineHeight: 1 }}
+        >
+          {tile.glyph}
+        </span>
+      </div>
+      <div
+        className="display"
+        style={{ fontSize: "2.5rem", lineHeight: 1, letterSpacing: "-0.015em" }}
+      >
+        {tile.title}{" "}
+        <span className="display-i" style={{ color: "var(--color-vermilion)" }}>
+          {tile.italic}
+        </span>
+      </div>
+      <p
+        className="mt-5"
+        style={{
+          fontSize: "0.92rem",
+          color: "var(--color-paper-muted)",
+          lineHeight: 1.6,
+          maxWidth: "34ch",
+        }}
+      >
+        {tile.body}
+      </p>
+    </Link>
+  );
+}
+
+function TopBar({ status }: { status: ReadyState }) {
+  const anyLive = status?.atlas || status?.vertex || status?.agent;
+  return (
+    <header className="absolute inset-x-0 top-0 z-20 border-b border-[color:var(--color-rule)]/70">
       <div className="mx-auto flex max-w-[1240px] items-center justify-between px-10 py-4 md:px-16">
-        <a href="/" className="flex items-baseline gap-2.5">
-          <span className="display text-[1.4rem] italic leading-none text-[color:var(--color-paper)]">
+        <Link href="/" className="flex items-baseline gap-2.5">
+          <span
+            className="display-i leading-none"
+            style={{ fontSize: "1.4rem", color: "var(--color-paper)" }}
+          >
             Mnemos
           </span>
           <span className="label">μν. — memory agent</span>
-        </a>
+        </Link>
         <div className="flex items-center gap-6">
-          <span className="chrome hidden md:inline">2026 · vol. 001 · {hackathonDay()}</span>
+          <span className="chrome hidden md:inline">
+            2026 · vol. 001 · day {hackathonDay()} / 028
+          </span>
           <span className="flex items-center gap-2">
-            <span className="pulse-dot block h-1.5 w-1.5 rounded-full bg-[color:var(--color-vermilion)]" />
-            <span className="chrome">idle</span>
+            <span className={anyLive ? "pulse-dot" : "pulse-dot pulse-dot-muted"} />
+            <span className="chrome">{anyLive ? "live" : "idle"}</span>
           </span>
         </div>
       </div>
@@ -131,95 +248,45 @@ function LeftRail() {
       aria-hidden
       className="pointer-events-none absolute bottom-24 left-3 top-24 z-10 hidden flex-col items-center justify-between md:flex"
     >
-      <span
-        className="chrome whitespace-nowrap"
-        style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-      >
+      <span className="vrail whitespace-nowrap">
         Mnemos · the memory agent · v0.0.1
       </span>
-      <span
-        className="chrome whitespace-nowrap"
-        style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-      >
+      <span className="vrail whitespace-nowrap">
         an editorial built on what you've seen
       </span>
     </aside>
   );
 }
 
-function BottomBar({ atlasOk }: { atlasOk?: boolean }) {
+function BottomBar({ atlasOk, stats }: { atlasOk?: boolean; stats: StatsState }) {
   return (
     <footer className="absolute inset-x-0 bottom-0 z-20 border-t border-[color:var(--color-rule)]/70">
       <div className="mx-auto grid max-w-[1240px] grid-cols-2 items-center gap-4 px-10 py-4 md:grid-cols-3 md:px-16">
         <span className="chrome">a memory-first agent · built for action</span>
         <span className="chrome hidden text-center md:block">
-          {isoDate()} — <span className="text-[color:var(--color-paper-muted)]">{atlasOk ? "vault active" : "empty vault"}</span>
+          {isoDate()} —{" "}
+          <span style={{ color: "var(--color-paper-muted)" }}>
+            {atlasOk
+              ? stats && stats.docs > 0
+                ? `vault active · ${stats.docs} docs`
+                : "vault active · empty"
+              : "vault offline"}
+          </span>
         </span>
         <span className="chrome text-right">
-          press <span className="text-[color:var(--color-paper-dim)]">⌘K</span> to begin
+          press <span style={{ color: "var(--color-paper-dim)" }}>⌘K</span> to begin
         </span>
       </div>
     </footer>
   );
 }
 
-function Tile({ heading, body, index, href }: { heading: string; body: string; index: string; href?: string }) {
-  const Wrapper = ({ children }: { children: React.ReactNode }) =>
-    href ? (
-      <Link href={href} className="group relative block bg-[color:var(--color-ink-1)] p-7 transition-colors hover:bg-[color:var(--color-ink-2)] md:p-8">
-        {children}
-      </Link>
-    ) : (
-      <article className="group relative bg-[color:var(--color-ink-1)] p-7 transition-colors hover:bg-[color:var(--color-ink-2)] md:p-8">
-        {children}
-      </article>
-    );
-
-  return (
-    <Wrapper>
-      <header className="flex items-baseline justify-between">
-        <h2 className="display text-[1.7rem] italic leading-none text-[color:var(--color-paper)]">
-          {heading}
-        </h2>
-        <span className="label">{index}</span>
-      </header>
-      <p className="mt-5 max-w-[34ch] text-[0.95rem] leading-[1.55] text-[color:var(--color-paper-dim)]">
-        {body}
-      </p>
-      <span className="absolute left-7 right-7 top-0 block h-px origin-left scale-x-0 bg-[color:var(--color-vermilion)] transition-transform duration-500 ease-out group-hover:scale-x-100 md:left-8 md:right-8" />
-    </Wrapper>
-  );
-}
-
-function StatusPill({ label, ok }: { label: string; ok?: boolean }) {
-  if (ok === undefined) {
-    return (
-      <span>
-        {label} · <span style={{ color: "var(--color-paper-muted)" }}>checking…</span>
-      </span>
-    );
-  }
-  return (
-    <span className="flex items-center gap-2">
-      <span
-        className="block h-1.5 w-1.5 rounded-full"
-        style={{ background: ok ? "#4ade80" : "var(--color-paper-muted)" }}
-      />
-      {label} · <span style={{ color: ok ? "#4ade80" : "var(--color-paper-muted)" }}>{ok ? "connected" : "offline"}</span>
-    </span>
-  );
-}
-
-// Hackathon runs May 16 → June 12 2026 (28 days total)
 const HACKATHON_START = new Date("2026-05-16T00:00:00Z").getTime();
 const HACKATHON_TOTAL = 28;
-
 function hackathonDay(): string {
-  const dayNum = Math.max(1, Math.min(HACKATHON_TOTAL, Math.floor((Date.now() - HACKATHON_START) / 86400_000) + 1));
-  const pad = (n: number) => String(n).padStart(3, "0");
-  return `day ${pad(dayNum)} / ${pad(HACKATHON_TOTAL)}`;
+  const d = Math.max(1, Math.min(HACKATHON_TOTAL, Math.floor((Date.now() - HACKATHON_START) / 86400_000) + 1));
+  return String(d).padStart(3, "0");
 }
-
 function isoDate(): string {
   const d = new Date();
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;

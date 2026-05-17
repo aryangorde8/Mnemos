@@ -34,18 +34,18 @@ export function ApprovalCard({ actionId, onResolved }: Props) {
 
   if (loading) {
     return (
-      <Shell label="proposed action">
-        <div className="h-20 animate-pulse bg-[color:var(--color-rule)]/40" />
-      </Shell>
+      <article className="approval rise" style={{ padding: "32px 36px" }}>
+        <div className="h-24 animate-pulse bg-[color:var(--color-rule)]/40" />
+      </article>
     );
   }
   if (err || !action) {
     return (
-      <Shell label="proposed action" tone="error">
-        <p className="font-mono text-[0.82rem] text-[color:var(--color-vermilion)]">
+      <article className="approval rise" style={{ padding: "20px 24px" }}>
+        <p className="mono text-[0.82rem]" style={{ color: "var(--color-vermilion)" }}>
           {err ?? "unknown error"}
         </p>
-      </Shell>
+      </article>
     );
   }
 
@@ -82,66 +82,80 @@ export function ApprovalCard({ actionId, onResolved }: Props) {
   }
 
   return (
-    <Shell
-      label={
-        action.kind === "draft_email"
-          ? `draft email · ${statusLabel(action.status)}`
-          : `proposed meeting · ${statusLabel(action.status)}`
-      }
-      tone={action.status === "sent" ? "ok" : action.status === "rejected" ? "muted" : "live"}
-    >
+    <article className="approval rise" style={{ padding: "32px 36px 28px" }}>
+      {/* Top meta strip */}
+      <header className="mb-5 flex items-baseline justify-between">
+        <div className="chrome flex items-center gap-3.5">
+          <span className={decided ? "pulse-dot pulse-dot-muted" : "pulse-dot"} />
+          <span
+            style={{
+              color: decided ? "var(--color-paper-muted)" : "var(--color-vermilion)",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              fontSize: "0.7rem",
+              fontWeight: 500,
+            }}
+          >
+            {action.status} · {action.kind === "draft_email" ? "draft email" : "scheduled meeting"}
+          </span>
+          {action.runId && (
+            <>
+              <span>·</span>
+              <span>run {action.runId.slice(0, 8)}</span>
+            </>
+          )}
+          <span>·</span>
+          <span className="tabular">{fmtTime(action.createdAt)}</span>
+        </div>
+        <div className="chrome">
+          {decided ? statusFooter(action) : "awaiting one-click approval"}
+        </div>
+      </header>
+
+      {/* Editorial body */}
       {action.kind === "draft_email" ? (
         <DraftEmailView
           proposal={proposal as DraftEmailProposal}
           editing={editing && !decided}
-          onChange={(p) => {
-            setAction({ ...action, proposal: p });
-          }}
+          onChange={(p) => setAction({ ...action, proposal: p })}
         />
       ) : (
         <MeetingView proposal={proposal as ScheduleMeetingProposal} />
       )}
 
-      {action.status === "sent" && action.final ? (
-        <p className="mt-4 font-mono text-[0.78rem] text-[color:var(--color-saffron)]">
-          sent · {fmtDate(action.decidedAt ?? action.createdAt)}
-        </p>
-      ) : null}
-      {action.status === "rejected" ? (
-        <p className="mt-4 font-mono text-[0.78rem] text-[color:var(--color-paper-faint)]">
-          rejected · {fmtDate(action.decidedAt ?? action.createdAt)}
-          {action.reason ? ` · ${action.reason}` : ""}
-        </p>
-      ) : null}
-
+      {/* Decision rail */}
       {!decided ? (
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+        <div
+          className="mt-8 flex items-center gap-3 border-t border-[color:var(--color-rule)] pt-6"
+        >
           <button
             disabled={busy !== null}
             onClick={() => onApprove(editing ? (proposal as unknown as Record<string, unknown>) : undefined)}
-            className="inline-flex items-center gap-2 border border-[color:var(--color-vermilion)] bg-[color:var(--color-vermilion)] px-3 py-1.5 font-mono text-[0.78rem] uppercase tracking-[0.12em] text-[color:var(--color-ink)] transition-opacity disabled:opacity-50"
+            className="btn-decisive primary"
           >
-            {busy === "approve" ? "sending…" : editing ? "approve edits" : "approve · send"}
+            ✓ {busy === "approve" ? "sending…" : editing ? "approve edits" : "approve & send"}
           </button>
           {action.kind === "draft_email" ? (
             <button
               disabled={busy !== null}
               onClick={() => setEditing((e) => !e)}
-              className="font-mono text-[0.78rem] uppercase tracking-[0.12em] text-[color:var(--color-paper-dim)] transition-colors hover:text-[color:var(--color-paper)] disabled:opacity-50"
+              className="btn-decisive"
             >
-              {editing ? "cancel edit" : "edit"}
+              ⋯ {editing ? "cancel edit" : "edit"}
             </button>
           ) : null}
           <button
             disabled={busy !== null}
             onClick={onReject}
-            className="font-mono text-[0.78rem] uppercase tracking-[0.12em] text-[color:var(--color-paper-faint)] transition-colors hover:text-[color:var(--color-vermilion)] disabled:opacity-50"
+            className="btn-decisive ghost"
           >
-            {busy === "reject" ? "…" : "reject"}
+            ✕ {busy === "reject" ? "…" : "reject"}
           </button>
+          <div className="flex-1" />
+          <div className="chrome hidden md:block">↵ to approve · ⌘E to edit · esc to dismiss</div>
         </div>
       ) : null}
-    </Shell>
+    </article>
   );
 }
 
@@ -155,156 +169,167 @@ function DraftEmailView({
   onChange: (p: DraftEmailProposal) => void;
 }) {
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-[64px_1fr] items-baseline gap-x-4 gap-y-1.5">
-        <span className="label">to</span>
-        <span className="font-mono text-[0.86rem] text-[color:var(--color-paper-dim)]">
+    <div>
+      {/* Meta block — labeled mono, two-column grid */}
+      <div
+        className="mb-7 grid border-b border-[color:var(--color-rule)] pb-6"
+        style={{
+          gridTemplateColumns: "90px 1fr",
+          gap: "8px 28px",
+        }}
+      >
+        <div className="label" style={{ paddingTop: 3 }}>to</div>
+        <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
           {proposal.to.join(", ")}
-        </span>
-        {proposal.cc.length > 0 ? (
+        </div>
+        {proposal.cc.length > 0 && (
           <>
-            <span className="label">cc</span>
-            <span className="font-mono text-[0.86rem] text-[color:var(--color-paper-dim)]">
+            <div className="label" style={{ paddingTop: 3 }}>cc</div>
+            <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
               {proposal.cc.join(", ")}
-            </span>
+            </div>
           </>
-        ) : null}
-        <span className="label">subject</span>
+        )}
+        <div className="label" style={{ paddingTop: 3 }}>subject</div>
         {editing ? (
           <input
             value={proposal.subject}
             onChange={(e) => onChange({ ...proposal, subject: e.target.value })}
-            className="border-b border-[color:var(--color-rule-strong)] bg-transparent font-mono text-[0.92rem] text-[color:var(--color-paper)] focus:border-[color:var(--color-vermilion)] focus:outline-none"
+            className="mono border-b border-[color:var(--color-rule-strong)] bg-transparent text-[color:var(--color-paper)] focus:border-[color:var(--color-vermilion)] focus:outline-none"
+            style={{ fontSize: "0.86rem" }}
           />
         ) : (
-          <span className="display text-[1.05rem] italic leading-tight text-[color:var(--color-paper)]">
+          <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
             {proposal.subject}
-          </span>
+          </div>
         )}
       </div>
-      <div className="mt-3 border-t border-[color:var(--color-rule)] pt-4">
-        {editing ? (
-          <textarea
-            value={proposal.body}
-            onChange={(e) => onChange({ ...proposal, body: e.target.value })}
-            rows={Math.max(8, proposal.body.split("\n").length + 1)}
-            className="block w-full resize-y bg-transparent font-mono text-[0.9rem] leading-[1.6] text-[color:var(--color-paper)] focus:outline-none"
-          />
-        ) : (
-          <p
-            className="whitespace-pre-wrap text-[0.95rem] leading-[1.65] text-[color:var(--color-paper-dim)]"
-            style={{ fontFamily: "var(--font-sans)" }}
-          >
-            {proposal.body}
-          </p>
-        )}
+
+      {/* Subject as display headline */}
+      <div
+        className="display-i mb-5"
+        style={{
+          fontSize: "1.6rem",
+          color: "var(--color-paper)",
+          letterSpacing: "-0.005em",
+          lineHeight: 1.15,
+        }}
+      >
+        {proposal.subject}
       </div>
+
+      {/* Body — serif pull-quote weight */}
+      {editing ? (
+        <textarea
+          value={proposal.body}
+          onChange={(e) => onChange({ ...proposal, body: e.target.value })}
+          rows={Math.max(6, proposal.body.split("\n").length + 1)}
+          className="display block w-full resize-y bg-transparent text-[color:var(--color-paper-dim)] focus:outline-none"
+          style={{
+            fontSize: "1.18rem",
+            lineHeight: 1.45,
+            letterSpacing: "-0.003em",
+          }}
+        />
+      ) : (
+        <div
+          className="display"
+          style={{
+            fontSize: "1.18rem",
+            lineHeight: 1.45,
+            color: "var(--color-paper-dim)",
+            letterSpacing: "-0.003em",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {proposal.body}
+        </div>
+      )}
     </div>
   );
 }
 
 function MeetingView({ proposal }: { proposal: ScheduleMeetingProposal }) {
   return (
-    <div className="grid grid-cols-[100px_1fr] items-baseline gap-x-5 gap-y-2">
-      <span className="label">title</span>
-      <span className="display text-[1.1rem] italic leading-tight text-[color:var(--color-paper)]">
+    <div>
+      {/* Meta block */}
+      <div
+        className="mb-7 grid border-b border-[color:var(--color-rule)] pb-6"
+        style={{ gridTemplateColumns: "90px 1fr", gap: "8px 28px" }}
+      >
+        <div className="label" style={{ paddingTop: 3 }}>with</div>
+        <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
+          {proposal.attendees.join(", ")}
+        </div>
+        <div className="label" style={{ paddingTop: 3 }}>when</div>
+        <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
+          {proposal.proposedTimes.map((t, i) => (
+            <div key={t}>
+              <span style={{ color: i === 0 ? "var(--color-vermilion)" : "var(--color-paper-faint)" }}>
+                {i === 0 ? "→" : "·"}
+              </span>{" "}
+              {fmtTime(t)}
+            </div>
+          ))}
+        </div>
+        <div className="label" style={{ paddingTop: 3 }}>duration</div>
+        <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
+          {proposal.durationMinutes} min
+        </div>
+        {proposal.location && (
+          <>
+            <div className="label" style={{ paddingTop: 3 }}>where</div>
+            <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
+              {proposal.location}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Title as display headline */}
+      <div
+        className="display-i mb-5"
+        style={{
+          fontSize: "1.6rem",
+          color: "var(--color-paper)",
+          letterSpacing: "-0.005em",
+        }}
+      >
         {proposal.title}
-      </span>
-      <span className="label">attendees</span>
-      <span className="font-mono text-[0.86rem] text-[color:var(--color-paper-dim)]">
-        {proposal.attendees.join(", ")}
-      </span>
-      <span className="label">when</span>
-      <ul className="space-y-0.5 font-mono text-[0.86rem] text-[color:var(--color-paper-dim)]">
-        {proposal.proposedTimes.map((t, i) => (
-          <li key={t}>
-            <span className="text-[color:var(--color-paper-faint)]">
-              {i === 0 ? "→" : " "}
-            </span>{" "}
-            {fmtTime(t)}
-          </li>
-        ))}
-      </ul>
-      <span className="label">duration</span>
-      <span className="font-mono text-[0.86rem] text-[color:var(--color-paper-dim)]">
-        {proposal.durationMinutes} min
-      </span>
-      {proposal.location ? (
-        <>
-          <span className="label">location</span>
-          <span className="font-mono text-[0.86rem] text-[color:var(--color-paper-dim)]">
-            {proposal.location}
-          </span>
-        </>
-      ) : null}
-      {proposal.agenda ? (
-        <>
-          <span className="label">agenda</span>
-          <pre className="whitespace-pre-wrap font-mono text-[0.84rem] leading-[1.6] text-[color:var(--color-paper-dim)]">
-            {proposal.agenda}
-          </pre>
-        </>
-      ) : null}
+      </div>
+
+      {proposal.agenda && (
+        <div
+          className="display"
+          style={{
+            fontSize: "1.1rem",
+            lineHeight: 1.45,
+            color: "var(--color-paper-dim)",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {proposal.agenda}
+        </div>
+      )}
     </div>
   );
 }
 
-function Shell({
-  label,
-  tone,
-  children,
-}: {
-  label: string;
-  tone?: "live" | "ok" | "error" | "muted";
-  children: React.ReactNode;
-}) {
-  const accent =
-    tone === "ok"
-      ? "var(--color-saffron)"
-      : tone === "error"
-        ? "var(--color-vermilion)"
-        : tone === "muted"
-          ? "var(--color-rule-strong)"
-          : "var(--color-vermilion)";
-  return (
-    <section
-      className="my-5 border border-[color:var(--color-rule)] bg-[color:var(--color-ink-2)]"
-      style={{ boxShadow: `inset 3px 0 0 0 ${accent}` }}
-    >
-      <header className="flex items-center justify-between border-b border-[color:var(--color-rule)] px-5 py-2.5">
-        <span className="label">{label}</span>
-        <span className="chrome">awaiting decision</span>
-      </header>
-      <div className="px-5 py-5">{children}</div>
-    </section>
-  );
-}
-
-function statusLabel(s: string): string {
-  return s.toLowerCase();
+function statusFooter(a: ActionRecord): string {
+  if (a.status === "sent")
+    return `sent · ${fmtTime(a.decidedAt ?? a.createdAt)}`;
+  if (a.status === "rejected")
+    return `rejected · ${a.reason ?? "no reason given"}`;
+  return "";
 }
 
 function fmtTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
+  return d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
-  });
-}
-
-function fmtDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
+    second: "2-digit",
+    hour12: false,
   });
 }

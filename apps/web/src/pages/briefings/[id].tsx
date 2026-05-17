@@ -176,38 +176,53 @@ export default function BriefingDetail() {
           </div>
         </header>
 
-        <article className="mx-auto max-w-[820px] px-10 pb-32 pt-16 md:px-16">
-          <div className="flex items-center gap-3">
-            <span className="block h-px w-10 bg-[color:var(--color-vermilion)]" />
-            <span className="label">briefing · 1-pager</span>
-          </div>
-
-          <h1 className="display mt-6 text-[clamp(2rem,4.6vw,3rem)] italic leading-[1.1] text-[color:var(--color-paper)]">
-            {eventTitle ?? <Skeleton w="18ch" />}
-          </h1>
-          <div className="mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-1 chrome">
-            {eventWhen ? <span>{fmtFull(eventWhen)}</span> : null}
-            {eventLocation ? <span>{eventLocation}</span> : null}
-            {attendees.length > 0 ? (
-              <span>
-                {attendees.length} attendees ·{" "}
-                <span className="text-[color:var(--color-paper-muted)]">
-                  {attendees.slice(0, 4).join(", ")}
-                  {attendees.length > 4 ? " +" + (attendees.length - 4) : ""}
-                </span>
-              </span>
-            ) : null}
-          </div>
-
-          {mode === "generating" ? (
-            <div className="mt-8 flex items-center gap-3 chrome">
-              <span className="pulse-dot block h-1.5 w-1.5 rounded-full bg-[color:var(--color-vermilion)]" />
-              <span>{phase}</span>
+        <article className="mx-auto max-w-[920px] px-10 pb-32 pt-14 md:px-16">
+          {/* Editorial masthead */}
+          <header className="border-b border-[color:var(--color-rule-strong)] pb-7">
+            <div className="flex items-baseline justify-between">
+              <div className="label">briefing · {briefing ? "saved" : mode === "generating" ? "generating" : "ready"}</div>
+              <div className="chrome">
+                {briefing?.createdAt
+                  ? `generated ${fmtTime(briefing.createdAt)}`
+                  : mode === "generating"
+                    ? phase
+                    : ""}
+              </div>
             </div>
-          ) : null}
-          {mode === "rendered" && briefing?.createdAt ? (
-            <p className="mt-8 chrome">generated {fmtFull(briefing.createdAt)}</p>
-          ) : null}
+            <h1
+              className="display-i mt-5 leading-none"
+              style={{
+                fontSize: "clamp(2.4rem, 5.4vw, 4.4rem)",
+                color: "var(--color-paper)",
+                letterSpacing: "-0.018em",
+              }}
+            >
+              {eventTitle ?? <Skeleton w="22ch" />}
+            </h1>
+            <div className="mt-4 flex flex-wrap items-baseline gap-x-7 gap-y-1 chrome">
+              {eventWhen && <span>{fmtFull(eventWhen)}</span>}
+              {eventWhen && eventLocation && <span aria-hidden>·</span>}
+              {eventLocation && <span>{eventLocation}</span>}
+              {attendees.length > 0 && (
+                <>
+                  <span aria-hidden>·</span>
+                  <span>
+                    {attendees.length} attendees ·{" "}
+                    <span style={{ color: "var(--color-paper-muted)" }}>
+                      {attendees.slice(0, 4).join(", ")}
+                      {attendees.length > 4 ? " +" + (attendees.length - 4) : ""}
+                    </span>
+                  </span>
+                </>
+              )}
+            </div>
+            {mode === "generating" && (
+              <div className="mt-6 flex items-center gap-3 chrome">
+                <span className="pulse-dot" />
+                <span>{phase}</span>
+              </div>
+            )}
+          </header>
 
           <div className="mt-12">
             {mode === "loading" ? (
@@ -304,5 +319,15 @@ function fmtFull(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+  });
+}
+
+function fmtTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }
