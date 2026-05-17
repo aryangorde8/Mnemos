@@ -37,7 +37,6 @@ echo "[deploy-web] building image: ${IMAGE}"
 gcloud builds submit "$ROOT" \
   --project "${GOOGLE_CLOUD_PROJECT}" \
   --region "${REGION}" \
-  --tag "${IMAGE}" \
   --config <(cat <<EOF
 steps:
   - name: gcr.io/cloud-builders/docker
