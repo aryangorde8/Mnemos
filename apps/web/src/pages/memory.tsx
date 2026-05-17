@@ -1,7 +1,9 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { getGraph, type Entity, type GraphResponse, type Relation } from "@/lib/api";
+import { AmbientOrbs, Tilt3D, ScrollReveal } from "@/components/parallax";
 
 const AGENT = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
 
@@ -115,8 +117,11 @@ export default function MemoryPage() {
       <Head>
         <title>Mnemos — the memory graph</title>
       </Head>
-      <main className="relative min-h-dvh w-full">
-        <header className="border-b border-[color:var(--color-rule)]/70">
+      <main className="relative min-h-dvh w-full scene-3d">
+        <div className="pointer-events-none fixed inset-0 z-0">
+          <AmbientOrbs />
+        </div>
+        <header className="relative z-10 border-b border-[color:var(--color-rule)]/70">
           <div className="mx-auto flex max-w-[1240px] items-center justify-between px-10 py-4 md:px-16">
             <Link href="/" className="flex items-baseline gap-2.5">
               <span className="display text-[1.4rem] italic leading-none text-[color:var(--color-paper)]">
@@ -136,30 +141,50 @@ export default function MemoryPage() {
           </div>
         </header>
 
-        <section className="mx-auto max-w-[1240px] px-10 pb-32 pt-14 md:px-16">
-          <div className="flex items-center gap-3">
+        <section className="relative z-10 mx-auto max-w-[1240px] px-10 pb-32 pt-14 md:px-16">
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             <span className="block h-px w-10 bg-[color:var(--color-vermilion)]" />
             <span className="label">08 · the memory graph</span>
-          </div>
+          </motion.div>
 
-          <h1 className="display mt-6 max-w-[26ch] text-[clamp(2rem,5vw,3.2rem)] italic leading-[1.05] text-[color:var(--color-paper)]">
+          <motion.h1
+            className="display mt-6 max-w-[26ch] text-[clamp(2rem,5vw,3.2rem)] italic leading-[1.05] text-[color:var(--color-paper)]"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+          >
             Everyone, everything,
             <br />
             <span style={{ color: "var(--color-paper-muted)" }}>extracted.</span>
-          </h1>
-          <p className="mt-4 max-w-[60ch] text-[0.98rem] leading-relaxed text-[color:var(--color-paper-dim)]">
+          </motion.h1>
+          <motion.p
+            className="mt-4 max-w-[60ch] text-[0.98rem] leading-relaxed text-[color:var(--color-paper-dim)]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             Mnemos scans the corpus chunk-by-chunk and lifts named entities — people,
             projects, commitments — into a structured graph. Every mention gets
             counted; every commitment gets a directional edge.
-          </p>
+          </motion.p>
 
-          {/* stats bar */}
-          <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden border border-[color:var(--color-rule)] bg-[color:var(--color-rule)] md:grid-cols-4">
-            <StatTile label="people" value={graph?.stats.entities.person ?? 0} accent="vermilion" />
-            <StatTile label="projects" value={graph?.stats.entities.project ?? 0} accent="saffron" />
-            <StatTile label="topics" value={graph?.stats.entities.topic ?? 0} accent="muted" />
-            <StatTile label="relations" value={graph?.stats.relations ?? 0} accent="vermilion" />
-          </div>
+          {/* stats bar — 3D tilt on each tile */}
+          <motion.div
+            className="scene-3d mt-12 grid grid-cols-2 gap-px overflow-hidden border border-[color:var(--color-rule)] bg-[color:var(--color-rule)] md:grid-cols-4"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Tilt3D max={4} lift={6}><StatTile label="people" value={graph?.stats.entities.person ?? 0} accent="vermilion" /></Tilt3D>
+            <Tilt3D max={4} lift={6}><StatTile label="projects" value={graph?.stats.entities.project ?? 0} accent="saffron" /></Tilt3D>
+            <Tilt3D max={4} lift={6}><StatTile label="topics" value={graph?.stats.entities.topic ?? 0} accent="muted" /></Tilt3D>
+            <Tilt3D max={4} lift={6}><StatTile label="relations" value={graph?.stats.relations ?? 0} accent="vermilion" /></Tilt3D>
+          </motion.div>
 
           {/* extraction controls */}
           <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -181,9 +206,15 @@ export default function MemoryPage() {
           {/* the graph itself */}
           {hasGraph ? (
             <div className="mt-16 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-3">
-              <Column label="people" tone="vermilion" entities={graph?.entities.person ?? []} relations={graph?.relations ?? []} />
-              <Column label="projects" tone="saffron" entities={graph?.entities.project ?? []} relations={graph?.relations ?? []} />
-              <Column label="topics" tone="muted" entities={graph?.entities.topic ?? []} relations={graph?.relations ?? []} />
+              <ScrollReveal delay={0}>
+                <Column label="people" tone="vermilion" entities={graph?.entities.person ?? []} relations={graph?.relations ?? []} />
+              </ScrollReveal>
+              <ScrollReveal delay={0.1}>
+                <Column label="projects" tone="saffron" entities={graph?.entities.project ?? []} relations={graph?.relations ?? []} />
+              </ScrollReveal>
+              <ScrollReveal delay={0.2}>
+                <Column label="topics" tone="muted" entities={graph?.entities.topic ?? []} relations={graph?.relations ?? []} />
+              </ScrollReveal>
             </div>
           ) : (
             <EmptyPanel />

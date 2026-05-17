@@ -1,11 +1,12 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ready, ingestStats } from "@/lib/api";
 import { StatusPill } from "@/components/editorial";
 import { Spotlight } from "@/components/spotlight";
 import { Reveal, Words, Drawline, stagger, fadeRise } from "@/components/motion-primitives";
+import { AmbientOrbs, Tilt3D, ScrollReveal } from "@/components/parallax";
 
 type ReadyState = { atlas: boolean; vertex: boolean; agent: boolean } | null;
 type StatsState = { docs: number; chunks: number } | null;
@@ -13,6 +14,11 @@ type StatsState = { docs: number; chunks: number } | null;
 export default function Dashboard() {
   const [status, setStatus] = useState<ReadyState>(null);
   const [stats, setStats] = useState<StatsState>(null);
+  const { scrollY } = useScroll();
+  // Hero parallax — text drifts up at half the scroll speed
+  const heroY = useTransform(scrollY, [0, 600], [0, -80]);
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0.4]);
+  const kickerX = useTransform(scrollY, [0, 600], [0, 30]);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,16 +39,24 @@ export default function Dashboard() {
       <Head>
         <title>Mnemos — the memory agent</title>
       </Head>
-      <main className="relative min-h-dvh w-full overflow-hidden">
+      <main className="relative min-h-dvh w-full overflow-x-hidden scene-3d">
         <Spotlight intensity={0.38} />
+        {/* Drifting warm orbs — sit behind everything, parallax on scroll */}
+        <div className="pointer-events-none fixed inset-0 z-0">
+          <AmbientOrbs />
+        </div>
         <TopBar status={status} />
         <LeftRail />
         <BottomBar atlasOk={status?.atlas} stats={stats} />
 
-        <section className="relative z-10 mx-auto max-w-[1240px] px-10 pb-32 pt-32 md:px-16">
+        <motion.section
+          className="relative z-10 mx-auto max-w-[1240px] px-10 pb-32 pt-32 md:px-16"
+          style={{ y: heroY, opacity: heroOpacity }}
+        >
           {/* Hero kicker */}
           <motion.div
             className="label flex items-center gap-3"
+            style={{ x: kickerX }}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -121,14 +135,16 @@ export default function Dashboard() {
 
           {/* Three editorial tiles — staggered scale-in */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3"
+            className="scene-3d grid grid-cols-1 md:grid-cols-3"
             variants={stagger(0.08, 1.4)}
             initial="hidden"
             animate="show"
           >
             {TILES.map((t, i) => (
               <motion.div key={t.title} variants={fadeRise}>
-                <Tile tile={t} last={i === TILES.length - 1} />
+                <Tilt3D max={5} lift={10}>
+                  <Tile tile={t} last={i === TILES.length - 1} />
+                </Tilt3D>
               </motion.div>
             ))}
           </motion.div>
@@ -172,7 +188,7 @@ export default function Dashboard() {
             </span>
             <span className="chrome">— signed, the agent.</span>
           </div>
-        </section>
+        </motion.section>
       </main>
     </>
   );
@@ -209,11 +225,13 @@ function Tile({ tile, last }: { tile: (typeof TILES)[number]; last: boolean }) {
   return (
     <Link
       href={tile.href}
-      className="rise focusable group relative block"
+      className="tilt-card focusable group relative block"
       style={{
         padding: "36px 32px 32px",
         borderRight: last ? "none" : "1px solid var(--color-rule)",
         borderTop: "1px solid var(--color-rule)",
+        background:
+          "linear-gradient(180deg, rgba(50, 35, 22, 0.18) 0%, rgba(28, 20, 12, 0.0) 100%)",
       }}
     >
       {/* Hover hairline */}
