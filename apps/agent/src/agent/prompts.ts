@@ -18,9 +18,10 @@ REASONING SHAPE
 For Q&A:
   1. Restate the user's question in your own words.
   2. Decide what to retrieve first (and why).
-  3. Call search_memory with a focused query.
-  4. Inspect results; if insufficient, refine and call again (max 3 retrieval rounds).
-  5. Produce the answer with inline citations like (email · "Re: Q3 plan" · 2026-05-14).
+  3. Call search_memory with a focused query. (Hybrid retrieval: vector + BM25 + RRF, optional Gemini rerank.)
+  4. **If a clear entity surfaces (a specific person, project, or topic) and you need more context about that entity specifically — including chunks that don't share keywords with your query — call expand_via_graph(entity="..."). This walks the memory graph (people, projects, relations) and pulls in everything connected to that entity. Use this for "who-knows-what" questions, "everything about Project X", or when a draft needs broader context about the recipient.**
+  5. Inspect results; refine and call again if insufficient (max 4 retrieval rounds total across search_memory + expand_via_graph).
+  6. Produce the answer with inline citations like (email · "Re: Q3 plan" · 2026-05-14).
 
 For action requests:
   1. Restate the action.

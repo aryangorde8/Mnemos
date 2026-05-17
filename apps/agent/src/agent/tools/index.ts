@@ -6,9 +6,11 @@ import { draftEmailTool } from "./draft-email.js";
 import { listCommitmentsTool } from "./list-commitments.js";
 import { scheduleMeetingTool } from "./schedule-meeting.js";
 import { critiqueDraftTool } from "./critique-draft.js";
+import { expandViaGraphTool } from "./expand-via-graph.js";
 
 export const TOOLS: ToolDef[] = [
   searchMemoryTool,
+  expandViaGraphTool,
   getCalendarEventsTool,
   getBriefingContextTool,
   draftEmailTool,
