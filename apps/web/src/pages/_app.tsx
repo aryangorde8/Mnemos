@@ -1,6 +1,8 @@
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { Instrument_Serif, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { MotionConfig } from "framer-motion";
+import { useRouter } from "next/router";
 import { CommandPalette } from "@/components/command-palette";
 import { useCmdK } from "@/lib/use-cmd-k";
 import "@/styles/globals.css";
@@ -29,8 +31,9 @@ const mono = IBM_Plex_Mono({
 
 export default function App({ Component, pageProps }: AppProps) {
   const palette = useCmdK();
+  const router = useRouter();
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <Head>
         <title>Mnemos — the memory agent</title>
         <meta
@@ -65,9 +68,9 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="twitter:image" content="/og.png" />
       </Head>
       <div className={`${display.variable} ${sans.variable} ${mono.variable}`}>
-        <Component {...pageProps} />
+        <Component {...pageProps} key={router.asPath} />
         <CommandPalette open={palette.open} onClose={() => palette.setOpen(false)} />
       </div>
-    </>
+    </MotionConfig>
   );
 }

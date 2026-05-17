@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   getCritiqueForAction,
   type CritiqueRecord,
@@ -55,7 +56,13 @@ export function CritiqueCard({
   const low = findings.filter((f) => f.severity === "low").length;
 
   return (
-    <aside className="critique rise" aria-label="critic findings">
+    <motion.aside
+      className="critique"
+      aria-label="critic findings"
+      initial={{ opacity: 0, y: 18, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+    >
       {/* header row */}
       <header className="critique-header">
         <div className="flex items-center gap-3">
@@ -113,7 +120,7 @@ export function CritiqueCard({
           ))}
         </ol>
       )}
-    </aside>
+    </motion.aside>
   );
 }
 

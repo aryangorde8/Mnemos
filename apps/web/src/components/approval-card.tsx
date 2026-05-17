@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   approveAction,
   getAction,
@@ -82,7 +83,13 @@ export function ApprovalCard({ actionId, onResolved }: Props) {
   }
 
   return (
-    <article className="approval rise" style={{ padding: "32px 36px 28px" }}>
+    <motion.article
+      className="approval"
+      style={{ padding: "32px 36px 28px" }}
+      initial={{ opacity: 0, y: 20, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    >
       {/* Top meta strip */}
       <header className="mb-5 flex items-baseline justify-between">
         <div className="chrome flex items-center gap-3.5">
@@ -155,7 +162,7 @@ export function ApprovalCard({ actionId, onResolved }: Props) {
           <div className="chrome hidden md:block">↵ to approve · ⌘E to edit · esc to dismiss</div>
         </div>
       ) : null}
-    </article>
+    </motion.article>
   );
 }
 

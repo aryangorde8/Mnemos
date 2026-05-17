@@ -1,8 +1,11 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { ready, ingestStats } from "@/lib/api";
 import { StatusPill } from "@/components/editorial";
+import { Spotlight } from "@/components/spotlight";
+import { Reveal, Words, Drawline, stagger, fadeRise } from "@/components/motion-primitives";
 
 type ReadyState = { atlas: boolean; vertex: boolean; agent: boolean } | null;
 type StatsState = { docs: number; chunks: number } | null;
@@ -31,19 +34,26 @@ export default function Dashboard() {
         <title>Mnemos — the memory agent</title>
       </Head>
       <main className="relative min-h-dvh w-full overflow-hidden">
+        <Spotlight intensity={0.38} />
         <TopBar status={status} />
         <LeftRail />
         <BottomBar atlasOk={status?.atlas} stats={stats} />
 
         <section className="relative z-10 mx-auto max-w-[1240px] px-10 pb-32 pt-32 md:px-16">
           {/* Hero kicker */}
-          <div className="rise label">
-            ── day {hackathonDay()} · the rapid agent hackathon · mongodb partner track
-          </div>
+          <motion.div
+            className="label flex items-center gap-3"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Drawline width={40} delay={0.1} />
+            <span>day {hackathonDay()} · the rapid agent hackathon · mongodb partner track</span>
+          </motion.div>
 
-          {/* Hero headline */}
-          <h1
-            className="display rise delay-1 mt-7"
+          {/* Hero headline — word-by-word reveal */}
+          <motion.h1
+            className="display mt-7"
             style={{
               fontSize: "clamp(2.8rem, 7.4vw, 6.6rem)",
               lineHeight: 0.94,
@@ -51,56 +61,86 @@ export default function Dashboard() {
               color: "var(--color-paper)",
               maxWidth: "22ch",
             }}
+            variants={stagger(0.05, 0.18)}
+            initial="hidden"
+            animate="show"
           >
-            The first agent that takes
+            <Words text="The first agent that takes" gap={0.045} />
             <br />
-            <em
+            <motion.em
+              variants={fadeRise}
               className="display-i"
-              style={{ color: "var(--color-paper)" }}
+              style={{ display: "inline-block", color: "var(--color-paper)" }}
             >
               multi-step actions
-            </em>{" "}
-            <span style={{ color: "var(--color-paper-dim)" }}>on top</span>
+            </motion.em>{" "}
+            <motion.span variants={fadeRise} style={{ display: "inline-block", color: "var(--color-paper-dim)" }}>
+              on top
+            </motion.span>
             <br />
-            <span style={{ color: "var(--color-paper-dim)" }}>of your professional memory.</span>
-          </h1>
+            <Words
+              text="of your professional memory."
+              gap={0.045}
+              style={{ color: "var(--color-paper-dim)" }}
+            />
+          </motion.h1>
 
           {/* Sub-paragraph */}
-          <p
-            className="rise delay-2 mt-9"
-            style={{
-              maxWidth: 640,
-              fontSize: "1.02rem",
-              color: "var(--color-paper-muted)",
-              lineHeight: 1.6,
-            }}
-          >
-            Mnemos ingests your corpus once — every email, calendar event, meeting note, shared doc,
-            slack message, and stray jot. From then on it retrieves, reasons in a live stream, and
-            proposes concrete actions that wait for one&#8209;click approval. Not search. Not notes.
-          </p>
+          <Reveal delay={1.0}>
+            <p
+              className="mt-9"
+              style={{
+                maxWidth: 640,
+                fontSize: "1.02rem",
+                color: "var(--color-paper-muted)",
+                lineHeight: 1.6,
+              }}
+            >
+              Mnemos ingests your corpus once — every email, calendar event, meeting note, shared doc,
+              slack message, and stray jot. From then on it retrieves, reasons in a live stream, and
+              proposes concrete actions that wait for one&#8209;click approval. Not search. Not notes.
+            </p>
+          </Reveal>
 
           {/* CTA row */}
-          <div className="rise delay-3 mt-9 flex flex-wrap items-center gap-x-4 gap-y-3">
-            <Link href="/ingest" className="btn-decisive primary">begin ingest</Link>
-            <Link href="/ask" className="btn-decisive">ask the agent</Link>
-            <span className="chrome ml-3">
-              press <span style={{ color: "var(--color-paper)" }}>⌘K</span> anywhere to ask
-            </span>
-          </div>
+          <Reveal delay={1.2}>
+            <div className="mt-9 flex flex-wrap items-center gap-x-4 gap-y-3">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Link href="/ingest" className="btn-decisive primary">begin ingest</Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Link href="/ask" className="btn-decisive">ask the agent</Link>
+              </motion.div>
+              <span className="chrome ml-3">
+                press <span style={{ color: "var(--color-paper)" }}>⌘K</span> anywhere to ask
+              </span>
+            </div>
+          </Reveal>
 
           <hr className="hair mt-16" />
 
-          {/* Three editorial tiles */}
-          <div className="grid grid-cols-1 md:grid-cols-3">
+          {/* Three editorial tiles — staggered scale-in */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3"
+            variants={stagger(0.08, 1.4)}
+            initial="hidden"
+            animate="show"
+          >
             {TILES.map((t, i) => (
-              <Tile key={t.title} tile={t} last={i === TILES.length - 1} />
+              <motion.div key={t.title} variants={fadeRise}>
+                <Tile tile={t} last={i === TILES.length - 1} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
           <hr className="hair" />
 
           {/* Status pills row */}
-          <div className="rise delay-5 mt-12 flex flex-wrap items-center gap-3">
+          <motion.div
+            className="mt-12 flex flex-wrap items-center gap-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 1.7, ease: [0.22, 1, 0.36, 1] }}
+          >
             <StatusPill
               label="Atlas"
               value={status?.atlas ? "connected" : "offline"}
@@ -122,7 +162,7 @@ export default function Dashboard() {
               latency={status?.agent ? 4 : undefined}
               seed={3}
             />
-          </div>
+          </motion.div>
 
           {/* Sign-off */}
           <div className="mt-16 flex flex-wrap items-baseline justify-between gap-y-2">

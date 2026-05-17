@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface PaletteCommand {
   id: string;
@@ -118,18 +119,29 @@ export function CommandPalette({ open, onClose }: Props) {
     [active, commands, onClose],
   );
 
-  if (!open) return null;
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="command palette"
-      className="cmdk-back"
-      onClick={onClose}
-      onKeyDown={onKeyDown}
-    >
-      <section className="cmdk-shell" onClick={(e) => e.stopPropagation()}>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-label="command palette"
+          className="cmdk-back"
+          onClick={onClose}
+          onKeyDown={onKeyDown}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <motion.section
+            className="cmdk-shell"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, y: -16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
         {/* Input row */}
         <div
           className="flex items-center gap-3.5 border-b border-[color:var(--color-rule)] px-5 py-4"
@@ -238,7 +250,9 @@ export function CommandPalette({ open, onClose }: Props) {
           <span>↑↓ navigate · ↵ select · ⌘↵ open in new pane</span>
           <span>mnemos · v0.0.1</span>
         </footer>
-      </section>
-    </div>
+          </motion.section>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

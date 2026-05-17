@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { ApprovalCard } from "./approval-card";
 import { CritiqueCard, type PreloadedCritique } from "./critique-card";
 import { Cite } from "./editorial";
@@ -129,55 +130,80 @@ function StreamRow({
   // Special-case rendering for citations / done / error that don't get a node + time chip
   if (item.kind === "citations") {
     return (
-      <div className="rise mb-6 mt-2 flex flex-wrap gap-2">
+      <motion.div
+        className="mb-6 mt-2 flex flex-wrap gap-2"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
         {item.citations.map((c, i) => (
-          <Cite
+          <motion.span
             key={c.chunkId}
-            n={i + 1}
-            title={c.title}
-            src={sourceLabel(c.source)}
-            excerpt={c.text}
-          />
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.32, delay: i * 0.04, ease: [0.22, 1, 0.36, 1] }}
+            style={{ display: "inline-block" }}
+          >
+            <Cite n={i + 1} title={c.title} src={sourceLabel(c.source)} excerpt={c.text} />
+          </motion.span>
         ))}
-      </div>
+      </motion.div>
     );
   }
 
   if (item.kind === "done") {
     return (
-      <div
-        className="rise mt-4 flex items-center justify-between border-t border-[color:var(--color-rule)] pt-4 chrome"
+      <motion.div
+        className="mt-4 flex items-center justify-between border-t border-[color:var(--color-rule)] pt-4 chrome"
         style={{ marginLeft: -96 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
         <span>
           stream complete · {(item.totalMs / 1000).toFixed(2)}s · {item.turns} turn
           {item.turns === 1 ? "" : "s"}
         </span>
         <span className="text-[color:var(--color-paper-faint)]">— signed, the agent</span>
-      </div>
+      </motion.div>
     );
   }
 
   if (item.kind === "error") {
     return (
-      <div
-        className="rise mt-3 border bg-[color:var(--color-ink-2)] p-3 mono"
+      <motion.div
+        className="mt-3 border bg-[color:var(--color-ink-2)] p-3 mono"
         style={{
           borderColor: "var(--color-vermilion-deep)",
           color: "var(--color-vermilion)",
           marginLeft: -96,
         }}
+        initial={{ opacity: 0, x: -6 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
       >
         error · {item.message}
-      </div>
+      </motion.div>
     );
   }
 
   // Timeline row: time chip in gutter + node marker + content
   return (
-    <div className="rise relative" style={{ minHeight: 84, paddingBottom: 6 }}>
+    <motion.div
+      className="relative"
+      style={{ minHeight: 84, paddingBottom: 6 }}
+      initial={{ opacity: 0, x: -12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+    >
       {/* Stream node — sits on the rule */}
-      <div className={"stream-node " + nodeState} style={{ left: nodeState === "active" ? 74 : 76, top: 8 }} />
+      <motion.div
+        className={"stream-node " + nodeState}
+        style={{ left: nodeState === "active" ? 74 : 76, top: 8 }}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+      />
 
       {/* Time chip in left gutter */}
       <div
@@ -201,7 +227,7 @@ function StreamRow({
         <KindLabel kind={item.kind} />
         <RowBody item={item} live={live} />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
