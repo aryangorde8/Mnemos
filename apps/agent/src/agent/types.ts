@@ -37,6 +37,15 @@ export interface ToolResult {
   summary?: string;
 }
 
+export interface UsageMetadata {
+  promptTokens: number;
+  candidatesTokens: number;
+  thoughtsTokens: number;
+  totalTokens: number;
+  // estimated USD cost based on Gemini 3 Pro preview rates
+  estimatedCostUsd: number;
+}
+
 export type AgentEvent =
   | { kind: "start"; query: string; runId: string; at: number }
   | { kind: "thought"; chunk: string; at: number }
@@ -44,5 +53,5 @@ export type AgentEvent =
   | { kind: "observation"; id: string; name: string; result: ToolResult; durationMs: number; at: number }
   | { kind: "answer"; chunk: string; at: number }
   | { kind: "citations"; citations: Citation[]; at: number }
-  | { kind: "done"; turns: number; totalMs: number; at: number }
+  | { kind: "done"; turns: number; totalMs: number; usage: UsageMetadata; at: number }
   | { kind: "error"; message: string; at: number };

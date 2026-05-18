@@ -837,3 +837,55 @@
   0%, 100% { background-position: 200% 50%; }
   50%      { background-position: 0% 50%; }
 }
+
+/* ============================================================
+   CITATION PILLS — [N] markers in agent answer + hover-link to chips
+   ============================================================ */
+.cite-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  min-width: 1.4em;
+  padding: 0.2em 0.34em;
+  margin: 0 1px;
+  border-radius: 3px;
+  background: rgba(242, 87, 56, 0.14);
+  color: var(--color-vermilion);
+  border: 1px solid rgba(242, 87, 56, 0.32);
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease, border-color 180ms ease;
+  vertical-align: super;
+  transform: translateY(-0.05em);
+}
+.cite-pill:hover,
+.cite-pill:focus-visible {
+  background: var(--color-vermilion);
+  color: var(--color-paper);
+  border-color: var(--color-vermilion);
+  outline: none;
+  transform: translateY(-0.15em) scale(1.05);
+}
+.cite-pill-orphan {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* When [N] is hovered, the matching chip row glows */
+.cite-chip-wrap { display: inline-block; transition: transform 260ms ease; }
+.cite-chip-active {
+  transform: translateY(-2px);
+}
+.cite-chip-active :first-child {
+  box-shadow:
+    0 0 0 1px var(--color-vermilion) inset,
+    0 8px 24px -8px rgba(242, 87, 56, 0.55);
+}
+
+/* Highlighted body text — when crossing back from chip to text, we use this */
+.answer-prose { scroll-margin-top: 80px; }

@@ -54,11 +54,19 @@ export interface Content {
   parts: ContentPart[];
 }
 
+export interface StreamUsage {
+  promptTokens?: number;
+  candidatesTokens?: number;
+  thoughtsTokens?: number;
+  totalTokens?: number;
+}
+
 export interface StreamChunk {
   text?: string;
   functionCall?: { name: string; args: Record<string, unknown> };
   thoughtSignature?: string;
   finishReason?: string;
+  usage?: StreamUsage;
 }
 
 export interface StreamOptions {
@@ -127,26 +135,45 @@ export async function* streamGenerate(
             content?: { parts?: ContentPart[] };
             finishReason?: string;
           }>;
+          usageMetadata?: {
+            promptTokenCount?: number;
+            candidatesTokenCount?: number;
+            thoughtsTokenCount?: number;
+            totalTokenCount?: number;
+          };
         };
         const cand = parsed.candidates?.[0];
-        if (!cand) continue;
-        for (const part of cand.content?.parts ?? []) {
-          if (part.text !== undefined) {
-            yield {
-              text: part.text,
-              ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
-            };
-          } else if (part.functionCall) {
-            yield {
-              functionCall: {
-                name: part.functionCall.name,
-                args: part.functionCall.args ?? {},
-              },
-              ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
-            };
+        if (cand) {
+          for (const part of cand.content?.parts ?? []) {
+            if (part.text !== undefined) {
+              yield {
+                text: part.text,
+                ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
+              };
+            } else if (part.functionCall) {
+              yield {
+                functionCall: {
+                  name: part.functionCall.name,
+                  args: part.functionCall.args ?? {},
+                },
+                ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
+              };
+            }
           }
+          if (cand.finishReason) yield { finishReason: cand.finishReason };
         }
-        if (cand.finishReason) yield { finishReason: cand.finishReason };
+        // Usage metadata typically arrives in the final chunk(s)
+        if (parsed.usageMetadata) {
+          const u = parsed.usageMetadata;
+          yield {
+            usage: {
+              ...(u.promptTokenCount !== undefined ? { promptTokens: u.promptTokenCount } : {}),
+              ...(u.candidatesTokenCount !== undefined ? { candidatesTokens: u.candidatesTokenCount } : {}),
+              ...(u.thoughtsTokenCount !== undefined ? { thoughtsTokens: u.thoughtsTokenCount } : {}),
+              ...(u.totalTokenCount !== undefined ? { totalTokens: u.totalTokenCount } : {}),
+            },
+          };
+        }
       } catch {
         // partial chunk; continue
       }

@@ -255,12 +255,31 @@ function handleEvent(
       return;
     }
     case "done": {
+      const rawUsage = data["usage"] as
+        | {
+            promptTokens?: number;
+            candidatesTokens?: number;
+            thoughtsTokens?: number;
+            totalTokens?: number;
+            estimatedCostUsd?: number;
+          }
+        | undefined;
+      const usage = rawUsage
+        ? {
+            promptTokens: Number(rawUsage.promptTokens ?? 0),
+            candidatesTokens: Number(rawUsage.candidatesTokens ?? 0),
+            thoughtsTokens: Number(rawUsage.thoughtsTokens ?? 0),
+            totalTokens: Number(rawUsage.totalTokens ?? 0),
+            estimatedCostUsd: Number(rawUsage.estimatedCostUsd ?? 0),
+          }
+        : undefined;
       setItems((prev) => [
         ...sealOpen(prev),
         {
           kind: "done",
           turns: Number(data["turns"] ?? 0),
           totalMs: Number(data["totalMs"] ?? 0),
+          ...(usage ? { usage } : {}),
           at,
         },
       ]);

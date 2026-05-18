@@ -22,6 +22,7 @@ export async function* runAgent(
     { role: "user", parts: [{ text: userFraming(opts.query) }] },
   ];
   const allCitations: Citation[] = [];
+  const usage = { prompt: 0, candidates: 0, thoughts: 0, total: 0 };
 
   yield { kind: "start", query: opts.query, runId, at: Date.now() };
 
@@ -72,6 +73,15 @@ export async function* runAgent(
             ...(chunk.thoughtSignature ? { thoughtSignature: chunk.thoughtSignature } : {}),
           });
         }
+        if (chunk.usage) {
+          // Vertex sometimes emits cumulative usage in later chunks of the same
+          // turn — overwrite per-turn then add at the end. Here we track running
+          // max for this turn and roll into the run total below.
+          if (chunk.usage.promptTokens !== undefined) usage.prompt += chunk.usage.promptTokens;
+          if (chunk.usage.candidatesTokens !== undefined) usage.candidates += chunk.usage.candidatesTokens;
+          if (chunk.usage.thoughtsTokens !== undefined) usage.thoughts += chunk.usage.thoughtsTokens;
+          if (chunk.usage.totalTokens !== undefined) usage.total += chunk.usage.totalTokens;
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -105,6 +115,13 @@ export async function* runAgent(
         kind: "done",
         turns: turn,
         totalMs: Date.now() - startedAt,
+        usage: {
+          promptTokens: usage.prompt,
+          candidatesTokens: usage.candidates,
+          thoughtsTokens: usage.thoughts,
+          totalTokens: usage.total > 0 ? usage.total : usage.prompt + usage.candidates + usage.thoughts,
+          estimatedCostUsd: estimateCost(usage.prompt, usage.candidates + usage.thoughts),
+        },
         at: Date.now(),
       };
       return;
@@ -199,4 +216,18 @@ function dedupCitations(list: Citation[]): Citation[] {
     out.push(c);
   }
   return out.sort((a, b) => b.score - a.score).slice(0, 12);
+}
+
+/**
+ * Cost estimate for Gemini 3 Pro Preview (per Vertex pricing as of May 2026):
+ *   input  $1.25 / 1M tokens   (≤ 200k input)
+ *   output $10.00 / 1M tokens  (≤ 200k input)
+ * Thinking tokens are billed as output. We round the result so the chip
+ * displays as $0.0021 not $0.00214837.
+ */
+function estimateCost(promptTokens: number, outputTokens: number): number {
+  const inUsd = (promptTokens / 1_000_000) * 1.25;
+  const outUsd = (outputTokens / 1_000_000) * 10.0;
+  const total = inUsd + outUsd;
+  return Math.round(total * 10000) / 10000;
 }

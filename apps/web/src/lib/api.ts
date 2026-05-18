@@ -112,6 +112,18 @@ export interface DraftEmailProposal {
   intent: string;
 }
 
+export interface SlotEvaluation {
+  start: string;
+  end: string;
+  conflicts: Array<{
+    id: string;
+    title: string;
+    when: string;
+    location: string | null;
+  }>;
+  free: boolean;
+}
+
 export interface ScheduleMeetingProposal {
   title: string;
   attendees: string[];
@@ -119,6 +131,8 @@ export interface ScheduleMeetingProposal {
   durationMinutes: number;
   location: string | null;
   agenda: string | null;
+  slots?: SlotEvaluation[];
+  preferredIdx?: number;
 }
 
 export type ProposalData = DraftEmailProposal | ScheduleMeetingProposal;

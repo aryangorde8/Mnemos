@@ -1,8 +1,24 @@
-import { useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { ApprovalCard } from "./approval-card";
 import { CritiqueCard, type PreloadedCritique } from "./critique-card";
 import { Cite } from "./editorial";
+
+/**
+ * Active citation context — when a user hovers `[N]` in the answer text, or
+ * a chip in the citations row, the index is broadcast so the other side can
+ * highlight in sync.
+ */
+interface ActiveCiteCtx {
+  active: number | null;          // 1-indexed citation, or null
+  setActive: (n: number | null) => void;
+  citations: Citation[];
+}
+const ActiveCiteContext = createContext<ActiveCiteCtx>({
+  active: null,
+  setActive: () => undefined,
+  citations: [],
+});
 
 export interface Citation {
   chunkId: string;
@@ -43,7 +59,19 @@ export type StreamItem =
     }
   | { kind: "answer"; text: string; complete: boolean; at: number }
   | { kind: "citations"; citations: Citation[]; at: number }
-  | { kind: "done"; turns: number; totalMs: number; at: number }
+  | {
+      kind: "done";
+      turns: number;
+      totalMs: number;
+      usage?: {
+        promptTokens: number;
+        candidatesTokens: number;
+        thoughtsTokens: number;
+        totalTokens: number;
+        estimatedCostUsd: number;
+      };
+      at: number;
+    }
   | { kind: "error"; message: string; at: number };
 
 export function ReasoningStream({
@@ -56,6 +84,17 @@ export function ReasoningStream({
   runId: string | null;
 }) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [active, setActive] = useState<number | null>(null);
+
+  // Find the citations event so the cross-link knows the full list.
+  const citationsItem = items.find((i) => i.kind === "citations") as
+    | { kind: "citations"; citations: Citation[] }
+    | undefined;
+  const citations = citationsItem?.citations ?? [];
+  const doneItem = items.find((i) => i.kind === "done") as
+    | (StreamItem & { kind: "done" })
+    | undefined;
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [items.length, lastChunkSig(items)]);
@@ -72,6 +111,7 @@ export function ReasoningStream({
   }
 
   return (
+    <ActiveCiteContext.Provider value={{ active, setActive, citations }}>
     <section aria-label="agent reasoning" className="relative">
       {/* Stream header — minimal chrome */}
       <header className="mb-6 flex items-baseline justify-between border-b border-[color:var(--color-rule)] pb-3">
@@ -87,6 +127,30 @@ export function ReasoningStream({
             )}
             <span className="px-2 text-[color:var(--color-rule-strong)]">·</span>
             <span>gemini-3.1-pro · vertex</span>
+            {doneItem?.usage && (
+              <>
+                <span className="px-2 text-[color:var(--color-rule-strong)]">·</span>
+                <span
+                  className="tabular"
+                  title={`prompt: ${doneItem.usage.promptTokens} · completion: ${doneItem.usage.candidatesTokens} · thinking: ${doneItem.usage.thoughtsTokens}`}
+                  style={{ color: "var(--color-paper-dim)" }}
+                >
+                  {formatTokens(doneItem.usage.totalTokens)} tok
+                </span>
+                <span className="px-2 text-[color:var(--color-rule-strong)]">·</span>
+                <span className="tabular" style={{ color: "var(--color-vermilion)" }}>
+                  {formatCost(doneItem.usage.estimatedCostUsd)}
+                </span>
+              </>
+            )}
+            {doneItem && (
+              <>
+                <span className="px-2 text-[color:var(--color-rule-strong)]">·</span>
+                <span className="tabular" style={{ color: "var(--color-paper-dim)" }}>
+                  {(doneItem.totalMs / 1000).toFixed(2)}s
+                </span>
+              </>
+            )}
           </span>
         </div>
         <span className="chrome">
@@ -110,6 +174,66 @@ export function ReasoningStream({
         <div ref={bottomRef} />
       </div>
     </section>
+    </ActiveCiteContext.Provider>
+  );
+}
+
+/**
+ * AnswerText — parses `[N]` and `[N][M]` markers from the agent's answer
+ * and renders each as an interactive citation pill. Hover/focus syncs with
+ * the citation chip row via ActiveCiteContext.
+ */
+function AnswerText({ text, live, complete }: { text: string; live: boolean; complete: boolean }) {
+  const { citations, setActive } = useContext(ActiveCiteContext);
+  // Match consecutive [N][M]... groups or single [N]
+  const pattern = /(\[\d+\](?:\[\d+\])*)/g;
+  const parts: ReactNode[] = [];
+  let lastIdx = 0;
+  let m: RegExpExecArray | null;
+  while ((m = pattern.exec(text)) !== null) {
+    if (m.index > lastIdx) parts.push(text.slice(lastIdx, m.index));
+    // Extract individual numbers in this group
+    const nums = Array.from(m[0].matchAll(/\[(\d+)\]/g)).map((g) => Number(g[1]));
+    parts.push(
+      <span key={m.index} style={{ display: "inline-flex", gap: 1, marginLeft: 1 }}>
+        {nums.map((n, i) => {
+          const cit = citations[n - 1];
+          if (!cit) {
+            return (
+              <span key={i} className="cite-pill cite-pill-orphan" aria-label={`citation ${n} (missing)`}>{n}</span>
+            );
+          }
+          return (
+            <button
+              key={i}
+              type="button"
+              className="cite-pill"
+              onMouseEnter={() => setActive(n)}
+              onMouseLeave={() => setActive(null)}
+              onFocus={() => setActive(n)}
+              onBlur={() => setActive(null)}
+              onClick={() => {
+                const el = document.querySelector(`[data-cite-chip="${n}"]`);
+                el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                setActive(n);
+                setTimeout(() => setActive(null), 1800);
+              }}
+              title={`${cit.source} · ${cit.title}${cit.text ? "\n\n" + cit.text.slice(0, 180) : ""}`}
+            >
+              {n}
+            </button>
+          );
+        })}
+      </span>,
+    );
+    lastIdx = m.index + m[0].length;
+  }
+  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+  return (
+    <>
+      {parts}
+      {live && !complete && <span className="caret-thin" />}
+    </>
   );
 }
 
@@ -144,7 +268,7 @@ function StreamRow({
             transition={{ duration: 0.32, delay: i * 0.04, ease: [0.22, 1, 0.36, 1] }}
             style={{ display: "inline-block" }}
           >
-            <Cite n={i + 1} title={c.title} src={sourceLabel(c.source)} excerpt={c.text} />
+            <CiteHoverable n={i + 1} title={c.title} src={sourceLabel(c.source)} excerpt={c.text} />
           </motion.span>
         ))}
       </motion.div>
@@ -326,17 +450,17 @@ function RowBody({ item, live }: { item: StreamItem; live: boolean }) {
     case "answer":
       return (
         <div
-          className="display"
+          className="display answer-prose"
           style={{
             fontSize: "1.42rem",
-            lineHeight: 1.4,
+            lineHeight: 1.45,
             color: "var(--color-paper)",
             maxWidth: 720,
             letterSpacing: "-0.005em",
+            whiteSpace: "pre-wrap",
           }}
         >
-          {item.text}
-          {live && !item.complete && <span className="caret-thin" />}
+          <AnswerText text={item.text} live={live} complete={item.complete} />
         </div>
       );
     default:
@@ -389,4 +513,47 @@ function lastChunkSig(items: StreamItem[]): string {
     return last.kind + ":" + last.text.length;
   }
   return last.kind;
+}
+
+/**
+ * CiteHoverable — wraps the existing Cite chip and adds cross-link behavior
+ * via ActiveCiteContext. When [N] in the answer is hovered, this chip
+ * highlights too. When this chip is hovered, [N] markers in the answer
+ * highlight.
+ */
+function formatTokens(n: number): string {
+  if (n >= 10000) return (n / 1000).toFixed(1) + "k";
+  return n.toLocaleString("en-US");
+}
+
+function formatCost(usd: number): string {
+  if (usd >= 0.01) return "$" + usd.toFixed(3);
+  if (usd >= 0.001) return "$" + usd.toFixed(4);
+  return "$" + usd.toFixed(5);
+}
+
+function CiteHoverable({
+  n,
+  title,
+  src,
+  excerpt,
+}: {
+  n: number;
+  title: string;
+  src: string;
+  excerpt?: string;
+}) {
+  const { active, setActive } = useContext(ActiveCiteContext);
+  const isActive = active === n;
+  return (
+    <span
+      data-cite-chip={n}
+      data-active={isActive ? "1" : undefined}
+      className={"cite-chip-wrap" + (isActive ? " cite-chip-active" : "")}
+      onMouseEnter={() => setActive(n)}
+      onMouseLeave={() => setActive(null)}
+    >
+      <Cite n={n} title={title} src={src} excerpt={excerpt} />
+    </span>
+  );
 }

@@ -270,14 +270,49 @@ function MeetingView({ proposal }: { proposal: ScheduleMeetingProposal }) {
         </div>
         <div className="label" style={{ paddingTop: 3 }}>when</div>
         <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
-          {proposal.proposedTimes.map((t, i) => (
-            <div key={t}>
-              <span style={{ color: i === 0 ? "var(--color-vermilion)" : "var(--color-paper-faint)" }}>
-                {i === 0 ? "→" : "·"}
-              </span>{" "}
-              {fmtTime(t)}
-            </div>
-          ))}
+          {proposal.proposedTimes.map((t, i) => {
+            const slot = proposal.slots?.[i];
+            const isPreferred = (proposal.preferredIdx ?? -1) === i;
+            const free = slot?.free ?? true;
+            return (
+              <div key={t} style={{ marginBottom: 6, lineHeight: 1.45 }}>
+                <span
+                  style={{
+                    color: isPreferred
+                      ? "var(--color-vermilion)"
+                      : free
+                        ? "var(--color-paper-faint)"
+                        : "var(--color-saffron)",
+                    fontWeight: 500,
+                  }}
+                >
+                  {isPreferred ? "→" : free ? "✓" : "✗"}
+                </span>{" "}
+                {fmtTime(t)}
+                {slot && (
+                  <span style={{ marginLeft: 8, fontSize: "0.78rem", color: free ? "#7a8a44" : "var(--color-saffron)" }}>
+                    {free ? "free" : `conflicts with ${slot.conflicts.length} event${slot.conflicts.length === 1 ? "" : "s"}`}
+                  </span>
+                )}
+                {slot && !free && slot.conflicts.length > 0 && (
+                  <ul style={{ marginTop: 4, marginLeft: 18, fontSize: "0.74rem", color: "var(--color-paper-muted)", listStyle: "none", paddingLeft: 0 }}>
+                    {slot.conflicts.slice(0, 2).map((c) => (
+                      <li key={c.id}>
+                        <span style={{ color: "var(--color-vermilion)" }}>·</span>{" "}
+                        {c.title}
+                        {c.location && (
+                          <span style={{ color: "var(--color-paper-faint)" }}> · {c.location}</span>
+                        )}
+                      </li>
+                    ))}
+                    {slot.conflicts.length > 2 && (
+                      <li style={{ color: "var(--color-paper-faint)" }}>+ {slot.conflicts.length - 2} more</li>
+                    )}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </div>
         <div className="label" style={{ paddingTop: 3 }}>duration</div>
         <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
