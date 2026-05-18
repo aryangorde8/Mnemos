@@ -42,7 +42,7 @@ export default function Dashboard() {
         <title>Mnemos — the memory agent</title>
       </Head>
       <main className="relative min-h-dvh w-full overflow-x-hidden scene-3d">
-        <Spotlight intensity={0.28} />
+        <Spotlight intensity={0.55} />
         {/* Constellation canvas — fills the top of the page, sits behind everything.
             Particle field of stars, hairline links, auto-firing vermilion reasoning
             traces, click-to-trace. Mnemos-III centerpiece. */}
