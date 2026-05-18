@@ -18,8 +18,18 @@ cd "$(dirname "$0")/.."
 ROOT="$PWD"
 
 if [[ -f .env.local ]]; then
-  # shellcheck disable=SC1091
-  set -a; source .env.local; set +a
+  # Source .env.local but DO NOT overwrite vars the user already exported —
+  # otherwise NEXT_PUBLIC_AGENT_URL=... in front of the script call is ignored.
+  while IFS='=' read -r key val; do
+    # skip comments + blank lines + invalid keys
+    [[ -z "$key" || "$key" =~ ^# || ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && continue
+    # only set if not already in environment
+    if [[ -z "${!key+x}" ]]; then
+      # strip surrounding quotes from val if present
+      val="${val%\"}"; val="${val#\"}"; val="${val%\'}"; val="${val#\'}"
+      export "$key=$val"
+    fi
+  done < .env.local
 fi
 
 : "${GOOGLE_CLOUD_PROJECT:?GOOGLE_CLOUD_PROJECT is required}"
