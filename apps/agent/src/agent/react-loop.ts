@@ -4,7 +4,7 @@ import { SYSTEM_PROMPT, userFraming } from "./prompts.js";
 import { TOOL_REGISTRY, TOOLS } from "./tools/index.js";
 import type { AgentEvent, Citation } from "./types.js";
 
-const MAX_TURNS = 6;
+const MAX_TURNS = 14;
 
 export interface RunOptions {
   query: string;
