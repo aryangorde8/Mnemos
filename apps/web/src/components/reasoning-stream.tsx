@@ -320,10 +320,13 @@ function StreamRow({
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* Stream node — sits on the rule */}
+      {/* Stream node — sits on the rule.
+          Negative offsets push it back into the timeline's 96px gutter
+          so it lands ON the vertical rule (at left:78 in the timeline div),
+          not 90px into the content area. */}
       <motion.div
         className={"stream-node " + nodeState}
-        style={{ left: nodeState === "active" ? 74 : 76, top: 8 }}
+        style={{ left: nodeState === "active" ? -22 : -20, top: 8 }}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
