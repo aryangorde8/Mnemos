@@ -1,25 +1,36 @@
 @import "tailwindcss";
 
 @theme {
-  /* warm umber palette — not black; cocoa-leaning so the editorial type feels printed, not screen-rendered */
-  --color-ink: #1a130c;
-  --color-ink-1: #221a12;
-  --color-ink-2: #2a2017;
-  --color-ink-3: #33271c;
-  --color-rule: #3d2f22;
-  --color-rule-strong: #54402f;
-  --color-paper: #f5ecd9;
-  --color-paper-dim: #ddd1ba;
-  --color-paper-muted: #a8987c;
-  --color-paper-faint: #786a52;
+  /* Mnemos-III palette — deep warm umber, atmospheric vermilion haze at top.
+     Darker than the previous brown — pure-leaning at the floor, paper-grain
+     noise overlay, restrained vermilion glow above the fold. Editorial
+     newsprint at midnight. */
+  --color-ink: #050402;
+  --color-ink-1: #0e0a05;
+  --color-ink-2: #14100a;
+  --color-ink-3: #1b1610;
+  --color-rule: #2a2218;
+  --color-rule-strong: #3a3024;
+  --color-rule-soft: #1f1a13;
+  --color-paper: #f3ecdf;
+  --color-paper-dim: #d8d2c5;
+  --color-paper-muted: #9c9486;
+  --color-paper-faint: #6c645a;
+  --color-paper-ghost: #4a443c;
   --color-vermilion: #f25738;
-  --color-vermilion-deep: #c93f25;
-  --color-saffron: #f0c84a;
+  --color-vermilion-deep: #b73826;
+  --color-vermilion-haze: rgba(242, 87, 56, 0.06);
+  --color-saffron: #e8c547;
   --color-moss: #7a8a44;
-  /* gradient stops used by hero + scrolling backgrounds */
-  --grad-warm-top: #2b1d12;
-  --grad-warm-mid: #1c140c;
-  --grad-warm-bottom: #110b06;
+  /* legacy gradient tokens kept so old refs don't break */
+  --grad-warm-top: #14100a;
+  --grad-warm-mid: #0e0a05;
+  --grad-warm-bottom: #050402;
+  /* motion tokens from Mnemos-III */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --snap: 220ms;
+  --reveal: 320ms;
+  --slow: 620ms;
 
   --font-display: "Instrument Serif", "Iowan Old Style", "Apple Garamond",
     "Baskerville", "Times New Roman", serif;
@@ -51,38 +62,43 @@
 
   body {
     min-height: 100dvh;
-    background-color: var(--grad-warm-mid);
-    background-image:
-      /* top warm haze — vermilion atmosphere */
-      radial-gradient(
-        ellipse 90% 55% at 50% -5%,
-        rgba(242, 87, 56, 0.10),
-        transparent 60%
-      ),
-      /* bottom-right amber pool */
-      radial-gradient(
-        ellipse 60% 40% at 100% 100%,
-        rgba(240, 200, 74, 0.04),
-        transparent 60%
-      ),
-      /* bottom-left cocoa depth */
-      radial-gradient(
-        ellipse 50% 50% at 0% 100%,
-        rgba(43, 29, 18, 0.55),
-        transparent 65%
-      ),
-      /* the editorial vertical wash — umber top fading to cocoa bottom */
-      linear-gradient(
-        180deg,
-        var(--grad-warm-top) 0%,
-        var(--grad-warm-mid) 32%,
-        var(--grad-warm-bottom) 100%
-      ),
-      /* paper-grain noise overlay */
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.95 0 0 0 0 0.92 0 0 0 0 0.86 0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-    background-blend-mode: normal, normal, normal, normal, overlay;
-    background-attachment: fixed, fixed, fixed, fixed, scroll;
+    background-color: var(--color-ink);
+    position: relative;
   }
+  /* Mnemos-III atmospherics — vermilion haze at top, deep ink pool at bottom */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse 1200px 480px at 50% -10%,
+        var(--color-vermilion-haze),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 80% 60% at 50% 100%,
+        rgba(20, 16, 10, 0.6),
+        transparent 70%
+      );
+  }
+  /* paper grain — restrained horizontal scan lines, 1.2% opacity */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(243, 236, 223, 0.012) 0 1px,
+      transparent 1px 3px
+    );
+  }
+  /* every direct child of body sits above the fixed atmospherics */
+  body > * { position: relative; z-index: 1; }
 
   ::selection {
     background-color: var(--color-vermilion);
@@ -889,3 +905,25 @@
 
 /* Highlighted body text — when crossing back from chip to text, we use this */
 .answer-prose { scroll-margin-top: 80px; }
+
+/* ============================================================
+   Mnemos-III adopted motion + chrome primitives
+   ============================================================ */
+@keyframes lsc-rise-left {
+  from { transform: translateX(-10px); }
+  to   { transform: translateX(0); }
+}
+@keyframes m3-rise-up {
+  from { transform: translateY(8px); }
+  to   { transform: translateY(0); }
+}
+.m3-rise-up { animation: m3-rise-up var(--reveal) var(--ease) both; }
+
+/* corner stream pane — backdrop-blurred ink card */
+.corner-stream-pane {
+  background: rgba(14, 10, 5, 0.78);
+  border: 1px solid var(--color-rule);
+  padding: 18px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
