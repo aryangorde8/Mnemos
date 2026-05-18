@@ -7,6 +7,8 @@ import { StatusPill } from "@/components/editorial";
 import { Spotlight } from "@/components/spotlight";
 import { Reveal, Words, Drawline, stagger, fadeRise } from "@/components/motion-primitives";
 import { AmbientOrbs, Tilt3D, ScrollReveal } from "@/components/parallax";
+import { ConstellationCanvas } from "@/components/constellation-canvas";
+import { LiveStreamCorner } from "@/components/live-stream-corner";
 
 type ReadyState = { atlas: boolean; vertex: boolean; agent: boolean } | null;
 type StatsState = { docs: number; chunks: number } | null;
@@ -40,9 +42,25 @@ export default function Dashboard() {
         <title>Mnemos — the memory agent</title>
       </Head>
       <main className="relative min-h-dvh w-full overflow-x-hidden scene-3d">
-        <Spotlight intensity={0.38} />
-        {/* Drifting warm orbs — sit behind everything, parallax on scroll */}
-        <div className="pointer-events-none fixed inset-0 z-0">
+        <Spotlight intensity={0.28} />
+        {/* Constellation canvas — fills the top of the page, sits behind everything.
+            Particle field of stars, hairline links, auto-firing vermilion reasoning
+            traces, click-to-trace. Mnemos-III centerpiece. */}
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-0" style={{ height: 720 }}>
+          <div className="pointer-events-auto absolute inset-0">
+            <ConstellationCanvas density={1.1} traceOn height={720} />
+          </div>
+          {/* gentle bottom fade so the headline reads */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, transparent 0%, transparent 55%, rgba(5,4,2,0.65) 88%, rgba(5,4,2,0.95) 100%)",
+            }}
+          />
+        </div>
+        {/* keep a single low-opacity orb for the warmth, drop the trio (constellation is busy enough) */}
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-50">
           <AmbientOrbs />
         </div>
         <TopBar status={status} />
@@ -50,7 +68,7 @@ export default function Dashboard() {
         <BottomBar atlasOk={status?.atlas} stats={stats} />
 
         <motion.section
-          className="relative z-10 mx-auto max-w-[1240px] px-10 pb-32 pt-32 md:px-16"
+          className="relative z-10 mx-auto max-w-[1240px] px-10 pb-32 pt-28 md:px-16"
           style={{ y: heroY, opacity: heroOpacity }}
         >
           {/* Hero kicker */}
@@ -61,58 +79,62 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Drawline width={40} delay={0.1} />
-            <span>day {hackathonDay()} · the rapid agent hackathon · mongodb partner track</span>
+            <Drawline width={32} delay={0.1} />
+            <span>── mnemos · the memory agent</span>
           </motion.div>
 
-          {/* Hero headline — word-by-word reveal */}
-          <motion.h1
-            className="display mt-7"
-            style={{
-              fontSize: "clamp(2.8rem, 7.4vw, 6.6rem)",
-              lineHeight: 0.94,
-              letterSpacing: "-0.02em",
-              color: "var(--color-paper)",
-              maxWidth: "22ch",
-            }}
-            variants={stagger(0.05, 0.18)}
-            initial="hidden"
-            animate="show"
-          >
-            <Words text="The first agent that takes" gap={0.045} />
-            <br />
-            <motion.em
-              variants={fadeRise}
-              className="display-i"
-              style={{ display: "inline-block", color: "var(--color-paper)" }}
-            >
-              multi-step actions
-            </motion.em>{" "}
-            <motion.span variants={fadeRise} style={{ display: "inline-block", color: "var(--color-paper-dim)" }}>
-              on top
-            </motion.span>
-            <br />
-            <Words
-              text="of your professional memory."
-              gap={0.045}
-              style={{ color: "var(--color-paper-dim)" }}
-            />
-          </motion.h1>
+          {/* Hero composition — headline left, live stream corner right */}
+          <div className="mt-7 grid items-start gap-12 md:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="min-w-0">
+              {/* Hero headline — Mnemos-III copy + word reveal */}
+              <motion.h1
+                className="display"
+                style={{
+                  fontSize: "clamp(2.6rem, 7vw, 5.8rem)",
+                  lineHeight: 1.0,
+                  letterSpacing: "-0.022em",
+                  color: "var(--color-paper)",
+                  textWrap: "balance",
+                }}
+                variants={stagger(0.05, 0.18)}
+                initial="hidden"
+                animate="show"
+              >
+                <Words text="Your professional memory," gap={0.045} />
+                <br />
+                <motion.span variants={fadeRise} className="display-i" style={{ display: "inline-block", color: "var(--color-vermilion)" }}>
+                  made navigable.
+                </motion.span>
+              </motion.h1>
+            </div>
+
+            {/* Live stream corner — proof, not decoration */}
+            <Reveal delay={1.05}>
+              <div className="corner-stream-pane m3-rise-up">
+                <div className="mb-3.5 flex items-baseline justify-between">
+                  <span className="label">live · stream 0x4a91</span>
+                  <span className="pulse-dot" />
+                </div>
+                <LiveStreamCorner />
+              </div>
+            </Reveal>
+          </div>
 
           {/* Sub-paragraph */}
           <Reveal delay={1.0}>
             <p
-              className="mt-9"
+              className="mt-8"
               style={{
-                maxWidth: 640,
-                fontSize: "1.02rem",
-                color: "var(--color-paper-muted)",
-                lineHeight: 1.6,
+                maxWidth: 560,
+                fontSize: "1rem",
+                color: "var(--color-paper-dim)",
+                lineHeight: "26px",
               }}
             >
-              Mnemos ingests your corpus once — every email, calendar event, meeting note, shared doc,
-              slack message, and stray jot. From then on it retrieves, reasons in a live stream, and
-              proposes concrete actions that wait for one&#8209;click approval. Not search. Not notes.
+              Ingest your email, calendar, notes, slack, and docs. Mnemos reasons over the corpus
+              with Gemini 3 Pro, drafts the action, and a second{" "}
+              <em style={{ color: "var(--color-saffron)", fontStyle: "normal" }}>Critic agent</em>{" "}
+              audits the draft — before you approve with one click.
             </p>
           </Reveal>
 
@@ -120,22 +142,20 @@ export default function Dashboard() {
           <Reveal delay={1.2}>
             <div className="mt-9 flex flex-wrap items-center gap-x-4 gap-y-3">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Link href="/ingest" className="btn-decisive primary">begin ingest</Link>
+                <Link href="/ask" className="btn-decisive primary">watch it reason →</Link>
               </motion.div>
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Link href="/ask" className="btn-decisive">ask the agent</Link>
+                <Link href="/memory" className="btn-decisive">tour the memory</Link>
               </motion.div>
-              <span className="chrome ml-3">
-                press <span style={{ color: "var(--color-paper)" }}>⌘K</span> anywhere to ask
-              </span>
+              <span className="chrome ml-3">click anywhere on the field to trace</span>
             </div>
           </Reveal>
 
-          <hr className="hair mt-16" />
+          <hr className="hair mt-20" />
 
-          {/* Three editorial tiles — staggered scale-in */}
+          {/* Four editorial tiles — staggered scale-in */}
           <motion.div
-            className="scene-3d grid grid-cols-1 md:grid-cols-3"
+            className="scene-3d grid grid-cols-1 md:grid-cols-4"
             variants={stagger(0.08, 1.4)}
             initial="hidden"
             animate="show"
@@ -200,24 +220,32 @@ const TILES = [
     glyph: "❡",
     title: "Memory",
     italic: "ingested.",
-    body: "A unified vault of mail, calendar, notes, slack and shared docs — stored as vectors in MongoDB Atlas, queryable in milliseconds.",
-    href: "/search",
+    body: "Mail, calendar, notes, slack, docs — vectorized in MongoDB Atlas, queryable in milliseconds.",
+    href: "/memory",
   },
   {
     num: "02",
-    glyph: "⌗",
+    glyph: "◆",
     title: "Reasoning",
     italic: "streamed.",
-    body: "Watch Gemini 3 Pro think out loud over a server-sent event stream. Every thought, every retrieval, every citation — in order.",
+    body: "Gemini 3 Pro thinks out loud over SSE. Every thought, retrieval, observation, citation — in order.",
     href: "/ask",
   },
   {
     num: "03",
     glyph: "✎",
-    title: "Action",
-    italic: "proposed.",
-    body: "The agent drafts the email, schedules the meeting, books the follow-up. You approve in one click. Nothing happens without you.",
-    href: "/actions",
+    title: "Critique",
+    italic: "audited.",
+    body: "A second agent red-pencils the first. Drafts arrive with their own copy-editor's notes.",
+    href: "/ask",
+  },
+  {
+    num: "04",
+    glyph: "⌗",
+    title: "Hybrid retrieval",
+    italic: "cited.",
+    body: "Vector + BM25 fused via RRF and reranked. Every claim traceable to a chunk in the vault.",
+    href: "/search",
   },
 ];
 
