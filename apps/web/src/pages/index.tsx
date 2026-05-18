@@ -147,67 +147,13 @@ export default function Dashboard() {
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Link href="/memory" className="btn-decisive">tour the memory</Link>
               </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Link href="/overview" className="btn-decisive ghost">read the overview</Link>
+              </motion.div>
               <span className="chrome ml-3">click anywhere on the field to trace</span>
             </div>
           </Reveal>
 
-          <hr className="hair mt-20" />
-
-          {/* Four editorial tiles — staggered scale-in */}
-          <motion.div
-            className="scene-3d grid grid-cols-1 md:grid-cols-4"
-            variants={stagger(0.08, 1.4)}
-            initial="hidden"
-            animate="show"
-          >
-            {TILES.map((t, i) => (
-              <motion.div key={t.title} variants={fadeRise}>
-                <Tilt3D max={5} lift={10}>
-                  <Tile tile={t} last={i === TILES.length - 1} />
-                </Tilt3D>
-              </motion.div>
-            ))}
-          </motion.div>
-          <hr className="hair" />
-
-          {/* Status pills row */}
-          <motion.div
-            className="mt-12 flex flex-wrap items-center gap-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 1.7, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <StatusPill
-              label="Atlas"
-              value={status?.atlas ? "connected" : "offline"}
-              state={status === null ? "pending" : status.atlas ? "on" : "off"}
-              latency={status?.atlas ? 12 : undefined}
-              seed={1}
-            />
-            <StatusPill
-              label="Vertex"
-              value={status?.vertex ? "connected" : "awaiting creds"}
-              state={status === null ? "pending" : status.vertex ? "on" : "off"}
-              latency={status?.vertex ? 86 : undefined}
-              seed={2}
-            />
-            <StatusPill
-              label="Agent"
-              value={status?.agent ? "live" : "offline"}
-              state={status === null ? "pending" : status.agent ? "on" : "off"}
-              latency={status?.agent ? 4 : undefined}
-              seed={3}
-            />
-          </motion.div>
-
-          {/* Sign-off */}
-          <div className="mt-16 flex flex-wrap items-baseline justify-between gap-y-2">
-            <span className="chrome">
-              corpus: <span className="tabular">{stats ? `${stats.docs} / 247` : "0 / 247"}</span>{" "}
-              documents{stats && stats.chunks > 0 ? ` · ${stats.chunks} chunks` : " · vault offline until ingest"}
-            </span>
-            <span className="chrome">— signed, the agent.</span>
-          </div>
         </motion.section>
       </main>
     </>
