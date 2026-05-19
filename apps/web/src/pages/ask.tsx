@@ -138,7 +138,12 @@ export default function AskPage() {
           </div>
 
           <div className="mt-12">
-            <ReasoningStream items={items} running={running} runId={runId} />
+            <ReasoningStream
+              items={items}
+              running={running}
+              runId={runId}
+              onReplay={() => { if (query.trim()) void runWith(query); }}
+            />
           </div>
 
           {items.length === 0 && !running ? (

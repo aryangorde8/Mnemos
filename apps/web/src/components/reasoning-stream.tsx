@@ -78,10 +78,14 @@ export function ReasoningStream({
   items,
   running,
   runId,
+  onReplay,
 }: {
   items: StreamItem[];
   running: boolean;
   runId: string | null;
+  /** when set, a replay button appears in the header and fires this on click.
+      Only enabled when the stream is complete (not currently running). */
+  onReplay?: () => void;
 }) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState<number | null>(null);
@@ -153,9 +157,40 @@ export function ReasoningStream({
             )}
           </span>
         </div>
-        <span className="chrome">
-          {items.length} {items.length === 1 ? "node" : "nodes"}
-        </span>
+        <div className="flex items-baseline gap-4">
+          {onReplay && !running && items.length > 0 && (
+            <button
+              onClick={onReplay}
+              className="mono focusable"
+              style={{
+                padding: "4px 10px",
+                fontSize: "0.7rem",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "var(--color-paper-dim)",
+                border: "1px solid var(--color-rule-strong)",
+                background: "var(--color-ink-2)",
+                cursor: "pointer",
+                transition: "all var(--snap) var(--ease)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-vermilion)";
+                e.currentTarget.style.color = "var(--color-paper)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-rule-strong)";
+                e.currentTarget.style.color = "var(--color-paper-dim)";
+              }}
+              title="replay the last query"
+            >
+              <span style={{ color: "var(--color-vermilion)", marginRight: 6 }}>↻</span>
+              replay
+            </button>
+          )}
+          <span className="chrome">
+            {items.length} {items.length === 1 ? "node" : "nodes"}
+          </span>
+        </div>
       </header>
 
       {/* Cinematic timeline */}
