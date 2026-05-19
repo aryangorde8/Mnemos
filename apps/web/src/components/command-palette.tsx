@@ -20,6 +20,7 @@ const NAV_COMMANDS: Array<{ id: string; label: string; hint: string; href: strin
   { id: "search", label: "search the vault", hint: "ranked vector recall", href: "/search" },
   { id: "memory", label: "the memory graph", hint: "extracted people · projects · relations", href: "/memory" },
   { id: "overview", label: "the four wedges", hint: "memory · reasoning · critique · hybrid", href: "/overview" },
+  { id: "runs", label: "runs · agent history", hint: "every past reasoning · click to replay", href: "/runs" },
   { id: "briefings", label: "briefings · the morning paper", hint: "1-pagers for upcoming meetings", href: "/briefings" },
   { id: "commitments", label: "commitments · the ledger", hint: "promises in & out", href: "/commitments" },
   { id: "actions", label: "actions · the queue", hint: "approvals and history", href: "/actions" },
