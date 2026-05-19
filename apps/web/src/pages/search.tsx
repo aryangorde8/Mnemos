@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ingestStats, ready, search, SearchFailed, type IngestStats, type ReadyResponse, type SearchResponse } from "@/lib/api";
 import { SearchInput } from "@/components/search-input";
 import { ResultCard } from "@/components/result-card";
+import { SearchPipeline } from "@/components/search-pipeline";
 
 interface UIState {
   query: string;
@@ -277,6 +278,8 @@ function EmptyPanel({ stats }: { stats: IngestStats | null }) {
 }
 
 function ResultsPanel({ response }: { response: SearchResponse }) {
+  const [view, setView] = useState<"pipeline" | "results">("pipeline");
+
   if (response.count === 0) {
     return (
       <div className="border-t border-[color:var(--color-rule)] py-12">
@@ -292,23 +295,70 @@ function ResultsPanel({ response }: { response: SearchResponse }) {
       </div>
     );
   }
+
   const phases = response.phases ?? [];
+
   return (
     <div>
-      <div className="flex items-baseline justify-between border-y border-[color:var(--color-rule)] py-3">
-        <span className="label">
-          {response.count} citations · hybrid retrieval
-        </span>
-        <span className="chrome tabular-nums">
+      {/* view toggle */}
+      <div className="flex items-baseline gap-1 border-b border-[color:var(--color-rule)]">
+        {(["pipeline", "results"] as const).map((v) => {
+          const active = view === v;
+          return (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className="mono focusable"
+              style={{
+                padding: "10px 16px",
+                fontSize: 10,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: active ? "var(--color-paper)" : "var(--color-paper-muted)",
+                borderBottom: active ? "1px solid var(--color-vermilion)" : "1px solid transparent",
+                transition: "all var(--snap) var(--ease)",
+                background: active ? "var(--color-ink-2)" : "transparent",
+                cursor: "pointer",
+              }}
+            >
+              <span
+                style={{
+                  color: active ? "var(--color-vermilion)" : "var(--color-paper-faint)",
+                  marginRight: 6,
+                  fontSize: 9,
+                }}
+              >
+                v.{v === "pipeline" ? "01" : "02"}
+              </span>
+              {v}
+            </button>
+          );
+        })}
+        <span className="ml-auto chrome tabular-nums" style={{ padding: "10px 0" }}>
           {phases.length > 0 ? phases.join(" → ") + " · " : ""}
           {response.tookMs} ms
         </span>
       </div>
-      <div>
-        {response.results.map((hit, i) => (
-          <ResultCard key={hit.chunkId} hit={hit} rank={i + 1} />
-        ))}
-      </div>
+
+      {view === "pipeline" ? (
+        <div className="mt-8">
+          <SearchPipeline response={response} />
+          <div className="mt-10 border-t border-[color:var(--color-rule)] pt-6">
+            <span className="label">cited hits</span>
+            <div className="mt-4">
+              {response.results.map((hit, i) => (
+                <ResultCard key={hit.chunkId} hit={hit} rank={i + 1} />
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4">
+          {response.results.map((hit, i) => (
+            <ResultCard key={hit.chunkId} hit={hit} rank={i + 1} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
