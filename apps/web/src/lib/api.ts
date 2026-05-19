@@ -148,6 +148,11 @@ export interface ActionRecord {
   runId: string | null;
   origin: "agent" | "manual";
   model: string | null;
+  sentVia?: "simulated" | "gmail" | null;
+  sentAs?: string | null;
+  gmailMessageId?: string | null;
+  gmailThreadId?: string | null;
+  gmailError?: string | null;
   createdAt: string;
   decidedAt: string | null;
 }
@@ -343,6 +348,36 @@ export async function getCritiqueForAction(actionId: string): Promise<CritiqueRe
   const res = await fetch(`${AGENT}/actions/${actionId}/critique`, { cache: "no-store" });
   if (!res.ok) return null;
   return (await res.json()) as CritiqueRecord;
+}
+
+// ─── Gmail OAuth ────────────────────────────────────────────────────────
+
+export interface GmailStatus {
+  configured: boolean;
+  connected: boolean;
+  email?: string;
+}
+
+export async function getGmailStatus(): Promise<GmailStatus> {
+  try {
+    const res = await fetch(`${AGENT}/auth/google/status`, { cache: "no-store" });
+    if (!res.ok) return { configured: false, connected: false };
+    return (await res.json()) as GmailStatus;
+  } catch {
+    return { configured: false, connected: false };
+  }
+}
+
+export function gmailConnectUrl(): string {
+  return `${AGENT}/auth/google/start`;
+}
+
+export async function disconnectGmail(): Promise<boolean> {
+  const res = await fetch(`${AGENT}/auth/google/disconnect`, {
+    method: "POST",
+    cache: "no-store",
+  });
+  return res.ok;
 }
 
 // ─── Memory graph ────────────────────────────────────────────────────────

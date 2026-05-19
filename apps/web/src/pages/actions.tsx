@@ -1,17 +1,33 @@
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { listActions, type ActionRecord, type ActionStatus } from "@/lib/api";
+import {
+  disconnectGmail,
+  getGmailStatus,
+  gmailConnectUrl,
+  listActions,
+  type ActionRecord,
+  type ActionStatus,
+  type GmailStatus,
+} from "@/lib/api";
 import { ApprovalCard } from "@/components/approval-card";
 
 type FilterTab = "proposed" | "sent" | "rejected" | "all";
 
 export default function ActionsPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<FilterTab>("proposed");
   const [actions, setActions] = useState<ActionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [gmail, setGmail] = useState<GmailStatus | null>(null);
+  const justConnected = router.query.connected === "gmail";
+
+  useEffect(() => {
+    void getGmailStatus().then(setGmail);
+  }, [justConnected, reloadKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +84,21 @@ export default function ActionsPage() {
             What the agent
             <span style={{ color: "var(--color-paper-muted)" }}> has proposed.</span>
           </h1>
+
+          {/* Gmail OAuth banner — only visible when the agent has Gmail
+              env vars configured. When connected, the next 'approve & send'
+              actually sends via Gmail API; otherwise the simulated send
+              behaviour is unchanged. */}
+          {gmail?.configured && (
+            <GmailBanner
+              status={gmail}
+              justConnected={justConnected}
+              onDisconnect={async () => {
+                await disconnectGmail();
+                setReloadKey((k) => k + 1);
+              }}
+            />
+          )}
 
           <div className="mt-10 flex flex-wrap items-baseline gap-x-6 gap-y-2 border-b border-[color:var(--color-rule)] pb-3">
             {(["proposed", "sent", "rejected", "all"] as const).map((t) => (
@@ -172,6 +203,118 @@ function EmptyPanel({ tab }: { tab: FilterTab }) {
       <p className="mt-3 max-w-[52ch] text-[1.05rem] leading-relaxed text-[color:var(--color-paper-dim)]">
         {msgs[tab]}
       </p>
+    </div>
+  );
+}
+
+function GmailBanner({
+  status,
+  justConnected,
+  onDisconnect,
+}: {
+  status: GmailStatus;
+  justConnected: boolean;
+  onDisconnect: () => void | Promise<void>;
+}) {
+  const connected = status.connected;
+  return (
+    <div
+      className="mt-8 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3"
+      style={{
+        border: "1px solid var(--color-rule)",
+        background: "var(--color-ink-1)",
+        padding: "14px 20px",
+        position: "relative",
+      }}
+    >
+      <span
+        style={{
+          position: "absolute",
+          left: -1,
+          top: -1,
+          bottom: -1,
+          width: 2,
+          background: connected ? "var(--color-moss)" : "var(--color-saffron)",
+        }}
+      />
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, maxWidth: 720 }}>
+        <div className="flex items-baseline gap-3">
+          <span
+            className="label"
+            style={{ color: connected ? "var(--color-moss)" : "var(--color-saffron)" }}
+          >
+            {connected ? "✓ gmail connected" : "gmail · awaiting connect"}
+          </span>
+          {justConnected && connected && (
+            <span className="chrome" style={{ color: "var(--color-paper-dim)" }}>
+              ← just authorized
+            </span>
+          )}
+        </div>
+        <p
+          className="chrome"
+          style={{ color: "var(--color-paper-muted)", lineHeight: 1.55, maxWidth: 640 }}
+        >
+          {connected ? (
+            <>
+              Approvals on draft emails will send live via{" "}
+              <span style={{ color: "var(--color-paper)" }}>{status.email ?? "your account"}</span>{" "}
+              using <code style={{ color: "var(--color-paper-dim)" }}>gmail.users.messages.send</code>.
+              Disconnect to fall back to simulated sends.
+            </>
+          ) : (
+            <>
+              Connect your Google account once and the next{" "}
+              <em className="display-i">approve &amp; send</em> will fire a real Gmail
+              <code style={{ color: "var(--color-paper-dim)" }}> users.messages.send</code> instead of
+              just flipping the status to <span style={{ color: "var(--color-paper-dim)" }}>sent</span>.
+              You can disconnect anytime.
+            </>
+          )}
+        </p>
+      </div>
+      <div>
+        {connected ? (
+          <button
+            onClick={() => void onDisconnect()}
+            className="mono focusable"
+            style={{
+              padding: "6px 14px",
+              fontSize: 10,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--color-paper-muted)",
+              border: "1px solid var(--color-rule-strong)",
+              background: "var(--color-ink-2)",
+              cursor: "pointer",
+            }}
+          >
+            ⊘ disconnect
+          </button>
+        ) : (
+          <a
+            href={gmailConnectUrl()}
+            className="mono focusable"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 14px",
+              fontSize: 10,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--color-paper)",
+              border: "1px solid var(--color-vermilion)",
+              background: "var(--color-ink-2)",
+              cursor: "pointer",
+              textDecoration: "none",
+            }}
+          >
+            <span style={{ color: "var(--color-vermilion)" }}>→</span>
+            connect gmail
+          </a>
+        )}
+      </div>
     </div>
   );
 }

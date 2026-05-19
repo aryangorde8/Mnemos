@@ -358,8 +358,15 @@ function MeetingView({ proposal }: { proposal: ScheduleMeetingProposal }) {
 }
 
 function statusFooter(a: ActionRecord): string {
-  if (a.status === "sent")
+  if (a.status === "sent") {
+    if (a.sentVia === "gmail" && a.gmailMessageId) {
+      return `sent via gmail · ${a.gmailMessageId.slice(0, 12)} · ${fmtTime(a.decidedAt ?? a.createdAt)}`;
+    }
+    if (a.gmailError) {
+      return `sent (gmail err: ${a.gmailError.slice(0, 40)}) · ${fmtTime(a.decidedAt ?? a.createdAt)}`;
+    }
     return `sent · ${fmtTime(a.decidedAt ?? a.createdAt)}`;
+  }
   if (a.status === "rejected")
     return `rejected · ${a.reason ?? "no reason given"}`;
   return "";
