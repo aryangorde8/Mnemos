@@ -16,16 +16,30 @@ interface AgentEnvelope<T = unknown> {
   data: T;
 }
 
+interface PastTurn {
+  query: string;
+  answer: string;
+  items: StreamItem[];
+  runId: string | null;
+}
+
 export default function AskPage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [running, setRunning] = useState(false);
   const [items, setItems] = useState<StreamItem[]>([]);
   const [runId, setRunId] = useState<string | null>(null);
+  /** Past turns from this conversation — passed to the agent as history
+      on every new query so it can reference earlier answers. */
+  const [thread, setThread] = useState<PastTurn[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const autoRanRef = useRef(false);
+  // Latest streamed answer text — kept in a ref so we can capture it on
+  // 'done' without waiting for a setState re-render.
+  const itemsRef = useRef<StreamItem[]>([]);
+  useEffect(() => { itemsRef.current = items; }, [items]);
 
-  const runWith = useCallback(async (q: string) => {
+  const runWith = useCallback(async (q: string, currentThread: PastTurn[]) => {
     const trimmed = q.trim();
     if (!trimmed) return;
     abortRef.current?.abort();
@@ -36,14 +50,37 @@ export default function AskPage() {
     setRunId(null);
     setRunning(true);
 
+    // Build the history payload from past turns: each turn becomes
+    //   user → query
+    //   model → final answer
+    const history = currentThread.flatMap((t) => [
+      { role: "user" as const, text: t.query },
+      { role: "model" as const, text: t.answer },
+    ]);
+
+    let myRunId: string | null = null;
     try {
       await streamAsk({
         query: trimmed,
+        ...(history.length > 0 ? { history } : {}),
         signal: ac.signal,
         onEvent: (env: AgentEnvelope) => {
-          handleEvent(env, setItems, setRunId);
+          handleEvent(env, setItems, (id) => { myRunId = id; setRunId(id); });
         },
       });
+      // On clean completion, archive this run as a past turn for the next query
+      const finalItems = itemsRef.current;
+      const answerItem = finalItems.find((i): i is Extract<StreamItem, { kind: "answer" }> => i.kind === "answer");
+      const answerText = answerItem?.text ?? "";
+      if (answerText.trim().length > 0) {
+        setThread((prev) => [
+          ...prev,
+          { query: trimmed, answer: answerText, items: finalItems, runId: myRunId },
+        ]);
+        setItems([]); // clear the live stream — the archived card takes over
+        setRunId(null);
+        setQuery(""); // ready for the next follow-up
+      }
     } catch (err) {
       if (ac.signal.aborted) return;
       const msg = err instanceof Error ? err.message : String(err);
@@ -53,10 +90,19 @@ export default function AskPage() {
     }
   }, []);
 
+  const resetThread = useCallback(() => {
+    abortRef.current?.abort();
+    setThread([]);
+    setItems([]);
+    setRunId(null);
+    setQuery("");
+    setRunning(false);
+  }, []);
+
   const submit = useCallback(async () => {
     if (running) return;
-    await runWith(query);
-  }, [query, running, runWith]);
+    await runWith(query, thread);
+  }, [query, thread, running, runWith]);
 
   useEffect(() => {
     if (!router.isReady || autoRanRef.current) return;
@@ -66,7 +112,7 @@ export default function AskPage() {
       setQuery(q);
       if (run) {
         autoRanRef.current = true;
-        void runWith(q);
+        void runWith(q, []); // URL-initiated runs always start a fresh thread
       }
     }
   }, [router.isReady, router.query.q, router.query.run, runWith]);
@@ -114,44 +160,198 @@ export default function AskPage() {
             <span className="label">03 · multi-step reasoning</span>
           </div>
 
-          <h1 className="display mt-6 max-w-[28ch] text-[clamp(2rem,5vw,3.2rem)] italic leading-[1.05] text-[color:var(--color-paper)]">
-            What should the agent
-            <span style={{ color: "var(--color-paper-muted)" }}> do for you?</span>
-          </h1>
-
-          <div className="mt-12 max-w-[60ch]">
-            <SearchInput
-              value={query}
-              onChange={setQuery}
-              onSubmit={submit}
-              pending={running}
-            />
-            {running ? (
-              <button
-                onClick={cancel}
-                className="mt-3 inline-flex items-center gap-2 border border-[color:var(--color-rule-strong)] bg-[color:var(--color-ink-2)] px-3 py-1 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-[color:var(--color-paper-dim)] transition-colors hover:border-[color:var(--color-vermilion)] hover:text-[color:var(--color-paper)]"
+          {thread.length === 0 ? (
+            <h1 className="display mt-6 max-w-[28ch] text-[clamp(2rem,5vw,3.2rem)] italic leading-[1.05] text-[color:var(--color-paper)]">
+              What should the agent
+              <span style={{ color: "var(--color-paper-muted)" }}> do for you?</span>
+            </h1>
+          ) : (
+            <div className="mt-6 flex flex-wrap items-baseline justify-between gap-y-2">
+              <h1
+                className="display"
+                style={{ fontSize: "clamp(1.5rem, 3.4vw, 2.2rem)", color: "var(--color-paper)", letterSpacing: "-0.012em" }}
               >
-                <span>esc</span>
-                <span className="text-[color:var(--color-paper-faint)]">cancel</span>
+                Conversation{" "}
+                <span className="display-i" style={{ color: "var(--color-vermilion)" }}>
+                  · {thread.length} {thread.length === 1 ? "turn" : "turns"}
+                </span>
+              </h1>
+              <button
+                onClick={resetThread}
+                className="mono focusable"
+                style={{
+                  padding: "5px 12px",
+                  fontSize: 10,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "var(--color-paper-muted)",
+                  border: "1px solid var(--color-rule-strong)",
+                  background: "var(--color-ink-2)",
+                  cursor: "pointer",
+                }}
+                title="start a fresh conversation"
+              >
+                ⏎ new thread
               </button>
-            ) : null}
+            </div>
+          )}
+
+          {/* Past turns archive */}
+          {thread.length > 0 && (
+            <div className="mt-10 space-y-12">
+              {thread.map((t, i) => (
+                <PastTurnCard key={i} turn={t} index={i} />
+              ))}
+            </div>
+          )}
+
+          <div className={thread.length > 0 ? "mt-12 border-t border-[color:var(--color-rule)] pt-10" : "mt-12 max-w-[60ch]"}>
+            {thread.length > 0 && (
+              <div className="label mb-4">follow-up · the agent remembers</div>
+            )}
+            <div className="max-w-[60ch]">
+              <SearchInput
+                value={query}
+                onChange={setQuery}
+                onSubmit={submit}
+                pending={running}
+              />
+              {running ? (
+                <button
+                  onClick={cancel}
+                  className="mt-3 inline-flex items-center gap-2 border border-[color:var(--color-rule-strong)] bg-[color:var(--color-ink-2)] px-3 py-1 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-[color:var(--color-paper-dim)] transition-colors hover:border-[color:var(--color-vermilion)] hover:text-[color:var(--color-paper)]"
+                >
+                  <span>esc</span>
+                  <span className="text-[color:var(--color-paper-faint)]">cancel</span>
+                </button>
+              ) : null}
+            </div>
           </div>
 
-          <div className="mt-12">
+          <div className="mt-10">
             <ReasoningStream
               items={items}
               running={running}
               runId={runId}
-              onReplay={() => { if (query.trim()) void runWith(query); }}
+              onReplay={() => {
+                const lastTurn = thread[thread.length - 1];
+                const q = lastTurn?.query || query;
+                if (q.trim()) void runWith(q, thread.slice(0, -1));
+              }}
             />
           </div>
 
-          {items.length === 0 && !running ? (
+          {thread.length === 0 && items.length === 0 && !running ? (
             <ExampleStrip onPick={(s) => setQuery(s)} />
           ) : null}
         </section>
       </main>
     </>
+  );
+}
+
+/**
+ * PastTurnCard — collapses a finished turn into a compact archive card.
+ * The full reasoning stream stays browsable but folded; clicking the
+ * "expand" toggle re-shows the live timeline for that turn.
+ */
+function PastTurnCard({ turn, index }: { turn: PastTurn; index: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <article
+      style={{
+        border: "1px solid var(--color-rule)",
+        background: "var(--color-ink-1)",
+        position: "relative",
+      }}
+    >
+      <span
+        style={{
+          position: "absolute",
+          left: -1,
+          top: -1,
+          bottom: -1,
+          width: 2,
+          background: "var(--color-rule-strong)",
+        }}
+      />
+      <header
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          padding: "14px 24px",
+          borderBottom: "1px solid var(--color-rule)",
+        }}
+      >
+        <div className="chrome" style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
+          <span className="tabular" style={{ color: "var(--color-paper-faint)" }}>
+            turn {String(index + 1).padStart(2, "0")}
+          </span>
+          <span style={{ color: "var(--color-rule-strong)" }}>·</span>
+          {turn.runId && (
+            <>
+              <span className="tabular">run {turn.runId.slice(0, 8)}</span>
+              <span style={{ color: "var(--color-rule-strong)" }}>·</span>
+            </>
+          )}
+          <span>{turn.items.length} nodes</span>
+        </div>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="mono focusable"
+          style={{
+            padding: "3px 10px",
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--color-paper-muted)",
+            border: "1px solid var(--color-rule)",
+            background: "transparent",
+            cursor: "pointer",
+          }}
+        >
+          {open ? "▾ collapse" : "▸ expand stream"}
+        </button>
+      </header>
+
+      <div style={{ padding: "20px 28px 24px" }}>
+        <div className="label" style={{ marginBottom: 6 }}>you asked</div>
+        <div
+          className="display-i"
+          style={{
+            fontSize: "1.25rem",
+            color: "var(--color-paper)",
+            lineHeight: 1.4,
+            letterSpacing: "-0.005em",
+            marginBottom: 18,
+          }}
+        >
+          “{turn.query}”
+        </div>
+
+        <div className="label" style={{ marginBottom: 6 }}>the agent answered</div>
+        <div
+          className="display"
+          style={{
+            fontSize: "1.05rem",
+            color: "var(--color-paper-dim)",
+            lineHeight: 1.55,
+            whiteSpace: "pre-wrap",
+            maxWidth: 760,
+          }}
+        >
+          {turn.answer}
+        </div>
+
+        {open && turn.items.length > 0 && (
+          <div className="mt-8 border-t border-[color:var(--color-rule)] pt-6">
+            <div className="label mb-4">full reasoning stream</div>
+            <ReasoningStream items={turn.items} running={false} runId={turn.runId} />
+          </div>
+        )}
+      </div>
+    </article>
   );
 }
 

@@ -6,6 +6,15 @@ import { runAgent } from "../agent/react-loop.js";
 const askSchema = z.object({
   query: z.string().min(1).max(4000),
   maxTurns: z.number().int().min(1).max(12).optional(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "model"]),
+        text: z.string().min(1).max(8000),
+      }),
+    )
+    .max(20)
+    .optional(),
 });
 
 export const agentRouter: Router = createRouter();
@@ -47,6 +56,9 @@ agentRouter.post("/agent/ask", async (req: Request, res: Response) => {
     for await (const ev of runAgent({
       query: parsed.data.query,
       ...(parsed.data.maxTurns ? { maxTurns: parsed.data.maxTurns } : {}),
+      ...(parsed.data.history && parsed.data.history.length > 0
+        ? { history: parsed.data.history }
+        : {}),
     })) {
       if (closed) break;
       write(ev.kind, ev);

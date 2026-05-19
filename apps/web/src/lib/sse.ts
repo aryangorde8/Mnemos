@@ -9,6 +9,7 @@ export interface AgentEventEnvelope {
 export interface AskOptions {
   query: string;
   maxTurns?: number;
+  history?: Array<{ role: "user" | "model"; text: string }>;
   signal?: AbortSignal;
   onEvent: (envelope: AgentEventEnvelope) => void;
 }
@@ -76,12 +77,17 @@ async function streamSSE(
 export async function streamAsk({
   query,
   maxTurns,
+  history,
   signal,
   onEvent,
 }: AskOptions): Promise<void> {
   return streamSSE(
     `${AGENT_URL}/agent/ask`,
-    { query, ...(maxTurns ? { maxTurns } : {}) },
+    {
+      query,
+      ...(maxTurns ? { maxTurns } : {}),
+      ...(history && history.length > 0 ? { history } : {}),
+    },
     signal,
     onEvent,
   );

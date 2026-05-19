@@ -12,6 +12,10 @@ export interface RunOptions {
   /** Override the system prompt — used by the /debate route to spawn a
       Devil's Advocate variant on the same query. Defaults to SYSTEM_PROMPT. */
   systemPrompt?: string;
+  /** Prior conversation turns. Passed verbatim as Gemini `contents` before
+      the current user query. Each entry is what the user asked + what the
+      agent answered. Used by /ask for multi-turn follow-ups. */
+  history?: Array<{ role: "user" | "model"; text: string }>;
 }
 
 export async function* runAgent(
@@ -21,9 +25,16 @@ export async function* runAgent(
   const runId = randomUUID();
   const maxTurns = opts.maxTurns ?? MAX_TURNS;
   const declarations = TOOLS.map((t) => t.declaration);
-  const contents: Content[] = [
-    { role: "user", parts: [{ text: userFraming(opts.query) }] },
-  ];
+  const contents: Content[] = [];
+  // Thread prior conversation turns first (if any). Each historical turn
+  // is a user message followed by the model's answer — Gemini handles the
+  // rest as native multi-turn context.
+  if (opts.history && opts.history.length > 0) {
+    for (const turn of opts.history) {
+      contents.push({ role: turn.role, parts: [{ text: turn.text }] });
+    }
+  }
+  contents.push({ role: "user", parts: [{ text: userFraming(opts.query) }] });
   const allCitations: Citation[] = [];
   const usage = { prompt: 0, candidates: 0, thoughts: 0, total: 0 };
 
