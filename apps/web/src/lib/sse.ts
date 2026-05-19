@@ -110,3 +110,13 @@ export async function streamBriefing({
     onEvent,
   );
 }
+
+export interface DebateOptions {
+  query: string;
+  signal?: AbortSignal;
+  onEvent: (envelope: AgentEventEnvelope) => void;
+}
+
+export async function streamDebate({ query, signal, onEvent }: DebateOptions): Promise<void> {
+  return streamSSE(`${AGENT_URL}/debate`, { query }, signal, onEvent);
+}

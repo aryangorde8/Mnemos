@@ -9,6 +9,9 @@ const MAX_TURNS = 14;
 export interface RunOptions {
   query: string;
   maxTurns?: number;
+  /** Override the system prompt — used by the /debate route to spawn a
+      Devil's Advocate variant on the same query. Defaults to SYSTEM_PROMPT. */
+  systemPrompt?: string;
 }
 
 export async function* runAgent(
@@ -35,7 +38,7 @@ export async function* runAgent(
 
     try {
       for await (const chunk of streamGenerate({
-        system: SYSTEM_PROMPT,
+        system: opts.systemPrompt ?? SYSTEM_PROMPT,
         contents,
         tools: declarations,
         temperature: 0.4,
