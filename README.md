@@ -7,42 +7,63 @@ calendar, and documents — and *does things about it* under your approval.
 
 Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 
-- **Live:** https://mnemos-web-920213762253.us-central1.run.app
-- **Agent API:** https://mnemos-agent-920213762253.us-central1.run.app
-- **Demo (3 min):** *added at submission*
+- **Live:** https://mnemos.aryangorde.com
+- **Agent API:** https://mnemos-agent.aryangorde.com
+- **Demo (3 min):** *<YouTube link added at submission>*
 - **License:** Apache 2.0
+
+![Mnemos hero](docs/screenshots/01-cold-open.png)
 
 ## What's special
 
-- **Hybrid retrieval** — every memory query runs `$vectorSearch` *and* `$search` (BM25) in parallel, merges via Reciprocal Rank Fusion, then optionally reranks the top candidates with Gemini. The reasoning stream shows the pipeline live (`vector 20 → bm25 20 → rrf → 32 → rerank · gemini · top 8`).
-- **Critic sub-agent** — after every drafted email, a second adversarial agent audits the draft against the cited context. Flags unsupported claims, hallucinated specifics, voice mismatches, and safety issues. Renders inline below the ApprovalCard so the user sees both proposals at once.
-- **Memory graph** — a Gemini extractor reads every chunk and lifts named people / projects / topics + directional relations (owes / works_with / manages / discusses) into a queryable graph. Each entity gets a mentions-over-time sparkline.
-- **Live reasoning stream** — every thought, tool call, observation, and citation streams character-by-character over SSE. No black boxes.
+- **Hybrid retrieval** — every memory query runs `$vectorSearch` *and* `$search` (BM25) in parallel, merges via Reciprocal Rank Fusion, then optionally reranks with a fast Gemini pass. The reasoning stream renders the pipeline live; `/search` lets you scrub through each phase to see what it produced.
+- **Critic sub-agent** — after every drafted email, a second adversarial agent audits the draft against the cited context. Flags unsupported claims, hallucinated specifics, voice mismatches, safety issues. Renders inline below the ApprovalCard.
+- **Graph-augmented retrieval** — when the agent identifies a key entity, it walks the memory graph (people, projects, relations) and pulls in chunks no keyword search would find. The traversal animates inline in the reasoning stream.
+- **Multi-agent debate** — `/debate` runs Primary + Devil's Advocate in parallel on the same query, then a Synthesizer produces the consensus answer.
+- **Memory as a constellation** — `/memory` plots extracted entities as stars on RA/Dec axes, with project constellations connecting their members.
+- **`[N]` claim verification** — every factual claim in the agent's answer ends with a vermilion citation pill. Hover to see the source chunk excerpt.
+- **Cost/latency telemetry** — every run shows token counts + estimated USD + latency in the stream header.
+- **Multi-turn conversation** — `/ask` remembers prior questions in the same session and threads context.
+- **Real Gmail send** — OAuth flow wired; "approve & send" actually fires `gmail.users.messages.send` when configured.
 
 ## What it does
 
 | Surface | Path |
 |---|---|
-| Empty-state dashboard | `/` |
-| Corpus loader (SSE progress) | `/ingest` |
-| Vault search with citations + hybrid phases | `/search` |
-| Ask the agent (SSE reasoning stream) | `/ask` |
-| Memory graph (entities + relations) | `/memory` |
-| Briefings — 1-pager generator | `/briefings`, `/briefings/[id]` |
-| Action approval (draft email + critic) | inline in `/ask` + `/actions` |
+| Constellation hero · cold open | `/` |
+| The four wedges · overview | `/overview` |
+| Ask · SSE reasoning stream with `[N]` citations | `/ask` |
+| Memory · SVG constellation chart | `/memory` |
+| Search · hybrid retrieval pipeline scrubber | `/search` |
+| Debate · two agents in parallel | `/debate` |
+| Runs · time-travel agent history | `/runs` |
+| Briefings · 1-pager generator | `/briefings`, `/briefings/[id]` |
 | Commitments ledger | `/commitments` |
+| Actions ledger (with Gmail connect) | `/actions` |
+| Ingest · SSE-streamed corpus loader | `/ingest` |
 | ⌘K command palette | global |
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Reasoning stream](docs/screenshots/03-ask-reasoning.png) | ![Search pipeline](docs/screenshots/05-search-pipeline.png) |
+| *Reasoning stream — `[N]` citation pills, hybrid pipeline phases, telemetry chip* | *Hybrid retrieval pipeline scrubber* |
+| ![Memory constellation](docs/screenshots/04-memory-constellation.png) | ![Debate](docs/screenshots/06-debate.png) |
+| *Memory constellation chart* | *Multi-agent debate* |
+| ![Runs](docs/screenshots/07-runs.png) | ![⌘K](docs/screenshots/02-cmd-k.png) |
+| *Time-travel runs · click to replay* | *⌘K command palette* |
 
 ## Stack
 
 | Layer | Tech |
 |---|---|
-| Frontend | Next.js 16 (Pages Router), TypeScript, Tailwind v4 CSS-first |
-| Agent | Node 22 + Express 5, hand-rolled ReAct loop, SSE |
-| LLM | Gemini 3 Pro via Vertex AI (streaming + function calling + JSON-mode reranker) |
-| Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) |
+| Frontend | Next.js 16 (Pages Router), TypeScript strict, Tailwind v4 CSS-first, Framer Motion 12 |
+| Agent | Node 22 + Express 5, hand-rolled ReAct loop, Server-Sent Events |
+| LLM | Gemini 3 Pro via Vertex AI (streaming + function calling + thinkingBudget control) |
+| Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) + a graph collection |
 | MCP | MongoDB MCP Server (stdio, gated by `MNEMOS_USE_MCP=1`) |
-| Hosting | Cloud Run (web + agent), scale-to-zero |
+| Hosting | Cloud Run (web + agent), scale-to-zero, custom subdomains |
 
 ## Local setup
 
@@ -67,6 +88,14 @@ NEXT_PUBLIC_AGENT_URL=$AGENT_URL bash scripts/deploy-web.sh
 ```
 
 Full runbook: [docs/DEPLOY.md](docs/DEPLOY.md).
+
+## Three demo scenarios that always work
+
+| | Prompt | Surface | Time |
+|---|---|---|---|
+| Q&A | *what did I commit to Sarah last week* | `/ask` | 10–35s |
+| The wedge | *draft a polite decline to Marcus for Monday coffee and propose Thursday at 2pm instead* | `/ask` | 60–90s |
+| Search | *inference SLO slip* | `/search` | <300ms |
 
 ## Architecture
 
