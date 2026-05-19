@@ -1,204 +1,273 @@
 # Devpost submission — Mnemos
 
-Drop this copy into the Devpost form. Fields below mirror the Devpost
-submission UI exactly.
+> Paste-ready copy for the Devpost form. Each section maps to a Devpost
+> field. The screenshots in `docs/screenshots/` upload in numbered order
+> (01 is the cover).
 
 ---
 
-## Tagline (140 chars)
+## Title
 
-> Mnemos is the first AI agent that takes multi-step actions on top of your professional memory — under your approval.
+```
+Mnemos
+```
 
-## Hero one-liner
+## Tagline (140 chars max)
+
+```
+The first AI agent that takes multi-step actions on top of your professional memory — with a Critic agent that audits every draft before you approve.
+```
+
+## Hero one-liner (above-the-fold callout)
 
 > Not search. Not notes. An agent that remembers what you've seen across
-> inbox, calendar, and documents — and *does things about it*.
+> inbox, calendar, and documents — and *does things about it* under your
+> approval.
 
 ---
 
 ## Inspiration
 
-Knowledge workers don't have a memory problem; they have a *retrieval and
+Knowledge workers don't have a memory problem — they have a *retrieval and
 follow-through* problem. The Q3 doc you promised Sarah, the design review
-Marcus is waiting on, the renewal email June flagged — they all live in
+Marcus is waiting on, the renewal email Diego flagged — they all live in
 your inbox already. The hard part is recalling them at the right moment
 and acting on them quickly.
 
-Every "AI for your notes" tool stops at the recall step. Mnemos is built
-around the next step: *the agent watches itself think, proposes a concrete
-action grounded in your memory, and waits for your approval before
-anything ships.*
+Every "AI for your notes" product stops at the recall step: search-with-
+better-vibes. Mnemos starts where they stop. The agent watches itself
+think, proposes a concrete action grounded in your memory, runs a second
+Critic agent to red-pencil its own draft, and waits for your one-click
+approval before anything ships.
 
 ## What it does
 
 Mnemos is a memory-first agent for a senior product manager. You ingest
 your professional corpus (emails, calendar, meeting notes, shared docs,
-slack, personal jots) once. From then on, you can:
+slack, personal jots) once. From then on:
 
-1. **Ask** — *"what did I commit to Sarah last week?"* The agent retrieves
-   the relevant memory, streams its reasoning live, and returns an answer
-   with chunk-level citations.
-2. **Brief** — Click any calendar event and get a 60-second 1-pager:
-   attendees with current context, open threads, outstanding commitments,
-   suggested talking points. The agent watches the reasoning unfold in
-   real time.
-3. **Act** — *"draft a polite decline to Marcus and propose Thursday at
-   2pm."* The agent searches memory for Marcus context, checks Thursday
-   availability, drafts an email in your voice, schedules the proposed
-   meeting, and surfaces both proposals inline for one-click approval.
-4. **Track** — A commitment dashboard makes "you owe Alex the Q3 doc by
-   Friday" and "Marcus owes you the design review by tomorrow" first-class
-   surfaces.
-
-The reasoning stream is the centerpiece — no black box. Every thought,
-tool call, observation, and citation is rendered as a terminal-grade
-character-by-character stream so the user can see *why* the agent did what
-it did.
+1. **Ask.** *"what did I commit to Sarah last week?"* — the agent
+   retrieves from hybrid (vector + BM25 + RRF + Gemini rerank) memory
+   and walks the entity graph if useful, streams its reasoning live,
+   and returns an answer with `[N]` citation pills you can hover to
+   verify against the source chunk.
+2. **Brief.** Click any calendar event → a 60-second editorial 1-pager:
+   attendees with current context, open threads, outstanding
+   commitments, suggested talking points. Generated as the agent
+   reasons.
+3. **Act.** *"draft a polite decline to Marcus and propose Thursday at
+   2pm."* The agent searches memory, walks the graph to find related
+   context, drafts the email in your voice (extracted from your real
+   outbound corpus), then a **Critic agent** runs in sequence and
+   audits the draft — flagging unsupported claims, voice mismatches,
+   hallucinated specifics, safety risks. `schedule_meeting` checks the
+   calendar for conflicts and proposes alternates. Two ApprovalCards
+   land inline; one click each, both go.
+4. **Track.** A commitment ledger surfaces who owes whom by when. A
+   memory graph plots people as stars and projects as constellations.
+5. **Debate.** A separate `/debate` route runs two agents in parallel —
+   Primary + Devil's Advocate — on the same query, with a third
+   Synthesizer producing the consensus answer below.
+6. **Time-travel.** Every past run is replayable. The reasoning stream
+   itself is the centerpiece: terminal-grade typography, character-by-
+   character SSE, color-coded by step kind, with an inline graph
+   traversal animation when the agent walks the entity graph.
 
 ## How we built it
 
-| Layer        | Tech                                            |
-|--------------|-------------------------------------------------|
-| Frontend     | **Next.js 16** (Pages Router), TS strict, **Tailwind v4** CSS-first |
-| Agent        | **Node 22 + Express 5**, hand-rolled ReAct loop streaming SSE |
-| LLM          | **Gemini 3 Pro** on Vertex AI (function calling + streaming) |
-| Embeddings   | `text-embedding-004` on Vertex AI, 768-dim cosine |
-| Memory       | **MongoDB Atlas Vector Search** (`$vectorSearch`) |
-| MCP          | **MongoDB MCP Server** as a stdio JSON-RPC tool |
-| Hosting      | **Cloud Run** for both services, **Cloud Build** CI |
-| Container reg| Artifact Registry                                |
+| Layer | Tech |
+|---|---|
+| Frontend | Next.js 16 (Pages Router), TypeScript strict, Tailwind v4 CSS-first, Framer Motion 12 |
+| Agent | Node 22 + Express 5, hand-rolled ReAct loop, Server-Sent Events |
+| LLM | Gemini 3 Pro via Vertex AI (streaming + function calling + thinkingBudget control) |
+| Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) + a graph collection |
+| MCP | MongoDB MCP Server (stdio, gated by `MNEMOS_USE_MCP=1`) |
+| Hosting | Cloud Run (web + agent, scale-to-zero, pre-warmed min-instances=1) |
+| Build | Cloud Build, GitHub Actions CI, multi-stage Docker |
 
-The agent exposes six tools to Gemini via function calling:
-`search_memory`, `get_calendar_events`, `get_briefing_context`,
-`draft_email`, `list_commitments`, `schedule_meeting`. The ReAct loop is
-an async generator that yields typed events (`start`, `thought`,
-`tool_call`, `observation`, `answer`, `citations`, `done`); the SSE
-endpoint pipes those straight to the browser. The web side parses the
-event stream, buffers thought / answer chunks, and renders them
-character-by-character with proper streaming UI states (live caret,
-auto-scroll, color-coded by event kind).
+**The retrieval stack (the MongoDB partner-track depth):**
+- `search_memory` runs `$vectorSearch` + `$search` (BM25) **in parallel**,
+  merges via Reciprocal Rank Fusion (k=60), and optionally reranks the
+  top candidates with a fast Gemini pass (thinkingBudget=0). Each phase
+  reports in the result summary so the reasoning stream shows the
+  pipeline visibly.
+- `expand_via_graph` is a true graph-RAG tool: BFS traversal over the
+  `entities` + `relations` collections starting from a seed entity,
+  pulling chunks shared by every visited entity. The reasoning stream
+  draws the actual traversal as an inline animated mini-constellation.
+- The `/memory` page renders the full graph as an SVG star map — people
+  plotted by first-seen + mention frequency, projects as constellation
+  lines connecting their members.
 
-Action-producing tools (`draft_email`, `schedule_meeting`) write a
-proposal to a dedicated `actions` collection in Mongo and return an
-`actionId`. The reasoning stream UI detects this and renders an inline
-`ApprovalCard` — the user can edit, approve, or reject without leaving
-the conversation. Approved actions flip status to `sent`; the ledger
-view at `/actions` shows the full history.
+**The Critic agent.** After every `draft_email` call, the primary agent
+automatically calls `critique_draft` with the actionId. The Critic agent
+runs a structured adversarial review (verdict ∈ approve / revise /
+reject, findings with severity, evidence verdict, fix suggestions, voice
+score 0–10) and persists to a `critiques` collection. The CritiqueCard
+renders inline below the ApprovalCard with a saffron accent.
 
-We use the MongoDB MCP server (the official one from `mongodb-mcp-server`)
-for vector-search queries. The agent spawns it as a child process,
-speaks JSON-RPC over stdio, calls `tools/aggregate` with the
-`$vectorSearch` pipeline, and falls back to direct Mongo access if the
-MCP path fails — so the partner integration is real, not theatrical.
+**`[N]` claim verification.** The system prompt instructs the agent to
+emit `[1]` `[2]` bracket markers after every factual claim. The UI
+parses these and renders interactive citation pills. Hover any `[N]`
+and the matching citation chip pulses; click to scroll it into view.
+
+**Cost/latency telemetry.** `usageMetadata` from every Vertex SSE chunk
+is accumulated across all turns. The done event carries `totalTokens`
++ `estimatedCostUsd` (Gemini 3 Pro pricing baked in). Shown live in
+the reasoning stream header.
+
+**Calendar conflict detection.** `schedule_meeting` checks the corpus
+calendar for each proposed time window, tags slots free/conflict, and
+identifies the preferred slot. ApprovalCard renders the result inline.
+
+**Real Gmail send.** OAuth 2.0 flow (`/auth/google/start` →
+`/auth/google/callback`) persists per-user refresh tokens in Mongo.
+When the user is connected, "approve & send" fires
+`gmail.users.messages.send` for real. Gated by env vars — falls back
+to simulated send when not configured.
 
 ## Challenges we ran into
 
-- **Streaming SSE through Express 5.** The initial implementation
-  listened to `req.on("close")` to clean up heartbeats; Express 5's
-  request stream emits `close` when the readable side ends (after the
-  POST body is consumed), so we were aborting the stream before writing
-  the first event. Fix: listen on `res.on("close")` instead, since that
-  fires only when the underlying connection terminates.
-- **Function calling + streaming in one Gemini call.** Vertex's
-  `streamGenerateContent` returns text *and* `functionCall` parts
-  interleaved within a single turn. The ReAct loop has to flush pending
-  text as a "thought" event before the tool call, then resume on the
-  next turn after the function response is appended to history.
-- **Coherent synthetic data.** 247 documents are useless if the names,
-  dates, and threads don't line up across files. We define a static
-  "world" with 8 narrative threads (Q3 planning, Lantern, Marcus 1:1,
-  Sarah's Q3 doc, Acme pricing, hiring, audit-log, background) and
-  generate one batched Gemini call per thread asking for a structured
-  JSON payload of the right document mix. People recur, dates align,
-  commitments span multiple files.
-- **Editorial aesthetic vs. dense information.** Building a Linear-tier
-  dark interface that also displays a 12-row search-result list with
-  citations, scores, and per-source glyphs took a real design pass.
-  We landed on a warm near-black palette with a single vermilion accent
-  (`#e84a35`), Instrument Serif for display, IBM Plex Sans for body, IBM
-  Plex Mono for the reasoning stream — and committed hard to one accent
-  color across every surface.
+- **Gemini 3 thinking tokens consume the output budget.** Set
+  `maxOutputTokens: 1500` and the model returns truncated JSON because
+  thoughts ate 1400 tokens. Fixed by adding `thinkingBudget: 0` for
+  structured tasks (rerank, critique, voice extraction) and bumping
+  `maxOutputTokens` to 8192 for safety.
+- **SSE streaming + scroll behaviour.** Standard EventSource doesn't
+  support POST bodies, so we use `fetch` + `ReadableStream` with manual
+  line buffering for SSE parsing. Scroll handlers had to coalesce
+  mousemove events via RAF to avoid React reconciles per pixel.
+- **Cross-origin Cloud Run + Brave Shields.** `mnemos.aryangorde.com` →
+  `*.run.app` triggered Brave's private-network-access prompt. Fixed
+  by mapping the agent to `mnemos-agent.aryangorde.com` (same
+  registrable domain, Brave stops asking).
+- **Workspace `node_modules` hoisting in Docker.** npm sometimes nests
+  deps under `apps/agent/node_modules` instead of hoisting. The
+  multi-stage Dockerfile now mirrors both layouts so module resolution
+  works at runtime.
+- **Multi-toolCall handling in Gemini 3.** Gemini 3.x can emit multiple
+  function calls per turn, and the next user turn must contain a
+  `functionResponse` for *every* call in the same order. Plus
+  `thoughtSignature` parts must be preserved verbatim. The hand-rolled
+  ReAct loop handles this carefully.
 
 ## Accomplishments we're proud of
 
-- A live reasoning stream that *looks like a serious terminal* — not a
-  chat bubble. Color-coded by step kind, animated caret on the live line,
-  citation chips at the end.
-- The full wedge demo works inside a single page: ask, watch reasoning,
-  see the ApprovalCard materialize inline, click approve, see the status
-  flip — no modal, no navigation, no page reload.
-- A 1-pager briefing generator that streams the markdown live and renders
-  each section (Attendees / Open threads / Outstanding commitments /
-  Suggested talking points) with its own accent color.
-- The agent fails gracefully without credentials. Every endpoint returns
-  a clear diagnostic; nothing crashes. Made dev-without-creds practical.
+- **The reasoning stream as centerpiece.** Not a chat bubble — a
+  cinematic vertical timeline with time chips in the gutter, vermilion
+  pulse on active nodes, mono labels per step kind, serif pull-quote
+  answers, and citation chips. Plus the inline graph-traversal
+  animation when the agent walks the entity graph.
+- **The Critic agent works as a real wedge.** Every draft is audited
+  before the user sees it. The system prompt mandates the auto-call,
+  and the agent revises once if the Critic returns high-severity.
+- **Multi-agent debate as a separate surface.** Two parallel reasoning
+  streams + a synthesizer. Almost no hackathon submission does this.
+- **The constellation memory chart** wired to live entity data —
+  RA/Dec axes, project constellations, hover sidenote with mention
+  sparklines per entity.
+- **Linear-tier polish.** Editorial typography (Instrument Serif italic
+  display, IBM Plex Mono data), single-accent vermilion, atmospheric
+  vermilion haze + paper-grain noise, no AI clichés.
 
 ## What we learned
 
-- The Vertex AI Function Calling API gives you streaming *and* tool calls
-  in the same turn — but you must keep `text` and `functionCall` parts in
-  order in the response history, or the next turn will go off the rails.
-- Atlas `$vectorSearch` is cheap to query but expensive to seed at
-  hackathon scale — embed in batches of 5, not one-at-a-time.
-- Tailwind v4's CSS-first config (no `tailwind.config.js`) lets you put
-  your entire design system in `globals.css`. Custom utilities via
-  `@utility` are a clean replacement for `@layer components`.
-- An ApprovalCard inside the reasoning stream is the right place for
-  approvals — *not* a separate modal. It keeps the cognitive context
-  intact.
+- The Vertex AI Function Calling API gives you streaming *and* tool
+  calls in the same turn — but the protocol is strict about
+  `thoughtSignature` ordering. One out-of-place text part and the next
+  turn goes off the rails.
+- Atlas `$vectorSearch` is cheap to query but **slow to seed at
+  hackathon scale**. Embedding 247 documents one at a time hit Vertex
+  quota fast; batches of 5 fixed it.
+- The **right place for an approval gate is inline in the reasoning
+  stream**, not a modal. Cognitive context stays intact; the user sees
+  the draft *while* the Critic's findings stream in below.
+- Tailwind v4's CSS-first config (no `tailwind.config.js`) lets the
+  entire design system live in `globals.css`. Custom `@utility` rules
+  are a clean replacement for `@layer components`.
 
 ## What's next for Mnemos
 
-- **Real Google integrations.** The calendar and email tools currently
-  simulate sends by writing to Mongo. Wiring up actual Google Calendar +
-  Gmail APIs is one step.
-- **Voice extraction at sign-up.** A small onboarding flow that samples
-  100 outbound emails and produces the personal voice fixture on day one.
-- **Multi-user.** A real auth gate (Firebase) and per-user vault
-  isolation.
-- **Streaming briefings into the reasoning stream.** Today the briefing
-  generator has its own SSE stream; folding it into the unified `/ask`
-  flow would let you do *"brief me on Q3 planning"* without switching
-  surfaces.
+- **Real production integrations.** Calendar tool currently writes to
+  Mongo; wire actual Google Calendar `events.insert`. Gmail send is
+  done (OAuth ready, dormant pending GCP credentials).
+- **Multi-user.** Per-user vault isolation behind Firebase Auth so
+  Mnemos becomes a product, not a demo.
+- **Voice onboarding.** A 60-second flow that samples 100 outbound
+  emails on day one and produces the personal voice fixture so the
+  Critic catches voice mismatches from the first use.
+- **MCP server.** Expose Mnemos's tools (search_memory,
+  expand_via_graph, critique_draft) as an MCP server so other agents
+  (Claude in Cursor, ChatGPT, etc.) can use Mnemos as their memory
+  layer.
 
 ---
 
 ## Built With
 
-- gemini-3-pro
-- vertex-ai
-- google-cloud-agent-builder
-- mongodb-atlas-vector-search
-- mongodb-mcp-server
-- google-cloud-run
-- google-cloud-build
-- nextjs
-- typescript
-- tailwindcss
-- node-js
-- express
-- server-sent-events
+```
+gemini-3-pro
+vertex-ai
+mongodb-atlas-vector-search
+mongodb-atlas-search
+mongodb-mcp-server
+mongodb
+google-cloud-run
+google-cloud-build
+nextjs
+react
+typescript
+tailwindcss
+framer-motion
+node-js
+express
+server-sent-events
+docker
+```
 
 ## Try it out
 
-- Live: **`https://mnemos.aryangorde.com`**
-- Repo: **`https://github.com/aryangorde/mnemos`**
-- Demo video: **`<YouTube/Vimeo link>`**
+- **Live:** https://mnemos.aryangorde.com
+- **Agent API:** https://mnemos-agent.aryangorde.com (try `/ready`)
+- **Repo:** https://github.com/aryangorde8/Mnemos
+- **Demo (3 min):** `<paste YouTube unlisted link here after recording>`
+
+### Three demo scenarios that always work
+
+| | Prompt | Time |
+|---|---|---|
+| Q&A | *what did I commit to Sarah last week* | 10–35s |
+| The wedge | *draft a polite decline to Marcus for Monday coffee and propose Thursday at 2pm instead* | 60–90s |
+| Search | *inference SLO slip* (via `/search`) | <300ms |
 
 ## Team
 
-- **Aryan Gorde** — solo build
+- **Aryan Gorde** — solo build · [@aryangorde8](https://github.com/aryangorde8)
 
 ---
 
-## Form-by-form quick paste
+## Devpost form quick-paste reference
 
 | Field | Value |
 |---|---|
-| Title | Mnemos |
-| Tagline | The first AI agent that takes multi-step actions on top of your professional memory. |
+| Project title | Mnemos |
+| Tagline | The first AI agent that takes multi-step actions on top of your professional memory — with a Critic agent that audits every draft before you approve. |
 | Submission URL | https://mnemos.aryangorde.com |
-| Video URL | `<demo video link>` |
-| Repo URL | https://github.com/aryangorde/mnemos |
+| Video URL | *(paste after recording)* |
+| Repo URL | https://github.com/aryangorde8/Mnemos |
 | Track | MongoDB partner track |
 | License | Apache 2.0 |
+| Built With tags | gemini-3-pro · vertex-ai · mongodb-atlas-vector-search · mongodb-atlas-search · mongodb-mcp-server · google-cloud-run · nextjs · typescript · tailwindcss · framer-motion · express · server-sent-events |
+
+## Gallery upload order
+
+Upload these in this order — Devpost uses the first image as the cover thumbnail:
+
+1. `docs/screenshots/01-cold-open.png` — **cover** — constellation hero, headline, live stream corner
+2. `docs/screenshots/03-ask-reasoning.png` — full Q&A run with `[N]` markers + telemetry chip
+3. `docs/screenshots/05-search-pipeline.png` — hybrid retrieval pipeline scrubber
+4. `docs/screenshots/04-memory-constellation.png` — SVG star map of extracted entities
+5. `docs/screenshots/06-debate.png` — multi-agent debate landing
+6. `docs/screenshots/02-cmd-k.png` — ⌘K palette overlay
+
+(Devpost gallery caps at 6 — the remaining shots `07-runs.png` + `08-overview.png` live in the repo for the README.)
