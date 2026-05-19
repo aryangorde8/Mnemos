@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { motion } from "framer-motion";
 import { ApprovalCard } from "./approval-card";
 import { CritiqueCard, type PreloadedCritique } from "./critique-card";
+import { InlineGraphTraversal, type TraversalPayload } from "./inline-graph-traversal";
 import { Cite } from "./editorial";
 
 /**
@@ -55,6 +56,7 @@ export type StreamItem =
       durationMs: number;
       actionId?: string;
       critique?: PreloadedCritique & { actionId: string };
+      traversal?: TraversalPayload;
       at: number;
     }
   | { kind: "answer"; text: string; complete: boolean; at: number }
@@ -473,6 +475,11 @@ function RowBody({ item, live }: { item: StreamItem; live: boolean }) {
               · {item.ok ? item.summary ?? "ok" : item.error ?? "failed"} · {item.durationMs}ms
             </span>
           </div>
+          {item.traversal && (
+            <div className="mt-3">
+              <InlineGraphTraversal payload={item.traversal} />
+            </div>
+          )}
           {item.actionId && (
             <div className="mt-5">
               <ApprovalCard actionId={item.actionId} />
