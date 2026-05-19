@@ -237,6 +237,10 @@ function handleEvent(
         name === "critique_draft" && result.ok && result.data
           ? extractCritique(result.data)
           : undefined;
+      const traversal =
+        name === "expand_via_graph" && result.ok && result.data
+          ? extractTraversal(result.data)
+          : undefined;
       setItems((prev) => [
         ...sealOpen(prev),
         {
@@ -248,6 +252,7 @@ function handleEvent(
           ...(result.error ? { error: result.error } : {}),
           ...(actionId ? { actionId } : {}),
           ...(critique ? { critique } : {}),
+          ...(traversal ? { traversal } : {}),
           durationMs: Number(data["durationMs"] ?? 0),
           at,
         },
@@ -375,5 +380,48 @@ function extractCritique(d: Record<string, unknown>):
     ...(typeof d["counts"] === "object" && d["counts"] !== null
       ? { counts: d["counts"] as { high: number; med: number; low: number } }
       : {}),
+  };
+}
+
+interface RawNode {
+  key?: unknown;
+  name?: unknown;
+  kind?: unknown;
+}
+interface RawEdge {
+  from?: unknown;
+  to?: unknown;
+  kind?: unknown;
+}
+
+function extractTraversal(
+  d: Record<string, unknown>,
+): NonNullable<Extract<StreamItem, { kind: "observation" }>["traversal"]> | undefined {
+  const resolved = Array.isArray(d["resolved"]) ? (d["resolved"] as RawNode[]) : [];
+  const traversed = Array.isArray(d["traversed"]) ? (d["traversed"] as RawNode[]) : [];
+  const relations = Array.isArray(d["relations"]) ? (d["relations"] as RawEdge[]) : [];
+
+  if (resolved.length === 0 && traversed.length === 0) return undefined;
+
+  const normNode = (n: RawNode) => ({
+    key: typeof n.key === "string" ? n.key : "",
+    name: typeof n.name === "string" ? n.name : "",
+    kind: typeof n.kind === "string" ? n.kind : "",
+  });
+  const normEdge = (e: RawEdge) => ({
+    from: typeof e.from === "string" ? e.from : "",
+    to: typeof e.to === "string" ? e.to : "",
+    kind: typeof e.kind === "string" ? e.kind : "",
+  });
+
+  const chunksFound = Number(d["chunksFound"] ?? 0);
+  const chunksReturned = Array.isArray(d["chunks"]) ? (d["chunks"] as unknown[]).length : 0;
+
+  return {
+    resolved: resolved.map(normNode).filter((n) => n.key),
+    traversed: traversed.map(normNode).filter((n) => n.key),
+    relations: relations.map(normEdge).filter((e) => e.from && e.to),
+    chunksFound,
+    chunksReturned,
   };
 }
