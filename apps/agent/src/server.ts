@@ -9,6 +9,7 @@ import { commitmentsRouter } from "./routes/commitments.js";
 import { briefingsRouter } from "./routes/briefings.js";
 import { graphRouter } from "./routes/graph.js";
 import { debateRouter } from "./routes/debate.js";
+import { authRouter } from "./routes/auth.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -24,9 +25,14 @@ app.get("/health", (_req: Request, res: Response) => {
 });
 
 app.get("/ready", (_req: Request, res: Response) => {
+  const gmailConfigured =
+    !!process.env.GMAIL_OAUTH_CLIENT_ID &&
+    !!process.env.GMAIL_OAUTH_CLIENT_SECRET &&
+    !!process.env.GMAIL_OAUTH_REDIRECT_URI;
   res.json({
     atlas: isMongoConfigured() ? "configured" : "missing",
     vertex: isVertexConfigured() ? "configured" : "missing",
+    gmail: gmailConfigured ? "configured" : "missing",
     geminiModel: config.VERTEX_GEMINI_MODEL,
     embeddingModel: config.VERTEX_EMBEDDING_MODEL,
     region: config.GOOGLE_CLOUD_LOCATION,
@@ -41,6 +47,7 @@ app.use(commitmentsRouter);
 app.use(briefingsRouter);
 app.use(graphRouter);
 app.use(debateRouter);
+app.use(authRouter);
 
 app.listen(config.AGENT_PORT, () => {
   console.log(`[mnemos-agent] listening on :${config.AGENT_PORT}`);

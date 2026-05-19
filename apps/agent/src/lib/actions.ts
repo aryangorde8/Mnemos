@@ -51,6 +51,12 @@ export interface ActionRecord<P extends ProposalData = ProposalData> {
   model?: string;
   // grounding context the primary agent passed in (for the Critic to audit against)
   context?: string;
+  // populated when a real Gmail send happened on approval
+  sentVia?: "simulated" | "gmail";
+  sentAs?: string;
+  gmailMessageId?: string;
+  gmailThreadId?: string;
+  gmailError?: string;
   createdAt: Date;
   decidedAt?: Date;
 }
@@ -117,16 +123,52 @@ export async function approveAction(
   if (existing.status !== "proposed") return existing;
 
   const final = (edits ? { ...existing.proposal, ...edits } : existing.proposal) as ProposalData;
-  await col.updateOne(
-    { _id: new ObjectId(id) },
-    {
-      $set: {
-        status: "sent",
-        final,
-        decidedAt: new Date(),
-      },
-    },
-  );
+
+  // If this is a draft_email AND Gmail is configured AND the demo user is
+  // connected, actually send the email via the Gmail API. On success the
+  // status remains "sent" and we annotate the record with gmailMessageId.
+  // On failure we still mark the action sent BUT add a gmailError note —
+  // we don't want to lose the audit trail.
+  let gmailInfo: { messageId: string; threadId?: string; sentAs: string } | null = null;
+  let gmailError: string | null = null;
+  if (existing.kind === "draft_email") {
+    try {
+      const { sendGmail, getAccessToken, DEMO_USER_ID, isGmailConfigured } = await import(
+        "./gmail.js"
+      );
+      if (isGmailConfigured()) {
+        const token = await getAccessToken(DEMO_USER_ID);
+        if (token) {
+          const proposal = final as DraftEmailProposal;
+          gmailInfo = await sendGmail(DEMO_USER_ID, {
+            to: proposal.to,
+            cc: proposal.cc,
+            subject: proposal.subject,
+            body: proposal.body,
+          });
+        }
+      }
+    } catch (err) {
+      gmailError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  const update: Record<string, unknown> = {
+    status: "sent",
+    final,
+    decidedAt: new Date(),
+  };
+  if (gmailInfo) {
+    update["gmailMessageId"] = gmailInfo.messageId;
+    if (gmailInfo.threadId) update["gmailThreadId"] = gmailInfo.threadId;
+    update["sentVia"] = "gmail";
+    update["sentAs"] = gmailInfo.sentAs;
+  } else if (existing.kind === "draft_email") {
+    update["sentVia"] = "simulated";
+    if (gmailError) update["gmailError"] = gmailError;
+  }
+
+  await col.updateOne({ _id: new ObjectId(id) }, { $set: update });
   return col.findOne({ _id: new ObjectId(id) });
 }
 
@@ -165,6 +207,11 @@ export function publicAction(a: ActionRecord): Record<string, unknown> {
     runId: a.runId ?? null,
     origin: a.origin,
     model: a.model ?? null,
+    sentVia: a.sentVia ?? null,
+    sentAs: a.sentAs ?? null,
+    gmailMessageId: a.gmailMessageId ?? null,
+    gmailThreadId: a.gmailThreadId ?? null,
+    gmailError: a.gmailError ?? null,
     createdAt: a.createdAt instanceof Date ? a.createdAt.toISOString() : a.createdAt,
     decidedAt:
       a.decidedAt instanceof Date
