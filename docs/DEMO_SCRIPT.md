@@ -1,220 +1,225 @@
-# Demo Script — 3-minute submission video
+# Demo script — 3-minute submission video (v2 · Mnemos-III aesthetic)
 
-> Source of truth for the shot list. Read this top-to-bottom before each take.
-> Every beat below maps to a working surface; if a beat doesn't have a
-> surface, the beat is wrong, not the code.
+> Read top-to-bottom before each take. Every beat below maps to a working
+> surface on the live URL — if a beat doesn't have a surface, the beat is
+> wrong, not the code.
 
-**Recording setup**
+## Pre-record checklist
 
-- 1920×1080 @ 30fps, MP4 H.264, system audio off, mic on (gain ~ −18 dB)
-- Browser: Chrome / Arc, **dark mode**, zoom 110 %, hide bookmarks bar
-- Open a fresh window, only the Mnemos tab visible
-- DevTools closed; close any "Update available" banner
-- Pre-load `/` so the empty state animations play on the first frame
-- Pre-warm the agent (one warm-up `/ask` call before record) so Vertex
-  TTFB is short on the live take
+| | Status check |
+|---|---|
+| Atlas vector + BM25 indexes both `READY` | hit `/ready` on the agent, expect `atlas: configured` |
+| Vertex Gemini 3 pro preview reachable | hit `/ready`, expect `vertex: configured` |
+| Prod corpus loaded | hit `/ingest/stats`, expect `documents: 242, chunks: 268` |
+| Memory graph extracted on prod | hit `/graph/stats`, expect `person: ≥36, project: ≥25, relations: ≥150` |
+| Voice fixture refreshed from live corpus | `scripts/fixtures/alex-voice.md` head should mention 24 sampled emails |
+| Cloud Run pre-warmed (no cold start) | both services have `min-instances=1` |
+| Three demo prompts work end-to-end three takes in a row | rehearse before recording |
+| `mnemos.aryangorde.com` resolves with valid SSL | dig + curl check |
 
-**Talking-head vs. voice-over**
+## Recording setup
 
-Voice-over only. No talking-head insert — keeps it editorial and tight.
+- 1920 × 1080 @ 30 fps, MP4 H.264, system audio off, mic on (gain ≈ −18 dB)
+- Browser: **Chrome or Safari** (NOT Brave — its Shields prompt every cross-site call)
+- Dark mode confirmed in DevTools (`prefers-color-scheme: dark`)
+- Zoom 110 %, hide bookmarks bar, no extensions visible
+- Fresh window, only the Mnemos tab open
+- DevTools closed, any browser banner dismissed
+- **Pre-load `/` once before recording** so the constellation canvas warms up and the first auto-trace has fired
+- **Pre-warm the agent** with one throwaway `/ask` call so Vertex TTFB is short on the live take
+- Voice-over only — no talking-head insert
 
 ---
 
 ## Shot list
 
-### 0:00 – 0:15 · Cold open
+### 0:00 – 0:15 · Cold open · the constellation
 
-**Visual.** `/` — empty dashboard. Camera does not move. Let the staggered
-`rise` animations land. Stop on the hero line for one beat before VO.
+**Visual.** `https://mnemos.aryangorde.com` — fresh load. Camera does not move.
+The constellation canvas particle field fades in. Hero text reveals
+word-by-word: *"Your professional memory, made navigable."* The live-stream
+corner widget cycles its 7-step canned reasoning trace in the side panel.
 
 **VO.**
-> Mnemos. The first AI agent that takes multi-step actions on top of
-> your professional memory.
+> Mnemos. An agent that takes multi-step actions on top of your
+> professional memory.
 
-**Cue.** At 0:13, mouse drifts toward the ⌘K kbd.
-
----
-
-### 0:15 – 0:30 · Ingestion
-
-**Visual.** Click **⌘K** → command palette opens. Type `load alex` →
-arrow-down to "ingest the demo corpus" → ⏎. Cut to a loading bar tile
-showing `0 / 247 docs ingested` rising. End on the populated dashboard
-chrome at the bottom: `Atlas · live` `Vertex · live` `247 docs · 1,184
-chunks indexed`.
-
-> 247 emails, meeting notes, calendar invites, and shared docs — chunked,
-> embedded, and indexed in Atlas Vector Search.
-
-**Cue.** Hold for ½ s on the green status pills before the next cut.
+**Cue.** At 0:08 the mouse drifts across the canvas, stars track
+gently. At 0:12 click anywhere on the field — a vermilion reasoning
+trace draws through the constellation in real time. *This is the only
+hero animation that matters.*
 
 ---
 
-### 0:30 – 1:00 · Memory Q&A
+### 0:15 – 0:35 · Q&A · grounded answer with click-to-verify
 
-**Visual.** Cmd+K again. Type the **exact** prompt:
+**Visual.** Press **⌘K** → command palette opens with the staggered
+entrance animation. Type the **exact** prompt:
 
 > what did I commit to Sarah last week
 
-⏎. Cut straight to `/ask?q=...&run=1`. The reasoning stream begins.
+⏎. Cut straight to `/ask?q=…&run=1`. The reasoning stream begins.
 
-**What the viewer sees**, in order:
+**What the viewer sees** (in order):
+1. Run header pulses: `streaming · gemini-3.1-pro · vertex`
+2. Time chips appear in the left gutter, vermilion node marker pops
+   on the rule (line 1)
+3. A `›` `search_memory` tool call with the args, then an `‹` observation
+   reading: **`hybrid · vector 24 → bm25 24 → rrf → 34 → top 8 · 412ms`**
+4. *Optionally* a second retrieval refining the query
+5. Italic mono `thoughts` streaming character-by-character
+6. The **answer** in serif body type with inline `[1]` `[2]` `[3]` pills
+   after every factual claim
+7. Citation chips row pops in at the end with the source titles
+8. Header chip lands: `12.4k tok · $0.0021 · 4.2s`
 
-1. A monospaced `›` thought streams: *"I need to find commitments Alex
-   made to Sarah within the past week…"*
-2. A vermilion `→ search_memory(query: "commitments to Sarah", limit: 8)`
-3. A saffron `← search_memory · 6 chunks · 312 ms`
-4. Another thought refining the search
-5. A second tool call narrowing by date range
-6. A second observation
-7. The final **answer** in serif body type, with inline citations.
-8. Citation chips below.
+**VO** (overlap with the stream):
+> Watch it think. Hybrid retrieval — vector plus BM25, fused with
+> reciprocal rank fusion. Every claim cited. Hover any number — the
+> matching source pulses.
 
-**VO.** (overlap with the streaming)
-> Watch it think. Not a black box — every retrieval, every tool call,
-> every citation is rendered live. The answer is grounded in the chunks
-> it actually read.
-
-**Cue.** At 0:55 hover over a citation chip to reveal a tooltip with the
-chunk excerpt for one beat.
+**Cue.** At 0:32, hover the `[1]` pill in the answer. The matching
+citation chip below glows vermilion. Hold for ½ second.
 
 ---
 
-### 1:00 – 1:45 · Briefing
+### 0:35 – 1:10 · Memory · the constellation chart
 
-**Visual.** Click the **Mnemos** wordmark → `/`. Click the **Action** tile
-(or click /briefings in the nav). On the briefings page, the upcoming
-calendar list is visible. Click `generate briefing` on **"Q3 Planning
-with Eng Leads"**. Cut to the live generation page.
+**Visual.** Click the **memory** link in the page nav (or ⌥3). Cut to
+`/memory` showing the SVG star map: people as stars sized by mention
+count, projects drawn as constellation lines connecting their members,
+RA/Dec axes labeled in editorial mono.
 
-**Status strip ticks through:** *load event → assemble context →
-synthesize 1-pager*. Markdown streams in, section by section:
-
-- `## Attendees` — bulleted list with role + current context
-- `## Open threads` — Q3 doc, identity dependency map, etc.
-- `## Outstanding commitments`
-- `## Suggested talking points` — 4 short questions in Alex's voice
+**Action sequence:**
+1. Pause for ½ second on the empty hover detail panel (right rail)
+2. Hover one bright star — twinkle cross appears, name label resolves,
+   right panel updates with mention sparkline + commitments
+3. Hover one constellation in the legend — everything except those
+   members dims to 18 % opacity
+4. Pan/scroll slightly to show the four stat tiles at the bottom
 
 **VO.**
-> A 60-second 1-pager for any meeting on your calendar. Attendees you'll
-> walk into the room with. Open threads. Outstanding promises. Four
-> talking points already grounded in last week's emails.
-
-**Cue.** At 1:42, the saved indicator flips to saffron: `saved · open
-saved briefing`.
+> The graph isn't decorative. A second Gemini pass reads every chunk
+> and pulls people, projects, and commitments into Atlas as a third
+> retrieval modality — graph traversal, alongside vector and BM25.
 
 ---
 
-### 1:45 – 2:30 · The wedge (the headline beat)
+### 1:10 – 2:00 · The wedge · draft + Critic + schedule
 
-**Visual.** Cmd+K. Type the **exact** prompt:
+**Visual.** Press **⌘K** again. Type:
 
-> draft a polite decline to Marcus and propose Thursday at 2pm
+> draft a polite decline to Marcus for Monday coffee and propose
+> Thursday at 2pm instead
 
-⏎. `/ask` opens.
+⏎. The reasoning stream lights up. This is the centerpiece beat.
 
-**What the viewer sees:**
-
-1. Thought: *"I need context on Marcus first."*
-2. `→ search_memory(query: "Marcus")`
-3. `← 4 chunks · 280 ms`
-4. Thought: *"Now check Thursday availability."*
-5. `→ get_calendar_events(from: "2026-05-21", to: "2026-05-21")`
-6. `← 3 events · 95 ms`
-7. Thought: *"Drafting the email."*
-8. `→ draft_email(to: ["marcus.bell@…"], subject: "Re: design review",
-   intent: "polite decline + propose Thu 2pm")`
-9. `← drafted reply · awaiting approval · 1340 ms`
-10. **`ApprovalCard` materializes inline.** Shows the drafted email with
-    subject and body. Vermilion left-border.
-11. **Mouse clicks `approve · send`.** The card flips to saffron:
-    `draft email · sent · 09:42 AM`.
-12. The reasoning continues:
-13. Thought: *"Now schedule the alternative."*
-14. `→ schedule_meeting(...)` → `← proposed`
-15. **Second `ApprovalCard`** for the meeting.
-16. **Mouse clicks `approve · send`.** Flips to saffron.
-17. Final **answer**: *"drafted the decline and proposed Thu 2pm. both
-    sent — done."*
-
-**VO.** (overlap)
-> This is the wedge. The agent searched my memory for context on Marcus,
-> checked Thursday on my calendar, drafted the email in my voice,
-> proposed the meeting — and waited at every step for my approval.
-
-**Cue.** At 2:27 the camera doesn't move. Both saffron `sent` pills are
-on screen.
-
----
-
-### 2:30 – 2:50 · Commitments
-
-**Visual.** Navigate to `/commitments`. The "you owe" tab is active.
-Four headline stats on top: outgoing / incoming / unattributed / total.
-The directional badges are immediately scannable.
+**Tool sequence the viewer will see:**
+1. `search_memory("Marcus")` → hybrid pipeline phase line
+2. `expand_via_graph(entity="Marcus Bell")` → **`graph expand · 1 seed → 3 entities · depth 1 · 12/36 chunks · 115ms`** — visible proof of GraphRAG
+3. `get_calendar_events(...)` → calendar window check
+4. `draft_email(...)` → ApprovalCard slides in from below with the email
+   draft, vermilion left rail, mono meta block, serif pull-quote body
+5. **`critique_draft(action_id=…)` auto-fires** → CritiqueCard drops in
+   below the ApprovalCard with a saffron left rail, copy-editor
+   findings (severity badges, claim quotes, fix suggestions)
+6. `schedule_meeting(...)` with conflict detection → second
+   ApprovalCard shows Thursday 2pm as **✓ free, preferred** with
+   alternates listed
+7. Final answer with `[N]` citations to the chunks Marcus came from
 
 **VO.**
-> The ledger never goes stale. Every promise pulled out of the corpus,
-> who owes whom, by when.
+> Two agents work in sequence. The drafter writes the email in Alex's
+> voice — extracted from his outbound corpus. The Critic, a second
+> agent, red-pencils the draft against the cited context: hallucinations,
+> tone, safety issues. Schedule meeting checks the calendar for
+> conflicts and proposes alternates.
+>
+> Nothing has been sent. The user approves with one click.
 
-**Cue.** Mouse hovers over the row "You owe Alex the Q3 doc by Friday."
-Cut to "Marcus owes you the design review by tomorrow." 2 s on each.
+**Cue.** At 1:55, mouse hovers the ApprovalCard's `✓ approve & send`
+button but doesn't click. Hold the frame for one beat.
 
 ---
 
-### 2:50 – 3:00 · Closer
+### 2:00 – 2:25 · Search · hybrid retrieval visible
 
-**Visual.** Back to `/`. Camera holds on the hero line.
+**Visual.** Press **⌘K**. Type `inference SLO slip` → enter as a search
+(arrow-right toggles ask→search). Cut to `/search?q=…&run=1`.
+
+**Beats to capture:**
+- Header pipeline line: `12 citations · hybrid retrieval · vector 24 → bm25 24 → rrf → 36 → top 12 · 287ms`
+- Each result row shows `V` and `T` source flags (vector / text)
+- Score bars for the top 3
 
 **VO.**
-> Mnemos. Memory you can act on. Open source, Apache 2.0, live at
-> mnemos.aryangorde.com.
-
-**Cue.** At 2:58 the public URL fades in at the bottom of the frame.
+> Atlas runs as a vector store, a full-text index, and a graph database
+> in the same query. MongoDB partner-track depth, no extra services.
 
 ---
 
-## Three rehearsed scenarios (must always work)
+### 2:25 – 2:50 · Commitments + actions ledger
 
-These three are the only prompts that will be typed during the live take.
-Run each three times before the final record. If any fails twice in a
-row, debug before continuing.
+**Visual.** Quick cut to `/commitments`. Show the directional
+`→ you owe` / `← owed to you` columns with the per-row commitment
+excerpts and dates. Two seconds.
 
-1. **Q&A** — *"what did I commit to Sarah last week"*
-   - Expected tools: `search_memory` × 1–2
-   - Expected runtime: 8–18 s end to end
-   - Expected citations: 3–6 chunks from `email` and `meeting_notes`
+Then `/actions` to show the same draft + meeting from earlier sitting
+in the ledger with `proposed · awaiting approval` status. Two seconds.
 
-2. **Briefing** — calendar event *"Q3 Planning with Eng Leads"*
-   - Expected pipeline: load event → context → synthesize
-   - Expected runtime: 12–25 s
-   - Expected sections in output: Attendees / Open threads / Outstanding
-     commitments / Suggested talking points
+**VO.**
+> Every action waits in the ledger. Every commitment surfaces by who
+> owes whom, by when.
 
-3. **Action** — *"draft a polite decline to Marcus and propose Thursday
-   at 2pm"*
-   - Expected tools (in order): `search_memory`, `get_calendar_events`,
-     `draft_email`, `schedule_meeting`
-   - Expected runtime: 18–35 s end to end
-   - Expected proposals: 2 ApprovalCards, both must render inline
+---
 
-## Pre-record checklist
+### 2:50 – 3:00 · Closer · the wordmark
 
-- [ ] Atlas index status is `READY` (`gcloud` Atlas API or web console)
-- [ ] `/health` and `/ready` return green on the production agent URL
-- [ ] `/ingest/stats` returns `documents: 247` on the production agent
-- [ ] Tab title says **"Mnemos — the empty vault"** before record
-- [ ] Browser zoom is 110 %, dark mode confirmed in DevTools
-- [ ] Three scenarios run cleanly back-to-back in under 90 s combined
-- [ ] OBS / Loom / QuickTime is recording the right window
-- [ ] System notifications muted, Slack quit, mail quit
+**Visual.** Back to `/`. Constellation visible. Hero text re-reveals
+(route remount triggers Framer Motion). Pretty URL appears at the
+bottom edge as a small overlay.
+
+**VO.**
+> Mnemos. Open source, Apache 2.0, live at mnemos.aryangorde.com.
+
+Cut at exactly 3:00.000 — judges will time it.
+
+---
+
+## The three rehearsed scenarios (must always work)
+
+These are the only prompts typed during the live take. Run each three
+times back-to-back before the final record. If any fails twice in a
+row, fix it before continuing.
+
+| # | Prompt | Tools expected | Runtime |
+|---|---|---|---|
+| 1 | *what did I commit to Sarah last week* | search_memory ×1-2 | 8–18 s |
+| 2 | *draft a polite decline to Marcus for Monday coffee and propose Thursday at 2pm instead* | search_memory, expand_via_graph, get_calendar_events, draft_email, critique_draft, schedule_meeting | 50–90 s |
+| 3 | *inference SLO slip* (search, not ask) | hybrid retrieval pipeline | 1–2 s |
+
+---
+
+## Things to NOT do on camera
+
+- **Brave**. Use Chrome / Safari / Firefox.
+- **DevTools open** — kills the editorial composition.
+- **The long `*.run.app` URL** — only the pretty subdomain appears in the URL bar.
+- **Hover the agent backend URL** — it's hidden by design.
+- **Click the constellation more than twice** — once is "look, interactive",
+  three times is "the demo is broken".
+- **Wait through a cold start** — pre-warm before each take.
+- **Show empty state on `/memory`** — graph extraction is already done on prod;
+  if it shows empty, refresh.
+
+---
 
 ## Post-record checklist
 
-- [ ] Trim hard at 3:00.000 — judges will time it
+- [ ] Trim hard at 3:00.000
 - [ ] Add captions for the three prompts (large, vermilion, Plex Mono)
-- [ ] Add a 1-frame title card at the start: just "Mnemos" in Instrument
-      Serif italic on the warm black
-- [ ] End card: tagline + public URL + GitHub URL
+- [ ] Optional: a 1-frame title card at the start — "Mnemos" in
+      Instrument Serif italic on the warm umber background
+- [ ] End card: tagline + pretty URL + GitHub URL
 - [ ] Upload to YouTube unlisted
-- [ ] Paste URL into Devpost form + this repo's README
+- [ ] Paste URL into Devpost form + README + SUBMISSION.md

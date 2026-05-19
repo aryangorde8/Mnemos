@@ -19,6 +19,8 @@ const DB = process.env.MONGODB_DB ?? "mnemos";
 const PROJECT = process.env.GOOGLE_CLOUD_PROJECT;
 const LOCATION = process.env.GOOGLE_CLOUD_LOCATION ?? "us-central1";
 const MODEL = process.env.VERTEX_GEMINI_MODEL ?? "gemini-3-pro";
+// Gemini 3.x preview models are only on the global endpoint; embeddings stay regional.
+const GEMINI_LOCATION = process.env.VERTEX_GEMINI_LOCATION ?? LOCATION;
 
 if (!URI) {
   console.error("MONGODB_URI is required");
@@ -44,8 +46,10 @@ async function getToken(): Promise<string> {
 }
 
 const ENDPOINT =
-  `https://${LOCATION}-aiplatform.googleapis.com/v1` +
-  `/projects/${PROJECT}/locations/${LOCATION}` +
+  (GEMINI_LOCATION === "global"
+    ? `https://aiplatform.googleapis.com/v1`
+    : `https://${GEMINI_LOCATION}-aiplatform.googleapis.com/v1`) +
+  `/projects/${PROJECT}/locations/${GEMINI_LOCATION}` +
   `/publishers/google/models/${MODEL}:generateContent`;
 
 interface SentEmail {
@@ -123,7 +127,9 @@ ${corpus}`;
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.4,
-      maxOutputTokens: 1500,
+      // Gemini 3 consumes thinking tokens regardless of budget — leave headroom
+      maxOutputTokens: 8192,
+      thinkingConfig: { thinkingBudget: 0 },
     },
   };
 

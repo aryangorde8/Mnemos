@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { getGraph, type Entity, type GraphResponse, type Relation } from "@/lib/api";
 import { AmbientOrbs, Tilt3D, ScrollReveal } from "@/components/parallax";
+import { ResponsiveConstellation, HoverDetail } from "@/components/constellation-chart";
 
 const AGENT = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
 
@@ -111,6 +112,8 @@ export default function MemoryPage() {
     (graph?.stats.entities.topic ?? 0);
 
   const hasGraph = totalEntities > 0;
+  const [view, setView] = useState<"constellation" | "ledger">("constellation");
+  const [hovered, setHovered] = useState<string | null>(null);
 
   return (
     <>
@@ -203,9 +206,72 @@ export default function MemoryPage() {
             )}
           </div>
 
+          {/* view selector — constellation (canon) vs ledger (fallback) */}
+          {hasGraph && (
+            <div className="mt-16 flex items-baseline gap-1 border-b border-[color:var(--color-rule)]">
+              {(["constellation", "ledger"] as const).map((v) => {
+                const active = view === v;
+                return (
+                  <button
+                    key={v}
+                    onClick={() => setView(v)}
+                    className="mono"
+                    style={{
+                      padding: "10px 16px",
+                      fontSize: 10,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      color: active ? "var(--color-paper)" : "var(--color-paper-muted)",
+                      borderBottom: active ? "1px solid var(--color-vermilion)" : "1px solid transparent",
+                      transition: "all var(--snap) var(--ease)",
+                      background: active ? "var(--color-ink-2)" : "transparent",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span style={{ color: active ? "var(--color-vermilion)" : "var(--color-paper-faint)", marginRight: 6, fontSize: 9 }}>
+                      v.{v === "constellation" ? "01" : "02"}
+                    </span>
+                    {v}
+                  </button>
+                );
+              })}
+              <span className="ml-auto chrome" style={{ padding: "10px 0" }}>
+                {graph!.entities.person.length} stars · {graph!.entities.project.length} constellations · {graph!.stats.relations} edges
+              </span>
+            </div>
+          )}
+
           {/* the graph itself */}
-          {hasGraph ? (
-            <div className="mt-16 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-3">
+          {!hasGraph ? (
+            <EmptyPanel />
+          ) : view === "constellation" ? (
+            <div className="mt-8">
+              <div
+                className="grid items-start gap-8"
+                style={{ gridTemplateColumns: "minmax(0, 1fr) 320px" }}
+              >
+                <div
+                  style={{
+                    border: "1px solid var(--color-rule)",
+                    background: "var(--color-ink-1)",
+                    position: "relative",
+                  }}
+                >
+                  <ResponsiveConstellation graph={graph!} onHover={setHovered} />
+                </div>
+                <aside
+                  style={{
+                    paddingLeft: 20,
+                    borderLeft: "1px solid var(--color-rule)",
+                    minHeight: 580,
+                  }}
+                >
+                  <HoverDetail hovered={hovered} graph={graph!} relations={graph!.relations} />
+                </aside>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-8 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-3">
               <ScrollReveal delay={0}>
                 <Column label="people" tone="vermilion" entities={graph?.entities.person ?? []} relations={graph?.relations ?? []} />
               </ScrollReveal>
@@ -216,8 +282,6 @@ export default function MemoryPage() {
                 <Column label="topics" tone="muted" entities={graph?.entities.topic ?? []} relations={graph?.relations ?? []} />
               </ScrollReveal>
             </div>
-          ) : (
-            <EmptyPanel />
           )}
         </section>
       </main>
