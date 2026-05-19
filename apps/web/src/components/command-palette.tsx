@@ -21,6 +21,7 @@ const NAV_COMMANDS: Array<{ id: string; label: string; hint: string; href: strin
   { id: "memory", label: "the memory graph", hint: "extracted people · projects · relations", href: "/memory" },
   { id: "overview", label: "the four wedges", hint: "memory · reasoning · critique · hybrid", href: "/overview" },
   { id: "runs", label: "runs · agent history", hint: "every past reasoning · click to replay", href: "/runs" },
+  { id: "debate", label: "debate · two agents disagree", hint: "primary + devil's advocate · parallel streams", href: "/debate" },
   { id: "briefings", label: "briefings · the morning paper", hint: "1-pagers for upcoming meetings", href: "/briefings" },
   { id: "commitments", label: "commitments · the ledger", hint: "promises in & out", href: "/commitments" },
   { id: "actions", label: "actions · the queue", hint: "approvals and history", href: "/actions" },
