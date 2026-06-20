@@ -37,6 +37,10 @@ export async function* runAgent(
   contents.push({ role: "user", parts: [{ text: userFraming(opts.query) }] });
   const allCitations: Citation[] = [];
   const usage = { prompt: 0, candidates: 0, thoughts: 0, total: 0 };
+  // Every draft_email must be audited by the Critic. We track which drafted
+  // actions have already been critiqued (by the model OR by us) so the
+  // invariant is enforced in code, not just requested in the prompt.
+  const critiquedActionIds = new Set<string>();
 
   yield { kind: "start", query: opts.query, runId, at: Date.now() };
 
@@ -148,6 +152,8 @@ export async function* runAgent(
     // Gemini 3.x requires the next user turn to contain a functionResponse for
     // *every* functionCall in the model turn — same count, same order.
     const responseParts: ContentPart[] = [];
+    // Drafts produced this turn that still need a Critic pass.
+    const draftedThisTurn: string[] = [];
     for (const call of toolCalls) {
       const callId = randomUUID().slice(0, 8);
       const tool = TOOL_REGISTRY.get(call.name);
@@ -174,6 +180,15 @@ export async function* runAgent(
       }
       const durationMs = Date.now() - t0;
 
+      // Track the draft/critique pairing so we can enforce the audit below.
+      if (call.name === "critique_draft") {
+        const aid = typeof call.args["action_id"] === "string" ? (call.args["action_id"] as string) : "";
+        if (aid) critiquedActionIds.add(aid);
+      } else if (call.name === "draft_email" && result.ok) {
+        const aid = typeof result.data?.["actionId"] === "string" ? (result.data["actionId"] as string) : "";
+        if (aid) draftedThisTurn.push(aid);
+      }
+
       if (result.citations && result.citations.length > 0) {
         allCitations.push(...result.citations);
       }
@@ -190,6 +205,56 @@ export async function* runAgent(
       responseParts.push({
         functionResponse: {
           name: call.name,
+          response: trimForModel(result),
+        },
+      });
+    }
+
+    // ── ENFORCE THE CRITIC ──
+    // For every draft_email this turn that the model did NOT pair with its own
+    // critique_draft call, run the Critic ourselves and feed the verdict back
+    // into the same user turn. This guarantees no draft ever reaches the user
+    // un-audited, regardless of whether the model followed the prompt.
+    const critic = TOOL_REGISTRY.get("critique_draft");
+    for (const actionId of draftedThisTurn) {
+      if (critiquedActionIds.has(actionId) || !critic) continue;
+      const callId = randomUUID().slice(0, 8);
+      // `auto: true` lets the UI distinguish an enforced critique from one the
+      // model requested itself.
+      yield {
+        kind: "tool_call",
+        id: callId,
+        name: "critique_draft",
+        args: { action_id: actionId, auto: true },
+        at: Date.now(),
+      };
+      const t0 = Date.now();
+      let result;
+      try {
+        result = await critic.handler({ action_id: actionId }, { query: opts.query, runId });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        result = { ok: false, error: msg };
+      }
+      const durationMs = Date.now() - t0;
+      critiquedActionIds.add(actionId);
+
+      if (result.citations && result.citations.length > 0) {
+        allCitations.push(...result.citations);
+      }
+
+      yield {
+        kind: "observation",
+        id: callId,
+        name: "critique_draft",
+        result,
+        durationMs,
+        at: Date.now(),
+      };
+
+      responseParts.push({
+        functionResponse: {
+          name: "critique_draft",
           response: trimForModel(result),
         },
       });

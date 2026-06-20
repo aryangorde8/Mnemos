@@ -1,3 +1,5 @@
+import { authHeaders } from "./auth-token";
+
 const AGENT = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
 
 export type SourceKind =
@@ -153,6 +155,10 @@ export interface ActionRecord {
   gmailMessageId?: string | null;
   gmailThreadId?: string | null;
   gmailError?: string | null;
+  bookedVia?: "simulated" | "google" | null;
+  calendarEventId?: string | null;
+  calendarHtmlLink?: string | null;
+  calendarError?: string | null;
   createdAt: string;
   decidedAt: string | null;
 }
@@ -186,7 +192,7 @@ export async function approveAction(
 ): Promise<ActionRecord> {
   const res = await fetch(`${AGENT}/actions/${id}/approve`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
     body: JSON.stringify(edits ? { edits } : {}),
   });
   if (!res.ok) {
@@ -202,7 +208,7 @@ export async function rejectAction(
 ): Promise<ActionRecord> {
   const res = await fetch(`${AGENT}/actions/${id}/reject`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
     body: JSON.stringify(reason ? { reason } : {}),
   });
   if (!res.ok) {
@@ -355,6 +361,7 @@ export async function getCritiqueForAction(actionId: string): Promise<CritiqueRe
 export interface GmailStatus {
   configured: boolean;
   connected: boolean;
+  calendar?: boolean;
   email?: string;
 }
 
@@ -376,6 +383,7 @@ export async function disconnectGmail(): Promise<boolean> {
   const res = await fetch(`${AGENT}/auth/google/disconnect`, {
     method: "POST",
     cache: "no-store",
+    headers: { ...(await authHeaders()) },
   });
   return res.ok;
 }

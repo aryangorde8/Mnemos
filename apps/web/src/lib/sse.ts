@@ -1,3 +1,5 @@
+import { authHeaders } from "./auth-token";
+
 const AGENT_URL =
   process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
 
@@ -25,6 +27,7 @@ async function streamSSE(
     headers: {
       "Content-Type": "application/json",
       Accept: "text/event-stream",
+      ...(await authHeaders()),
     },
     body: JSON.stringify(body),
     ...(signal ? { signal } : {}),

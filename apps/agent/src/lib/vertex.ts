@@ -75,6 +75,10 @@ export interface StreamOptions {
   tools?: FunctionDeclaration[];
   temperature?: number;
   maxTokens?: number;
+  // Discourages token repetition. A small positive value suppresses the
+  // occasional "wordwordword…" degeneration loop the preview model can fall
+  // into on long conversational turns. Scoped to the ReAct loop only.
+  frequencyPenalty?: number;
 }
 
 export async function* streamGenerate(
@@ -100,6 +104,8 @@ export async function* streamGenerate(
     generationConfig: {
       temperature: opts.temperature ?? 0.4,
       maxOutputTokens: opts.maxTokens ?? 2048,
+      // Default to a mild penalty so repetition loops self-correct.
+      frequencyPenalty: opts.frequencyPenalty ?? 0.4,
     },
   };
   const res = await fetch(url, {

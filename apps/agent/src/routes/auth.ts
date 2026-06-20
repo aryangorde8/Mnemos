@@ -99,12 +99,14 @@ authRouter.get("/auth/google/status", async (_req: Request, res: Response) => {
   }
   try {
     const tokens = await getTokens(DEMO_USER_ID);
-    if (!tokens) return res.json({ configured: true, connected: false });
+    if (!tokens) return res.json({ configured: true, connected: false, calendar: false });
     // Try a refresh to confirm the token is still valid
     const accessToken = await getAccessToken(DEMO_USER_ID);
     return res.json({
       configured: true,
       connected: !!accessToken,
+      // whether the granted scope includes Google Calendar
+      calendar: !!accessToken && /calendar/.test(tokens.scope),
       email: tokens.email,
     });
   } catch (err) {

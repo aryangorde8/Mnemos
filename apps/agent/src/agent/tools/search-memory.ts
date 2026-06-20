@@ -1,7 +1,7 @@
 import { config } from "../../config.js";
 import { embedQuery, generate } from "../../lib/vertex.js";
 import { getCollections } from "../../lib/mongo.js";
-import { searchViaMcp } from "../../mcp/mongo-mcp-client.js";
+import { searchViaMcp, aggregateViaMcp } from "../../mcp/mongo-mcp-client.js";
 import type { Citation, ToolDef } from "../types.js";
 
 /**
@@ -203,6 +203,11 @@ async function runText(
     },
   ];
   try {
+    // Prefer the MCP path for the BM25 leg too (per architectural commitment),
+    // then fall back to the direct driver.
+    const mcpResults = await aggregateViaMcp("chunks", pipeline);
+    if (mcpResults) return mcpResults.map(toRawHit);
+
     const raw = await chunks.aggregate(pipeline).toArray();
     return raw.map(toRawHit);
   } catch (err) {

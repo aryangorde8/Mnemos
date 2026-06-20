@@ -10,11 +10,15 @@ import { briefingsRouter } from "./routes/briefings.js";
 import { graphRouter } from "./routes/graph.js";
 import { debateRouter } from "./routes/debate.js";
 import { authRouter } from "./routes/auth.js";
+import { isFirebaseConfigured, requireAuth } from "./lib/firebase-auth.js";
 
 const app = express();
 app.disable("x-powered-by");
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "2mb" }));
+// Firebase auth gate — no-op unless FIREBASE_PROJECT_ID is configured, in which
+// case mutating/agent requests must carry a valid Firebase ID token.
+app.use(requireAuth);
 
 app.get("/health", (_req: Request, res: Response) => {
   res.json({
@@ -33,6 +37,8 @@ app.get("/ready", (_req: Request, res: Response) => {
     atlas: isMongoConfigured() ? "configured" : "missing",
     vertex: isVertexConfigured() ? "configured" : "missing",
     gmail: gmailConfigured ? "configured" : "missing",
+    firebaseAuth: isFirebaseConfigured() ? "enforced" : "open",
+    mcp: process.env["MNEMOS_USE_MCP"] !== "0" ? "enabled" : "disabled",
     geminiModel: config.VERTEX_GEMINI_MODEL,
     embeddingModel: config.VERTEX_EMBEDDING_MODEL,
     region: config.GOOGLE_CLOUD_LOCATION,

@@ -1,4 +1,5 @@
 import { getCollections } from "../../lib/mongo.js";
+import { listCommitmentRecords, publicCommitment } from "../../lib/commitments.js";
 import type { ToolDef } from "../types.js";
 
 export const listCommitmentsTool: ToolDef = {
@@ -27,7 +28,6 @@ export const listCommitmentsTool: ToolDef = {
   },
   handler: async (args) => {
     try {
-      const { chunks } = await getCollections();
       const direction =
         typeof args["direction"] === "string"
           ? (args["direction"] as "incoming" | "outgoing" | "all")
@@ -35,6 +35,30 @@ export const listCommitmentsTool: ToolDef = {
       const actor = typeof args["actor"] === "string" ? args["actor"].trim() : "";
       const limit = clampInt(args["limit"], 12, 1, 50);
 
+      // ── Primary path: the persisted, LLM-extracted ledger. ──
+      const records = await listCommitmentRecords({
+        direction,
+        ...(actor ? { actor } : {}),
+        status: "open",
+        limit,
+      });
+      if (records.length > 0) {
+        return {
+          ok: true,
+          data: {
+            direction,
+            actor: actor || null,
+            count: records.length,
+            source: "ledger",
+            commitments: records.map(publicCommitment),
+          },
+          summary: `${records.length} ${direction === "all" ? "" : direction + " "}commitments${actor ? ` involving ${actor}` : ""} · ledger`,
+        };
+      }
+
+      // ── Fallback: regex heuristic over chunk text (used when the ledger
+      // hasn't been built yet, so the demo still shows something). ──
+      const { chunks } = await getCollections();
       const commitmentRegex =
         "(owe[ds]?|owed|will deliver|by Friday|by Mon|by Tue|by Wed|by Thu|by EOD|by next|committed to|promised|action item|owner:|due\\s)";
       const filter: Record<string, unknown> = {

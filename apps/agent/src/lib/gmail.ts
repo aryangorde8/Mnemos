@@ -22,6 +22,9 @@ export const DEMO_USER_ID = "alex";
 
 export const GMAIL_SCOPES = [
   "https://www.googleapis.com/auth/gmail.send",
+  // Calendar read + write, so schedule_meeting can create real events and
+  // get_calendar_events can read the live calendar.
+  "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/userinfo.email",
   "openid",
 ];

@@ -4,6 +4,8 @@ import { Instrument_Serif, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google
 import { MotionConfig } from "framer-motion";
 import { useRouter } from "next/router";
 import { CommandPalette } from "@/components/command-palette";
+import { AuthControl } from "@/components/auth-control";
+import { AuthProvider } from "@/lib/auth";
 import { useCmdK } from "@/lib/use-cmd-k";
 import "@/styles/globals.css";
 
@@ -67,10 +69,13 @@ export default function App({ Component, pageProps }: AppProps) {
         />
         <meta name="twitter:image" content="/og.png" />
       </Head>
-      <div className={`${display.variable} ${sans.variable} ${mono.variable}`}>
-        <Component {...pageProps} key={router.asPath} />
-        <CommandPalette open={palette.open} onClose={() => palette.setOpen(false)} />
-      </div>
+      <AuthProvider>
+        <div className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+          <Component {...pageProps} key={router.asPath} />
+          <CommandPalette open={palette.open} onClose={() => palette.setOpen(false)} />
+          <AuthControl />
+        </div>
+      </AuthProvider>
     </MotionConfig>
   );
 }

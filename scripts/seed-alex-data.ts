@@ -274,6 +274,46 @@ async function main(): Promise<void> {
   if (LOAD || LOAD_ONLY) {
     console.log(`posting ${docs.length} docs to ${AGENT_URL}/ingest ...`);
     await loadIntoAgent(docs);
+
+    // Build the memory graph and the commitments ledger from the freshly
+    // ingested corpus so /memory and /commitments work immediately.
+    await triggerExtraction("/graph/extract", "memory graph");
+    await triggerExtraction("/commitments/extract", "commitments ledger");
+  }
+}
+
+/**
+ * Fire an SSE extraction endpoint (rebuild) and drain it to completion,
+ * printing the final `done` line. Best-effort — a failure here doesn't fail
+ * the seed.
+ */
+async function triggerExtraction(path: string, label: string): Promise<void> {
+  try {
+    console.log(`building ${label} via ${AGENT_URL}${path} ...`);
+    const res = await fetch(`${AGENT_URL}${path}?rebuild=1`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rebuild: true }),
+    });
+    if (!res.ok || !res.body) {
+      console.warn(`  ! ${label}: ${res.status} ${await res.text().catch(() => "")}`);
+      return;
+    }
+    // Drain the stream; surface the last meaningful line.
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let last = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const text = decoder.decode(value, { stream: true });
+      for (const line of text.split("\n")) {
+        if (line.startsWith("data:")) last = line.slice(5).trim();
+      }
+    }
+    console.log(`  ${label} done: ${last}`);
+  } catch (err) {
+    console.warn(`  ! ${label} skipped: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 

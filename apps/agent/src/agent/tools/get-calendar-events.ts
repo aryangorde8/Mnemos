@@ -1,4 +1,5 @@
 import { getCollections } from "../../lib/mongo.js";
+import { isCalendarConnected, listCalendarEvents } from "../../lib/calendar.js";
 import type { ToolDef } from "../types.js";
 
 export const getCalendarEventsTool: ToolDef = {
@@ -26,7 +27,6 @@ export const getCalendarEventsTool: ToolDef = {
   },
   handler: async (args) => {
     try {
-      const { documents } = await getCollections();
       const fromIso = typeof args["from"] === "string" ? args["from"] : new Date().toISOString();
       const toIso =
         typeof args["to"] === "string"
@@ -34,6 +34,41 @@ export const getCalendarEventsTool: ToolDef = {
           : new Date(new Date(fromIso).getTime() + 7 * 86400_000).toISOString();
       const title = typeof args["title_contains"] === "string" ? args["title_contains"] : "";
 
+      // ── Primary path: the live Google Calendar (when connected). ──
+      if (await isCalendarConnected()) {
+        try {
+          const live = await listCalendarEvents({
+            timeMin: fromIso,
+            timeMax: toIso,
+            ...(title ? { q: title } : {}),
+          });
+          return {
+            ok: true,
+            data: {
+              from: fromIso,
+              to: toIso,
+              source: "google_calendar",
+              count: live.length,
+              events: live.map((e) => ({
+                id: e.id,
+                title: e.title,
+                when: e.when,
+                location: e.location,
+                attendees: e.attendees,
+                organizer: e.organizer,
+                htmlLink: e.htmlLink,
+                agendaExcerpt: null,
+              })),
+            },
+            summary: `${live.length} events in window · google calendar`,
+          };
+        } catch {
+          // fall through to the Mongo-backed simulation on any API error
+        }
+      }
+
+      // ── Fallback: Mongo-backed calendar documents (offline demo). ──
+      const { documents } = await getCollections();
       const filter: Record<string, unknown> = { source: "calendar" };
       const dateClauses: Record<string, unknown>[] = [
         { "metadata.eventTime": { $gte: fromIso, $lte: toIso } },

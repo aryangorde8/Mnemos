@@ -1,12 +1,13 @@
 import { recordAction } from "../../lib/actions.js";
 import { getCollections } from "../../lib/mongo.js";
+import { getBusyIntervals, isCalendarConnected } from "../../lib/calendar.js";
 import type { ToolDef } from "../types.js";
 
 export const scheduleMeetingTool: ToolDef = {
   declaration: {
     name: "schedule_meeting",
     description:
-      "Propose a meeting and persist the proposal for user approval. Checks Alex's calendar for conflicts in each proposed time window and surfaces them in the response so the user can see what each slot would collide with. This does NOT call Google Calendar — it stores a proposed meeting in Mongo as the source of truth for the demo.",
+      "Propose a meeting and persist the proposal for user approval. Checks the calendar for conflicts in each proposed time window (the live Google Calendar when connected, otherwise the Mongo-backed demo calendar) and surfaces them per slot. The proposal is NOT booked until the user approves — on approval a real Google Calendar event is created when connected.",
     parameters: {
       type: "OBJECT",
       properties: {
@@ -53,8 +54,9 @@ export const scheduleMeetingTool: ToolDef = {
       // ── Conflict detection ──
       // Pull every calendar event that could overlap ANY of the proposed times,
       // then per-slot check whether the [start, end) window intersects an event.
+      const connected = await isCalendarConnected();
       const slotChecks = await Promise.all(
-        proposedTimes.map((iso) => evaluateSlot(iso, durationMinutes)),
+        proposedTimes.map((iso) => evaluateSlot(iso, durationMinutes, connected)),
       );
 
       const conflictCount = slotChecks.filter((s) => s.conflicts.length > 0).length;
@@ -129,7 +131,11 @@ interface SlotEvaluation {
   free: boolean;
 }
 
-async function evaluateSlot(startIso: string, durationMinutes: number): Promise<SlotEvaluation> {
+async function evaluateSlot(
+  startIso: string,
+  durationMinutes: number,
+  connected: boolean,
+): Promise<SlotEvaluation> {
   const start = new Date(startIso);
   if (Number.isNaN(start.getTime())) {
     return {
@@ -142,6 +148,24 @@ async function evaluateSlot(startIso: string, durationMinutes: number): Promise<
   const end = new Date(start.getTime() + durationMinutes * 60_000);
   const startMs = start.getTime();
   const endMs = end.getTime();
+
+  // ── Primary path: live Google Calendar free/busy. ──
+  if (connected) {
+    try {
+      const busy = await getBusyIntervals(start.toISOString(), end.toISOString());
+      const conflicts: SlotEvaluation["conflicts"] = [];
+      for (const b of busy) {
+        const bStart = new Date(b.start).getTime();
+        const bEnd = new Date(b.end).getTime();
+        if (Number.isNaN(bStart) || Number.isNaN(bEnd)) continue;
+        if (bEnd <= startMs || bStart >= endMs) continue;
+        conflicts.push({ id: "busy", title: "Busy (calendar)", when: b.start, location: null });
+      }
+      return { start: start.toISOString(), end: end.toISOString(), conflicts, free: conflicts.length === 0 };
+    } catch {
+      // fall through to the Mongo-backed simulation on any API error
+    }
+  }
 
   try {
     const { documents } = await getCollections();

@@ -57,6 +57,11 @@ export interface ActionRecord<P extends ProposalData = ProposalData> {
   gmailMessageId?: string;
   gmailThreadId?: string;
   gmailError?: string;
+  // populated when a schedule_meeting is approved
+  bookedVia?: "simulated" | "google";
+  calendarEventId?: string;
+  calendarHtmlLink?: string;
+  calendarError?: string;
   createdAt: Date;
   decidedAt?: Date;
 }
@@ -153,6 +158,37 @@ export async function approveAction(
     }
   }
 
+  // If this is a schedule_meeting AND the calendar is connected, create a real
+  // Google Calendar event on the preferred slot. On failure we still mark the
+  // action sent but annotate calendarError so the audit trail is preserved.
+  let calendarInfo: { eventId: string; htmlLink: string | null } | null = null;
+  let calendarError: string | null = null;
+  if (existing.kind === "schedule_meeting") {
+    try {
+      const { isCalendarConnected, insertCalendarEvent } = await import("./calendar.js");
+      if (await isCalendarConnected()) {
+        const meeting = final as ScheduleMeetingProposal;
+        const idx = meeting.preferredIdx !== undefined && meeting.preferredIdx >= 0 ? meeting.preferredIdx : 0;
+        const startIso = meeting.proposedTimes[idx] ?? meeting.proposedTimes[0];
+        if (startIso) {
+          const start = new Date(startIso);
+          const end = new Date(start.getTime() + (meeting.durationMinutes ?? 30) * 60_000);
+          const inserted = await insertCalendarEvent({
+            summary: meeting.title,
+            startIso: start.toISOString(),
+            endIso: end.toISOString(),
+            attendees: meeting.attendees,
+            location: meeting.location,
+            description: meeting.agenda,
+          });
+          calendarInfo = { eventId: inserted.id, htmlLink: inserted.htmlLink };
+        }
+      }
+    } catch (err) {
+      calendarError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
   const update: Record<string, unknown> = {
     status: "sent",
     final,
@@ -166,6 +202,14 @@ export async function approveAction(
   } else if (existing.kind === "draft_email") {
     update["sentVia"] = "simulated";
     if (gmailError) update["gmailError"] = gmailError;
+  }
+  if (calendarInfo) {
+    update["bookedVia"] = "google";
+    update["calendarEventId"] = calendarInfo.eventId;
+    if (calendarInfo.htmlLink) update["calendarHtmlLink"] = calendarInfo.htmlLink;
+  } else if (existing.kind === "schedule_meeting") {
+    update["bookedVia"] = "simulated";
+    if (calendarError) update["calendarError"] = calendarError;
   }
 
   await col.updateOne({ _id: new ObjectId(id) }, { $set: update });
@@ -212,6 +256,10 @@ export function publicAction(a: ActionRecord): Record<string, unknown> {
     gmailMessageId: a.gmailMessageId ?? null,
     gmailThreadId: a.gmailThreadId ?? null,
     gmailError: a.gmailError ?? null,
+    bookedVia: a.bookedVia ?? null,
+    calendarEventId: a.calendarEventId ?? null,
+    calendarHtmlLink: a.calendarHtmlLink ?? null,
+    calendarError: a.calendarError ?? null,
     createdAt: a.createdAt instanceof Date ? a.createdAt.toISOString() : a.createdAt,
     decidedAt:
       a.decidedAt instanceof Date

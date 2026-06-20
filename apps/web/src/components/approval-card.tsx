@@ -175,6 +175,14 @@ function DraftEmailView({
   editing: boolean;
   onChange: (p: DraftEmailProposal) => void;
 }) {
+  // Local string buffers for the recipient fields so typing commas/spaces
+  // doesn't get reformatted under the cursor. The parsed arrays are pushed up
+  // to the proposal on every change (that's what gets sent on approve).
+  const [toStr, setToStr] = useState(proposal.to.join(", "));
+  const [ccStr, setCcStr] = useState(proposal.cc.join(", "));
+  const fieldClass =
+    "mono w-full border-b border-[color:var(--color-rule-strong)] bg-transparent text-[color:var(--color-paper)] focus:border-[color:var(--color-vermilion)] focus:outline-none";
+
   return (
     <div>
       {/* Meta block — labeled mono, two-column grid */}
@@ -186,15 +194,41 @@ function DraftEmailView({
         }}
       >
         <div className="label" style={{ paddingTop: 3 }}>to</div>
-        <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
-          {proposal.to.join(", ")}
-        </div>
-        {proposal.cc.length > 0 && (
+        {editing ? (
+          <input
+            value={toStr}
+            onChange={(e) => {
+              setToStr(e.target.value);
+              onChange({ ...proposal, to: parseRecipients(e.target.value) });
+            }}
+            placeholder="recipient@example.com"
+            className={fieldClass}
+            style={{ fontSize: "0.86rem" }}
+          />
+        ) : (
+          <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
+            {proposal.to.join(", ")}
+          </div>
+        )}
+        {(editing || proposal.cc.length > 0) && (
           <>
             <div className="label" style={{ paddingTop: 3 }}>cc</div>
-            <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
-              {proposal.cc.join(", ")}
-            </div>
+            {editing ? (
+              <input
+                value={ccStr}
+                onChange={(e) => {
+                  setCcStr(e.target.value);
+                  onChange({ ...proposal, cc: parseRecipients(e.target.value) });
+                }}
+                placeholder="(optional)"
+                className={fieldClass}
+                style={{ fontSize: "0.86rem" }}
+              />
+            ) : (
+              <div className="mono" style={{ fontSize: "0.86rem", color: "var(--color-paper)" }}>
+                {proposal.cc.join(", ")}
+              </div>
+            )}
           </>
         )}
         <div className="label" style={{ paddingTop: 3 }}>subject</div>
@@ -370,6 +404,13 @@ function statusFooter(a: ActionRecord): string {
   if (a.status === "rejected")
     return `rejected · ${a.reason ?? "no reason given"}`;
   return "";
+}
+
+function parseRecipients(s: string): string[] {
+  return s
+    .split(/[,;]/)
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
 function fmtTime(iso: string): string {
