@@ -30,17 +30,67 @@ NAV = [("overview", "/overview"), ("ask", "/ask"), ("search", "/search"), ("deba
        ("briefings", "/briefings"), ("ingest", "/ingest")]
 
 
+CMDK_TARGETS = [("home", "/")] + NAV
+
+_CMDK_JS = """
+(function(){var ov=document.getElementById('cmdk');if(!ov)return;
+var input=document.getElementById('cmdk-input'),list=document.getElementById('cmdk-list');
+var items=[].slice.call(list.children),sel=0;
+function vis(){return items.filter(function(it){return it.style.display!=='none';});}
+function mark(i){var v=vis();sel=Math.max(0,Math.min(v.length-1,i));items.forEach(function(it){it.classList.remove('sel');});if(v[sel])v[sel].classList.add('sel');}
+function filt(){var q=input.value.toLowerCase();items.forEach(function(it){it.style.display=it.textContent.toLowerCase().indexOf(q)>=0?'':'none';});mark(0);}
+function open(){ov.classList.add('open');input.value='';filt();setTimeout(function(){input.focus();},10);}
+function close(){ov.classList.remove('open');}
+function go(){var v=vis();if(v[sel])window.location=v[sel].getAttribute('data-href');}
+document.addEventListener('keydown',function(e){
+if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();ov.classList.contains('open')?close():open();return;}
+if(!ov.classList.contains('open'))return;
+if(e.key==='Escape')close();else if(e.key==='ArrowDown'){e.preventDefault();mark(sel+1);}
+else if(e.key==='ArrowUp'){e.preventDefault();mark(sel-1);}else if(e.key==='Enter'){e.preventDefault();go();}});
+input.addEventListener('input',filt);
+ov.addEventListener('click',function(e){if(e.target===ov)close();});
+items.forEach(function(it){it.addEventListener('click',function(){window.location=it.getAttribute('data-href');});
+it.addEventListener('mouseenter',function(){mark(vis().indexOf(it));});});})();
+"""
+
+
+def command_palette():
+    items = [Div(Span(label), Span(href, cls="k"), cls="cmdk-item", data_href=href)
+             for label, href in CMDK_TARGETS]
+    overlay = Div(Div(
+        Input(id="cmdk-input", cls="cmdk-input", placeholder="jump to…", autocomplete="off"),
+        Div(*items, id="cmdk-list", cls="cmdk-list"),
+        cls="cmdk-panel"), id="cmdk", cls="cmdk-overlay")
+    return (overlay, Script(_CMDK_JS))
+
+
+def topbar(active: str = "", home: bool = False):
+    mid = (Span("2026 · vol. 001 · day 020 / 028", cls="chrome") if home
+           else Nav(*[A(label, href=href, cls=("on" if active == label else "")) for label, href in NAV]))
+    return Header(Div(
+        A(Span("Mnemos", cls="brand-i"), " ", Span("μν.", cls="label"), href="/",
+          style="display:flex;align-items:baseline;gap:8px"),
+        Div(mid, Span(Span(cls="pulse-dot"), " ", Span("live", cls="chrome"),
+                      style="display:inline-flex;align-items:center;gap:7px"),
+            cls="tb-right"),
+        cls="row"), cls="topbar")
+
+
+def leftrail():
+    return Aside(Span("Mnemos · the memory agent · v0.0.1", cls="vrail"),
+                 Span("an editorial built on what you've seen", cls="vrail"), cls="leftrail")
+
+
+def footer(active: str = ""):
+    return Footer(Div(Span("a memory-first agent · built for action", cls="chrome"),
+                      Span(active or "home", cls="chrome"),
+                      Span("press ⌘K to begin", cls="chrome"), cls="row"), cls="bottombar")
+
+
 def shell(active: str, *content):
-    nav = Header(
-        Div(
-            A(Span("Mnemos", cls="brand"), href="/"),
-            Span("mn. · the memory agent", cls="tag"),
-            Nav(*[A(label, href=href, cls=("on" if active == label else "")) for label, href in NAV]),
-            cls="wrap",
-        ),
-        cls="nav",
-    )
-    return (nav, Main(Div(*content, cls="wrap"), style="padding:40px 0 120px"))
+    return (topbar(active), leftrail(),
+            Main(Div(*content, cls="wrap"), style="padding:96px 0 86px"),
+            footer(active), *command_palette())
 
 
 # ─────────────────────────── pages ───────────────────────────
@@ -79,17 +129,7 @@ render();setInterval(render,1900);})();
 
 @rt("/")
 def home():
-    topbar = Header(Div(
-        A(Span("Mnemos", cls="brand-i"), " ", Span("μν. — memory agent", cls="label"),
-          href="/", style="display:flex;align-items:baseline;gap:10px"),
-        Div(Span("2026 · vol. 001 · day 020 / 028", cls="chrome"),
-            Span(Span(cls="pulse-dot"), " ", Span("live", cls="chrome"),
-                 style="display:inline-flex;align-items:center;gap:7px;margin-left:24px"),
-            style="display:flex;align-items:center"),
-        cls="row"), cls="topbar")
     constellation = Div(Canvas(id="constellation"), Div(cls="const-fade"), cls="const-layer")
-    leftrail = Aside(Span("Mnemos · the memory agent · v0.0.1", cls="vrail"),
-                     Span("an editorial built on what you've seen", cls="vrail"), cls="leftrail")
     hero = Main(
         Div(Span(cls="drawline"), Span("── mnemos · the memory agent"), cls="kicker label"),
         Div(
@@ -113,7 +153,8 @@ def home():
         Span("2026.05.20 — vault active · 242 docs", cls="chrome"),
         Span("press ⌘K to begin", cls="chrome"), cls="row"), cls="bottombar")
     return (Title("Mnemos — the memory agent"),
-            topbar, constellation, leftrail, hero, bottombar,
+            topbar(home=True), constellation, leftrail(), hero, bottombar,
+            *command_palette(),
             Script(_CONSTELLATION_JS + _LIVESTREAM_JS))
 
 

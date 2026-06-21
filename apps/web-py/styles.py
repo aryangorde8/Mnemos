@@ -68,6 +68,22 @@ a{color:inherit; text-decoration:none}
 .cs-think{color:var(--paper-muted);font-style:italic}
 .cs-tool{color:var(--vermilion)}
 .cs-obs{color:var(--paper-faint)}
+.tb-right{display:flex;align-items:center;gap:20px}
+.topbar nav{display:flex;gap:15px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.05em}
+.topbar nav a{color:var(--paper-muted);transition:color .2s}
+.topbar nav a:hover,.topbar nav a.on{color:var(--vermilion)}
+
+/* ── ⌘K command palette ── */
+.cmdk-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(3,2,1,.62);backdrop-filter:blur(4px)}
+.cmdk-overlay.open{display:flex;align-items:flex-start;justify-content:center;padding-top:14vh}
+.cmdk-panel{width:560px;max-width:90vw;background:var(--ink-1);border:1px solid var(--rule-strong);border-radius:6px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.cmdk-input{width:100%;padding:18px 20px;background:transparent;border:none;border-bottom:1px solid var(--rule);color:var(--paper);font-family:'Instrument Serif',serif;font-size:1.35rem;outline:none}
+.cmdk-input::placeholder{color:var(--paper-faint)}
+.cmdk-list{max-height:52vh;overflow:auto;padding:6px}
+.cmdk-item{display:flex;align-items:center;padding:11px 14px;border-radius:4px;cursor:pointer;font-size:.92rem;color:var(--paper-dim)}
+.cmdk-item .k{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--paper-faint)}
+.cmdk-item.sel{background:rgba(242,87,56,.12);color:var(--vermilion)}
+.cmdk-item.sel .k{color:var(--vermilion)}
 
 /* ── inner-page shell ── */
 header.nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(5,4,2,.7);border-bottom:1px solid var(--rule)}
