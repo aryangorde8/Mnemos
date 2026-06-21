@@ -38,7 +38,8 @@ MONGODB_DB=mnemos
 4. Create the vector search index:
 
 ```bash
-npx tsx --env-file=.env.local scripts/setup-mongo-index.ts
+npm run setup:agent   # one-time: python venv + agent deps
+npm run setup:mongo
 ```
 
 Atlas needs ~1–3 min to build the index. The script is idempotent.
@@ -72,7 +73,8 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 ```
 GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=us-central1
-VERTEX_GEMINI_MODEL=gemini-3-pro
+VERTEX_GEMINI_MODEL=gemini-3.1-pro-preview
+VERTEX_GEMINI_LOCATION=global
 VERTEX_EMBEDDING_MODEL=text-embedding-004
 ```
 
@@ -91,14 +93,11 @@ gcloud artifacts repositories create mnemos \
 ## 4. Seed the vault
 
 This populates Mongo with 247 synthetic Alex Chen documents — the demo corpus.
-Run the agent locally first, then have the seed script POST to its `/ingest`:
+The Python seed script generates, ingests, and builds the graph + commitments
+ledger directly (no running server needed):
 
 ```bash
-# terminal 1
-npm run dev:agent
-
-# terminal 2
-npx tsx --env-file=.env.local scripts/seed-alex-data.ts --load
+npm run seed -- --load
 ```
 
 It takes ~5–10 minutes (one Gemini call per narrative thread; one embedding
@@ -114,11 +113,11 @@ Optional: extract Alex's writing voice so `draft_email` mimics his actual
 phrasings:
 
 ```bash
-npx tsx --env-file=.env.local scripts/extract-voice.ts
+npm run voice
 ```
 
 Writes `scripts/fixtures/alex-voice.md`; the agent loads it lazily at draft
-time. A hand-crafted version is already committed — run `extract-voice.ts`
+time. A hand-crafted version is already committed — run `npm run voice`
 to override it with voice sampled from the generated corpus.
 
 ## 5. Deploy the agent
