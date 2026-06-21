@@ -59,10 +59,9 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 | Layer | Tech |
 |---|---|
 | Frontend | Next.js 16 (Pages Router), TypeScript strict, Tailwind v4 CSS-first, Framer Motion 12 |
-| Agent | Node 22 + Express 5, hand-rolled ReAct loop, Server-Sent Events |
-| LLM | Gemini 3 Pro via Vertex AI (streaming + function calling + thinkingBudget control) |
-| Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) + a graph collection |
-| MCP | MongoDB MCP Server (stdio, gated by `MNEMOS_USE_MCP=1`) |
+| Agent | Python 3.12 + FastAPI, hand-rolled ReAct loop, Server-Sent Events ([apps/agent-py](apps/agent-py)) |
+| LLM | Gemini 3.1 Pro (preview) via Vertex AI through the official `google-genai` SDK (streaming + function calling + thinking control) |
+| Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) + a graph collection, via `motor` (async driver) |
 | Hosting | Cloud Run (web + agent), scale-to-zero, custom subdomains |
 
 ## Local setup
@@ -71,10 +70,11 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 cp .env.example .env.local
 # fill MONGODB_URI, GOOGLE_CLOUD_PROJECT, GOOGLE_APPLICATION_CREDENTIALS
 
-npm install
+npm install                                                      # web deps + TS script utils
+npm run setup:agent                                             # python venv + agent deps
 npx tsx --env-file=.env.local scripts/setup-mongo-index.ts
 
-npm run dev:agent   # http://localhost:8787
+npm run dev:agent   # FastAPI (Python) on http://localhost:8787
 npm run dev:web     # http://localhost:3000
 
 npx tsx --env-file=.env.local scripts/seed-alex-data.ts --load   # ~5–10 min

@@ -48,7 +48,7 @@ steps:
             --build-arg NEXT_PUBLIC_AGENT_URL="${_NEXT_PUBLIC_AGENT_URL}" \
             -t "$TAG" .
         else
-          docker build -f apps/agent/Dockerfile -t "$TAG" .
+          docker build -f apps/agent-py/Dockerfile -t "$TAG" .
         fi
 
   - id: push

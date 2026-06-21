@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  typecheck-and-build:
-    name: typecheck + build
+  web:
+    name: typecheck + build (web)
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -33,26 +33,40 @@ jobs:
       - name: typecheck
         run: npm run typecheck
 
-      - name: build agent
-        run: npm --workspace apps/agent run build
-
       - name: build web (standalone)
         env:
           NEXT_PUBLIC_AGENT_URL: https://placeholder.run.app
           NEXT_TRACE_ROOT: ${{ github.workspace }}
         run: npm --workspace apps/web run build
 
-      - name: verify dist + standalone exist
+      - name: verify standalone exists
         run: |
-          test -f apps/agent/dist/server.js
           test -d apps/web/.next/standalone/apps/web
-          ls -la apps/agent/dist apps/web/.next/standalone
+          ls -la apps/web/.next/standalone
+
+  agent-py:
+    name: agent-py (python)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: install
+        run: pip install -r apps/agent-py/requirements.txt
+
+      - name: import check (app boots without credentials)
+        run: PYTHONPATH=apps/agent-py python -c "import app.main; print('agent-py imports OK')"
 
   docker:
     name: docker build (no push)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: typecheck-and-build
+    needs: [web, agent-py]
     steps:
       - uses: actions/checkout@v4
 
@@ -62,7 +76,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/agent/Dockerfile
+          file: apps/agent-py/Dockerfile
           push: false
           tags: mnemos-agent:ci
 

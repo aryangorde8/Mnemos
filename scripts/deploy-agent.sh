@@ -36,7 +36,8 @@ REGION="${GOOGLE_CLOUD_LOCATION:-us-central1}"
 SERVICE="${SERVICE_NAME:-mnemos-agent}"
 DB="${MONGODB_DB:-mnemos}"
 INDEX="${MONGODB_VECTOR_INDEX:-mnemos_vector_index}"
-GEMINI="${VERTEX_GEMINI_MODEL:-gemini-3-pro}"
+GEMINI="${VERTEX_GEMINI_MODEL:-gemini-3.1-pro-preview}"
+GEMINI_LOC="${VERTEX_GEMINI_LOCATION:-global}"
 EMBED="${VERTEX_EMBEDDING_MODEL:-text-embedding-004}"
 
 IMAGE="${REGION}-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/mnemos/${SERVICE}:$(date +%Y%m%d-%H%M%S)"
@@ -53,7 +54,7 @@ steps:
     args:
       - build
       - -f
-      - apps/agent/Dockerfile
+      - apps/agent-py/Dockerfile
       - -t
       - ${IMAGE}
       - .
@@ -69,7 +70,7 @@ echo "[deploy-agent] deploying ${SERVICE} on Cloud Run"
 EXTRA_ENV=""
 SET_ENV="MONGODB_URI=${MONGODB_URI},MONGODB_DB=${DB},MONGODB_VECTOR_INDEX=${INDEX}"
 SET_ENV+=",GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT},GOOGLE_CLOUD_LOCATION=${REGION}"
-SET_ENV+=",VERTEX_GEMINI_MODEL=${GEMINI},VERTEX_EMBEDDING_MODEL=${EMBED}"
+SET_ENV+=",VERTEX_GEMINI_MODEL=${GEMINI},VERTEX_GEMINI_LOCATION=${GEMINI_LOC},VERTEX_EMBEDDING_MODEL=${EMBED}"
 
 if [[ "${MNEMOS_USE_MCP:-}" == "1" ]]; then
   SET_ENV+=",MNEMOS_USE_MCP=1"
