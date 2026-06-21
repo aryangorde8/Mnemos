@@ -26,7 +26,8 @@ _SSE_EXT = NotStr('<script src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/
 app, rt = fast_app(pico=False, hdrs=(_FONTS, Style(CSS), _SSE_EXT), htmlkw={"lang": "en"})
 
 NAV = [("overview", "/overview"), ("ask", "/ask"), ("search", "/search"), ("debate", "/debate"),
-       ("memory", "/memory"), ("commitments", "/commitments"), ("actions", "/actions")]
+       ("memory", "/memory"), ("commitments", "/commitments"), ("actions", "/actions"),
+       ("briefings", "/briefings"), ("ingest", "/ingest")]
 
 
 def shell(active: str, *content):
@@ -344,6 +345,85 @@ def render_debate_event(ev: dict):
         return Div(P(f"[{agent}] → {ev.get('name','')}", cls="sub"), cls="stream-block",
                    style="border:none; padding:2px 0; margin:2px 0")
     return None
+
+
+@rt("/briefings")
+async def briefings():
+    data = await backend.get_json("/briefings") or {}
+    items = data.get("briefings", []) if isinstance(data, dict) else []
+    cards = [Div(P(b.get("eventTitle", ""), cls="t"),
+                 P((b.get("markdown", "") or "")[:220], cls="x"), cls="result") for b in items]
+    return (Title("Mnemos — briefings"), shell(
+        "briefings",
+        P("· the 1-pager", cls="eyebrow"),
+        H1("Walk in ", Span("prepared.", cls="accent i")),
+        P("name a calendar event; the agent assembles attendees, open threads, and commitments.",
+          cls="muted", style="max-width:580px"),
+        Form(Input(name="t", cls="field", placeholder="Q3 Planning with Eng Leads", autocomplete="off"),
+             hx_get="/briefings/run", hx_target="#bresult", hx_swap="innerHTML", style="margin-top:18px"),
+        Div(id="bresult", style="margin-top:8px"),
+        P("recent briefings", cls="label", style="margin:30px 0 10px"),
+        *(cards or [Div("none generated yet.", cls="empty")]),
+    ))
+
+
+@rt("/briefings/run")
+def briefings_run(t: str = ""):
+    t = (t or "").strip()
+    if not t:
+        return Div("type an event title.", cls="empty")
+    return Div(
+        P(Span("● ", cls="accent"), Span("assembling briefing", cls="mono"), cls="mono faint",
+          style="font-size:.8rem; margin-bottom:6px"),
+        Div(id="stream", cls="stream", hx_ext="sse", sse_connect=f"/briefings/stream?t={quote(t)}",
+            sse_swap="message", hx_swap="beforeend", sse_close="done"),
+    )
+
+
+@rt("/briefings/stream")
+async def briefings_stream(t: str = ""):
+    async def gen():
+        async for ev in backend.stream_events("/briefings/generate", {"event_title": t}):
+            k = ev.get("kind")
+            if k == "context_loaded":
+                yield sse_message(Div(f"context · {ev.get('relatedCount','?')} related · "
+                                      f"{ev.get('commitmentCount','?')} commitment leads", cls="sub faint"))
+            elif k == "synthesizing":
+                yield sse_message(Div("drafting…", cls="sub faint"))
+            elif k == "chunk":
+                yield sse_message(Span(ev.get("text", ""), cls="answer", style="display:inline; border:none; padding:0"))
+            elif k == "error":
+                yield sse_message(Div("error: " + ev.get("message", ""), cls="head accent"))
+                yield sse_message(Div(), event="done")
+                break
+            elif k == "done":
+                yield sse_message(Div(), event="done")
+                break
+    return EventStream(gen())
+
+
+@rt("/ingest")
+async def ingest():
+    stats = await backend.get_json("/ingest/stats") or {}
+    sources = stats.get("sources", []) if isinstance(stats, dict) else []
+    rows = [Tr(Td(s.get("source", ""), cls="mono"), Td(str(s.get("count", "")), cls="mono faint"))
+            for s in sources]
+
+    def kpi(n, label):
+        return Div(Div(str(n), cls="kpi"), Div(label, cls="label", style="margin-top:8px"), cls="card")
+
+    return (Title("Mnemos — ingest"), shell(
+        "ingest",
+        P("· the corpus", cls="eyebrow"),
+        H1("Memory ", Span("intake.", cls="accent i")),
+        Div(kpi(stats.get("documents", "—"), "documents"),
+            kpi(stats.get("chunks", "—"), "chunks"), cls="grid cols-2", style="margin-top:24px"),
+        Div(P("by source", cls="label", style="margin-bottom:10px"),
+            (Table(Tbody(*rows), cls="ledger") if rows else Div("no corpus yet — run the seed.", cls="empty")),
+            cls="card", style="margin-top:18px"),
+        P("read-only. to (re)load the demo corpus, run  npm run seed -- --load", cls="faint mono",
+          style="font-size:.78rem; margin-top:16px"),
+    ))
 
 
 if __name__ == "__main__":
