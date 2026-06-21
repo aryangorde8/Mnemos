@@ -70,14 +70,14 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 cp .env.example .env.local
 # fill MONGODB_URI, GOOGLE_CLOUD_PROJECT, GOOGLE_APPLICATION_CREDENTIALS
 
-npm install                                                      # web deps + TS script utils
-npm run setup:agent                                             # python venv + agent deps
-npx tsx --env-file=.env.local scripts/setup-mongo-index.ts
+npm install                # web deps
+npm run setup:agent        # python venv + agent deps
+npm run setup:mongo        # create the Atlas vector + BM25 indexes
 
 npm run dev:agent   # FastAPI (Python) on http://localhost:8787
 npm run dev:web     # http://localhost:3000
 
-npx tsx --env-file=.env.local scripts/seed-alex-data.ts --load   # ~5–10 min
+npm run seed -- --load     # generate + ingest corpus + build graph/ledger (~5–10 min)
 ```
 
 ## Deploy

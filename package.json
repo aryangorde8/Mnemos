@@ -11,14 +11,13 @@
     "dev:agent": "apps/agent-py/.venv/bin/python -m uvicorn app.main:app --app-dir apps/agent-py --host 127.0.0.1 --port 8787",
     "build:web": "npm --workspace apps/web run build",
     "setup:agent": "python3 -m venv apps/agent-py/.venv && apps/agent-py/.venv/bin/python -m pip install -r apps/agent-py/requirements.txt",
+    "setup:mongo": "apps/agent-py/.venv/bin/python apps/agent-py/scripts/setup_mongo_index.py",
+    "seed": "apps/agent-py/.venv/bin/python apps/agent-py/scripts/seed_alex_data.py",
+    "voice": "apps/agent-py/.venv/bin/python apps/agent-py/scripts/extract_voice.py",
     "typecheck": "npm --workspaces --if-present run typecheck"
   },
   "engines": {
     "node": ">=22.0.0"
   },
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "google-auth-library": "^9.15.0",
-    "mongodb": "^6.12.0"
-  }
+  "license": "Apache-2.0"
 }
