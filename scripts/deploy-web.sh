@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Deploy the Mnemos web frontend (Next.js 16) to Cloud Run.
+# Deploy the Mnemos web frontend (FastHTML) to Cloud Run.
 #
 # Required env:
 #   GOOGLE_CLOUD_PROJECT    — GCP project id
-#   NEXT_PUBLIC_AGENT_URL   — public URL of the deployed agent service
+#   AGENT_URL               — public URL of the deployed agent service
 #
 # Optional:
 #   GOOGLE_CLOUD_LOCATION   — defaults to us-central1
 #   SERVICE_NAME            — defaults to "mnemos-web"
 #
 # Usage:
-#   bash scripts/deploy-web.sh
+#   AGENT_URL=https://mnemos-agent-xxx.run.app bash scripts/deploy-web.sh
 
 set -euo pipefail
 
@@ -18,14 +18,9 @@ cd "$(dirname "$0")/.."
 ROOT="$PWD"
 
 if [[ -f .env.local ]]; then
-  # Source .env.local but DO NOT overwrite vars the user already exported —
-  # otherwise NEXT_PUBLIC_AGENT_URL=... in front of the script call is ignored.
   while IFS='=' read -r key val; do
-    # skip comments + blank lines + invalid keys
     [[ -z "$key" || "$key" =~ ^# || ! "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && continue
-    # only set if not already in environment
     if [[ -z "${!key+x}" ]]; then
-      # strip surrounding quotes from val if present
       val="${val%\"}"; val="${val#\"}"; val="${val%\'}"; val="${val#\'}"
       export "$key=$val"
     fi
@@ -33,7 +28,7 @@ if [[ -f .env.local ]]; then
 fi
 
 : "${GOOGLE_CLOUD_PROJECT:?GOOGLE_CLOUD_PROJECT is required}"
-: "${NEXT_PUBLIC_AGENT_URL:?NEXT_PUBLIC_AGENT_URL is required (deploy the agent first)}"
+: "${AGENT_URL:?AGENT_URL is required (deploy the agent first)}"
 
 REGION="${GOOGLE_CLOUD_LOCATION:-us-central1}"
 SERVICE="${SERVICE_NAME:-mnemos-web}"
@@ -41,7 +36,7 @@ SERVICE="${SERVICE_NAME:-mnemos-web}"
 IMAGE="${REGION}-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/mnemos/${SERVICE}:$(date +%Y%m%d-%H%M%S)"
 
 echo "[deploy-web] project=${GOOGLE_CLOUD_PROJECT} region=${REGION} service=${SERVICE}"
-echo "[deploy-web] agent URL → ${NEXT_PUBLIC_AGENT_URL}"
+echo "[deploy-web] agent URL → ${AGENT_URL}"
 echo "[deploy-web] building image: ${IMAGE}"
 
 gcloud builds submit "$ROOT" \
@@ -53,9 +48,7 @@ steps:
     args:
       - build
       - -f
-      - apps/web/Dockerfile
-      - --build-arg
-      - NEXT_PUBLIC_AGENT_URL=${NEXT_PUBLIC_AGENT_URL}
+      - apps/web-py/Dockerfile
       - -t
       - ${IMAGE}
       - .
@@ -81,7 +74,7 @@ gcloud run deploy "${SERVICE}" \
   --max-instances 4 \
   --timeout 60 \
   --concurrency 80 \
-  --set-env-vars "NEXT_PUBLIC_AGENT_URL=${NEXT_PUBLIC_AGENT_URL}"
+  --set-env-vars "AGENT_URL=${AGENT_URL}"
 
 URL=$(gcloud run services describe "${SERVICE}" \
   --project "${GOOGLE_CLOUD_PROJECT}" --region "${REGION}" \

@@ -2,20 +2,20 @@
 #
 # Build + deploy either service via a substitution:
 #   gcloud builds submit . --config=cloudbuild.yaml --substitutions=_TARGET=agent
-#   gcloud builds submit . --config=cloudbuild.yaml --substitutions=_TARGET=web,_NEXT_PUBLIC_AGENT_URL=https://mnemos-agent-xxx.a.run.app
+#   gcloud builds submit . --config=cloudbuild.yaml --substitutions=_TARGET=web,_AGENT_URL=https://mnemos-agent-xxx.a.run.app
 #
 # Required substitutions:
 #   _TARGET                 — "web" or "agent"
 #
 # Optional substitutions:
 #   _REGION                 — Cloud Run region (default us-central1)
-#   _NEXT_PUBLIC_AGENT_URL  — required when _TARGET=web
+#   _AGENT_URL              — required when _TARGET=web (the agent service URL)
 #   _SERVICE_NAME           — override service name (defaults to mnemos-${_TARGET})
 
 substitutions:
   _TARGET: agent
   _REGION: us-central1
-  _NEXT_PUBLIC_AGENT_URL: ""
+  _AGENT_URL: ""
   _SERVICE_NAME: ""
 
 steps:
@@ -43,10 +43,7 @@ steps:
         set -euo pipefail
         source /workspace/.cb.env
         if [[ "$TARGET" == "web" ]]; then
-          docker build \
-            -f apps/web/Dockerfile \
-            --build-arg NEXT_PUBLIC_AGENT_URL="${_NEXT_PUBLIC_AGENT_URL}" \
-            -t "$TAG" .
+          docker build -f apps/web-py/Dockerfile -t "$TAG" .
         else
           docker build -f apps/agent-py/Dockerfile -t "$TAG" .
         fi
@@ -72,7 +69,7 @@ steps:
         EXTRA=()
         if [[ "$TARGET" == "web" ]]; then
           EXTRA+=(--memory=512Mi --concurrency=80 --timeout=60)
-          EXTRA+=(--set-env-vars="NEXT_PUBLIC_AGENT_URL=${_NEXT_PUBLIC_AGENT_URL}")
+          EXTRA+=(--set-env-vars="AGENT_URL=${_AGENT_URL}")
         else
           EXTRA+=(--memory=1Gi --concurrency=40 --timeout=600)
         fi

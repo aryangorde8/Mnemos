@@ -15,63 +15,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  web:
-    name: typecheck + build (web)
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: install
-        run: npm ci --no-audit --no-fund
-
-      - name: typecheck
-        run: npm run typecheck
-
-      - name: build web (standalone)
-        env:
-          NEXT_PUBLIC_AGENT_URL: https://placeholder.run.app
-          NEXT_TRACE_ROOT: ${{ github.workspace }}
-        run: npm --workspace apps/web run build
-
-      - name: verify standalone exists
-        run: |
-          test -d apps/web/.next/standalone/apps/web
-          ls -la apps/web/.next/standalone
-
   agent-py:
     name: agent-py (python)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-
       - name: install
         run: pip install -r apps/agent-py/requirements.txt
-
       - name: import check (app boots without credentials)
         run: PYTHONPATH=apps/agent-py python -c "import app.main; print('agent-py imports OK')"
+
+  web-py:
+    name: web-py (python)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: install
+        run: pip install -r apps/web-py/requirements.txt
+      - name: import check
+        run: PYTHONPATH=apps/web-py python -c "import main; print('web-py imports OK')"
 
   docker:
     name: docker build (no push)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [web, agent-py]
+    needs: [agent-py, web-py]
     steps:
       - uses: actions/checkout@v4
-
       - uses: docker/setup-buildx-action@v3
-
       - name: build agent image
         uses: docker/build-push-action@v6
         with:
@@ -79,13 +60,10 @@ jobs:
           file: apps/agent-py/Dockerfile
           push: false
           tags: mnemos-agent:ci
-
       - name: build web image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/web/Dockerfile
+          file: apps/web-py/Dockerfile
           push: false
           tags: mnemos-web:ci
-          build-args: |
-            NEXT_PUBLIC_AGENT_URL=https://placeholder.run.app

@@ -58,7 +58,7 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 
 | Layer | Tech |
 |---|---|
-| Frontend | Next.js 16 (Pages Router), TypeScript strict, Tailwind v4 CSS-first, Framer Motion 12 |
+| Frontend | Python 3.12 + FastHTML (HTMX + SSE), server-rendered, no build step ([apps/web-py](apps/web-py)) |
 | Agent | Python 3.12 + FastAPI, hand-rolled ReAct loop, Server-Sent Events ([apps/agent-py](apps/agent-py)) |
 | LLM | Gemini 3.1 Pro (preview) via Vertex AI through the official `google-genai` SDK (streaming + function calling + thinking control) |
 | Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) + a graph collection, via `motor` (async driver) |
@@ -70,12 +70,12 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 cp .env.example .env.local
 # fill MONGODB_URI, GOOGLE_CLOUD_PROJECT, GOOGLE_APPLICATION_CREDENTIALS
 
-npm install                # web deps
-npm run setup:agent        # python venv + agent deps
+npm run setup:agent        # python venv + agent backend deps
+npm run setup:web          # python venv + frontend deps
 npm run setup:mongo        # create the Atlas vector + BM25 indexes
 
-npm run dev:agent   # FastAPI (Python) on http://localhost:8787
-npm run dev:web     # http://localhost:3000
+npm run dev:agent   # FastAPI agent on http://localhost:8787
+npm run dev:web     # FastHTML frontend on http://localhost:3000
 
 npm run seed -- --load     # generate + ingest corpus + build graph/ledger (~5–10 min)
 ```

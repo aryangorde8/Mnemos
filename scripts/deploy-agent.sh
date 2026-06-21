@@ -102,4 +102,4 @@ URL=$(gcloud run services describe "${SERVICE}" \
 
 echo
 echo "[deploy-agent] live → ${URL}"
-echo "[deploy-agent] copy this URL into NEXT_PUBLIC_AGENT_URL before deploying web."
+echo "[deploy-agent] copy this URL into AGENT_URL before deploying web."

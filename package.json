@@ -3,21 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "description": "An AI agent that takes multi-step actions on top of your professional memory.",
-  "workspaces": [
-    "apps/web"
-  ],
   "scripts": {
-    "dev:web": "npm --workspace apps/web run dev",
+    "dev:web": "apps/web-py/.venv/bin/python -m uvicorn main:app --app-dir apps/web-py --host 127.0.0.1 --port 3000",
     "dev:agent": "apps/agent-py/.venv/bin/python -m uvicorn app.main:app --app-dir apps/agent-py --host 127.0.0.1 --port 8787",
-    "build:web": "npm --workspace apps/web run build",
     "setup:agent": "python3 -m venv apps/agent-py/.venv && apps/agent-py/.venv/bin/python -m pip install -r apps/agent-py/requirements.txt",
+    "setup:web": "python3 -m venv apps/web-py/.venv && apps/web-py/.venv/bin/python -m pip install -r apps/web-py/requirements.txt",
     "setup:mongo": "apps/agent-py/.venv/bin/python apps/agent-py/scripts/setup_mongo_index.py",
     "seed": "apps/agent-py/.venv/bin/python apps/agent-py/scripts/seed_alex_data.py",
-    "voice": "apps/agent-py/.venv/bin/python apps/agent-py/scripts/extract_voice.py",
-    "typecheck": "npm --workspaces --if-present run typecheck"
-  },
-  "engines": {
-    "node": ">=22.0.0"
+    "voice": "apps/agent-py/.venv/bin/python apps/agent-py/scripts/extract_voice.py"
   },
   "license": "Apache-2.0"
 }

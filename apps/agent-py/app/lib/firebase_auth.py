@@ -19,7 +19,7 @@ _cert_cache: dict = {"certs": {}, "expires_at": 0.0}
 
 
 def _project_id() -> str:
-    return os.environ.get("FIREBASE_PROJECT_ID") or os.environ.get("NEXT_PUBLIC_FIREBASE_PROJECT_ID") or ""
+    return os.environ.get("FIREBASE_PROJECT_ID") or ""
 
 
 def is_firebase_configured() -> bool:
