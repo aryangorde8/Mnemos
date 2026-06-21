@@ -7,8 +7,8 @@ from __future__ import annotations
 from urllib.parse import quote
 
 from fasthtml.common import (  # type: ignore
-    A, Div, EventStream, Form, H1, H3, Header, Input, Main, Nav, NotStr, P, Span,
-    Style, Table, Tbody, Td, Th, Thead, Title, Tr, fast_app, sse_message,
+    A, Aside, Br, Canvas, Div, EventStream, Footer, Form, H1, H3, Header, Input, Main, Nav,
+    NotStr, P, Script, Span, Style, Table, Tbody, Td, Th, Thead, Title, Tr, fast_app, sse_message,
 )
 
 import backend
@@ -45,22 +45,76 @@ def shell(active: str, *content):
 
 # ─────────────────────────── pages ───────────────────────────
 
+_CONSTELLATION_JS = """
+(function(){var cvs=document.getElementById('constellation');if(!cvs)return;var parent=cvs.parentElement;
+var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;var dpr=window.devicePixelRatio||1;var H=720;
+var stars=[],links=[],mouse={x:-1000,y:-1000},trace=null;
+function build(w,h){var N=77;stars=[];for(var i=0;i<N;i++){var yb=Math.pow(Math.random(),1.3);
+stars.push({x:Math.random()*w,y:yb*h*0.85+20,vx:(Math.random()-.5)*.08,vy:(Math.random()-.5)*.08,r:.7+Math.random()*1.8,mag:Math.random(),phase:Math.random()*6.2832});}
+links=[];for(var i=0;i<stars.length;i++)for(var j=i+1;j<stars.length;j++){var dx=stars[i].x-stars[j].x,dy=stars[i].y-stars[j].y;if(Math.hypot(dx,dy)<120)links.push([i,j]);}}
+function resize(){var w=parent.getBoundingClientRect().width;cvs.width=w*dpr;cvs.height=H*dpr;cvs.style.width=w+'px';cvs.style.height=H+'px';build(w,H);}
+resize();new ResizeObserver(resize).observe(parent);
+function mkpath(start){var path=[start],used={};used[start]=1;for(var s=0;s<7;s++){var cur=stars[path[path.length-1]],nx=-1,nd=1e9;for(var i=0;i<stars.length;i++){if(used[i])continue;var d=Math.hypot(stars[i].x-cur.x,stars[i].y-cur.y);if(d<nd&&d<200){nd=d;nx=i;}}if(nx<0)break;used[nx]=1;path.push(nx);}return{path:path,t0:performance.now(),dur:2500};}
+if(!reduced){cvs.addEventListener('mousemove',function(e){var r=cvs.getBoundingClientRect();mouse={x:e.clientX-r.left,y:e.clientY-r.top};});
+cvs.addEventListener('mouseleave',function(){mouse={x:-1000,y:-1000};});
+cvs.addEventListener('click',function(e){var r=cvs.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;if(!stars.length)return;var n=0,nd=1e9;for(var i=0;i<stars.length;i++){var d=Math.hypot(stars[i].x-mx,stars[i].y-my);if(d<nd){nd=d;n=i;}}trace=mkpath(n);});}
+function loop(now){var ctx=cvs.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);var W=cvs.width/dpr,Hh=cvs.height/dpr;ctx.clearRect(0,0,W,Hh);
+if(!reduced){for(var k=0;k<stars.length;k++){var s=stars[k],dx=mouse.x-s.x,dy=mouse.y-s.y,d2=dx*dx+dy*dy;if(d2<22500){var f=(1-d2/22500)*.03;s.vx+=dx*f*.002;s.vy+=dy*f*.002;}s.vx*=.985;s.vy*=.985;s.x+=s.vx;s.y+=s.vy;s.phase+=.004+s.mag*.006;}}
+for(var l=0;l<links.length;l++){var a=stars[links[l][0]],b=stars[links[l][1]],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy);if(d>180)continue;ctx.strokeStyle='rgba(108,100,90,'+((1-d/180)*.18)+')';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+for(var k=0;k<stars.length;k++){var s=stars[k],tw=.55+.45*Math.sin(s.phase);ctx.beginPath();ctx.fillStyle='rgba(243,236,223,'+(.35+s.mag*.45*tw)+')';ctx.arc(s.x,s.y,s.r,0,6.2832);ctx.fill();}
+if(trace){var el=now-trace.t0,prog=Math.min(1,el/trace.dur),segs=trace.path.length-1,sp=prog*segs;ctx.strokeStyle='#f25738';ctx.lineWidth=1.1;ctx.beginPath();for(var k2=0;k2<segs;k2++){var a=stars[trace.path[k2]],b=stars[trace.path[k2+1]];if(sp>=k2+1){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}else if(sp>k2){var lo=sp-k2;ctx.moveTo(a.x,a.y);ctx.lineTo(a.x+(b.x-a.x)*lo,a.y+(b.y-a.y)*lo);break;}else break;}ctx.stroke();var hi=trace.path[Math.min(Math.floor(sp)+1,segs)],head=stars[hi];if(head){ctx.fillStyle='#f25738';ctx.beginPath();ctx.arc(head.x,head.y,2.5,0,6.2832);ctx.fill();ctx.beginPath();ctx.strokeStyle='rgba(242,87,56,.4)';ctx.lineWidth=.6;ctx.arc(head.x,head.y,8+4*Math.sin(now*.006),0,6.2832);ctx.stroke();}if(prog>=1)trace=null;}
+requestAnimationFrame(loop);}requestAnimationFrame(loop);
+if(!reduced){function fire(){if(stars.length)trace=mkpath(Math.floor(Math.random()*stars.length));}setTimeout(fire,800);setInterval(fire,4200);}})();
+"""
+
+_LIVESTREAM_JS = """
+(function(){var el=document.getElementById('livestream');if(!el)return;
+var sets=[[['cs-think','user wants to know if Q3 plan slipped'],['cs-tool','memory.search · "Q3 roadmap status"'],['cs-obs','6 docs · top cosine 0.91']],
+[['cs-think','draft a decline to Marcus, propose Thursday'],['cs-tool','draft_email → critique_draft'],['cs-obs','critic · revise · 1 high · voice 8/10']],
+[['cs-think','what do I owe Sarah this week?'],['cs-tool','list_commitments · outgoing'],['cs-obs','9 open · Q3 doc due May 22']]];
+var idx=0;function render(){var s=sets[idx%sets.length];el.innerHTML='';s.forEach(function(line,i){var d=document.createElement('span');d.className='cs-line '+line[0];d.style.animationDelay=(i*0.12)+'s';d.textContent=(line[0]==='cs-think'?'  ':'· ')+line[1];el.appendChild(d);});idx++;}
+render();setInterval(render,1900);})();
+"""
+
+
 @rt("/")
 def home():
-    return (Title("Mnemos — the memory agent"), shell(
-        "",
+    topbar = Header(Div(
+        A(Span("Mnemos", cls="brand-i"), " ", Span("μν. — memory agent", cls="label"),
+          href="/", style="display:flex;align-items:baseline;gap:10px"),
+        Div(Span("2026 · vol. 001 · day 020 / 028", cls="chrome"),
+            Span(Span(cls="pulse-dot"), " ", Span("live", cls="chrome"),
+                 style="display:inline-flex;align-items:center;gap:7px;margin-left:24px"),
+            style="display:flex;align-items:center"),
+        cls="row"), cls="topbar")
+    constellation = Div(Canvas(id="constellation"), Div(cls="const-fade"), cls="const-layer")
+    leftrail = Aside(Span("Mnemos · the memory agent · v0.0.1", cls="vrail"),
+                     Span("an editorial built on what you've seen", cls="vrail"), cls="leftrail")
+    hero = Main(
+        Div(Span(cls="drawline"), Span("── mnemos · the memory agent"), cls="kicker label"),
         Div(
-            P("01 · multi-step reasoning over memory", cls="eyebrow"),
-            H1("Your professional memory,", Span(" made navigable.", cls="accent i")),
-            P("Not search. Not notes. An agent that remembers what you've seen across inbox, "
-              "calendar, and documents — and does things about it under your approval.",
-              cls="muted", style="max-width:620px; font-size:1.12rem"),
-            Div(A("watch it reason →", href="/ask", cls="btn primary"),
-                A("tour the memory", href="/memory", cls="btn"),
-                style="display:flex; gap:12px; margin-top:28px"),
-            cls="hero",
-        ),
-    ))
+            Div(H1("Your professional memory,", Br(),
+                   Span("made navigable.", cls="display-i accent")), cls="hero-head"),
+            Div(Div(Span("live · stream 0x4a91", cls="label"), Span(cls="pulse-dot"), cls="cs-head"),
+                Div(id="livestream", cls="cs-body"), cls="corner-stream-pane"),
+            cls="hero-grid"),
+        P("Ingest your email, calendar, notes, slack, and docs. Mnemos reasons over the corpus "
+          "with Gemini 3 Pro, drafts the action, and a second ",
+          Span("Critic agent", cls="saffron"), " audits the draft — before you approve with one click.",
+          cls="hero-sub"),
+        Div(A("watch it reason →", href="/ask", cls="btn-decisive primary"),
+            A("tour the memory", href="/memory", cls="btn-decisive"),
+            A("read the overview", href="/overview", cls="btn-decisive ghost"),
+            Span("click anywhere on the field to trace", cls="chrome", style="margin-left:8px"),
+            cls="cta"),
+        cls="hero-main")
+    bottombar = Footer(Div(
+        Span("a memory-first agent · built for action", cls="chrome"),
+        Span("2026.05.20 — vault active · 242 docs", cls="chrome"),
+        Span("press ⌘K to begin", cls="chrome"), cls="row"), cls="bottombar")
+    return (Title("Mnemos — the memory agent"),
+            topbar, constellation, leftrail, hero, bottombar,
+            Script(_CONSTELLATION_JS + _LIVESTREAM_JS))
 
 
 @rt("/overview")
