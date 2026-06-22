@@ -1,12 +1,14 @@
 name: deploy
 
-# Auto-deploy to Cloud Run after CI passes on main. Keyless auth via Workload Identity
-# Federation (no service-account JSON stored in GitHub). Reuses the repo's cloudbuild.yaml,
-# so the deploy is identical to the manual `scripts/deploy-*.sh` path.
+# Auto-deploy to Cloud Run after CI passes on main. Reuses the repo's cloudbuild.yaml, so the
+# deploy is identical to the manual `scripts/deploy-*.sh` path.
 #
-# One-time setup: run `scripts/setup-gha-deploy.sh`, then add the four repo *variables* it prints
-# (Settings → Secrets and variables → Actions → Variables): GCP_PROJECT_ID, GCP_WIF_PROVIDER,
-# GCP_DEPLOY_SA, and optionally AGENT_URL. Until GCP_WIF_PROVIDER is set, this workflow no-ops.
+# Auth: a service-account JSON key stored as the repo secret GCP_SA_KEY.
+# One-time setup (UI or CLI): see scripts/setup-gha-deploy.sh. Then add:
+#   - repo *secret*   GCP_SA_KEY      = the service-account JSON key
+#   - repo *variable* GCP_PROJECT_ID  = your GCP project id
+#   - repo *variable* AGENT_URL       = https://mnemos-agent.aryangorde.com  (optional; default below)
+# Until GCP_PROJECT_ID is set, this workflow no-ops.
 
 on:
   workflow_run:
@@ -22,7 +24,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write        # required for Workload Identity Federation
 
 concurrency:
   group: deploy-cloud-run
@@ -38,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     # Run only when configured AND either: a manual dispatch, or CI succeeded on a push to main.
     if: >-
-      vars.GCP_WIF_PROVIDER != '' && (
+      vars.GCP_PROJECT_ID != '' && (
         github.event_name == 'workflow_dispatch' || (
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.head_branch == 'main' &&
@@ -53,20 +54,22 @@ jobs:
       - id: auth
         uses: google-github-actions/auth@v2
         with:
-          project_id: ${{ vars.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOY_SA }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
 
       - name: deploy web
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.service == 'web' || inputs.service == 'both' }}
         run: |
           gcloud builds submit . --config cloudbuild.yaml --region "$GCP_REGION" \
+            --project "${{ vars.GCP_PROJECT_ID }}" \
             --substitutions=_TARGET=web,_REGION=$GCP_REGION,_AGENT_URL=${{ vars.AGENT_URL || env.AGENT_URL_DEFAULT }}
 
       - name: deploy agent (manual only)
         if: ${{ github.event_name == 'workflow_dispatch' && (inputs.service == 'agent' || inputs.service == 'both') }}
         run: |
           gcloud builds submit . --config cloudbuild.yaml --region "$GCP_REGION" \
+            --project "${{ vars.GCP_PROJECT_ID }}" \
             --substitutions=_TARGET=agent,_REGION=$GCP_REGION
