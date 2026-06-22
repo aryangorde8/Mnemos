@@ -31,33 +31,43 @@ async def post_json(path: str, body: dict) -> dict | None:
 
 
 async def stream_events(path: str, body: dict) -> AsyncIterator[dict]:
-    """Proxy a backend SSE endpoint, yielding parsed event dicts (with `kind`)."""
-    async with httpx.AsyncClient(timeout=None) as c:
-        async with c.stream("POST", f"{AGENT}{path}", json=body,
-                            headers={"Accept": "text/event-stream"}) as r:
-            buffer = ""
-            event_name = "message"
-            async for chunk in r.aiter_text():
-                buffer += chunk
-                while "\n\n" in buffer:
-                    block, buffer = buffer.split("\n\n", 1)
-                    data_lines: list[str] = []
-                    ev = "message"
-                    for line in block.split("\n"):
-                        if line.startswith(":"):
+    """Proxy a backend SSE endpoint, yielding parsed event dicts (with `kind`).
+
+    Tolerant of a down/unreachable agent: connection failures surface as a single `error` event
+    rather than propagating, so the SSE surfaces degrade gracefully instead of hanging or 500-ing.
+    The connect is bounded; only the read (streaming body) is allowed to run long.
+    """
+    timeout = httpx.Timeout(connect=8.0, read=None, write=8.0, pool=8.0)
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as c:
+            async with c.stream("POST", f"{AGENT}{path}", json=body,
+                                headers={"Accept": "text/event-stream"}) as r:
+                if r.status_code >= 400:
+                    yield {"kind": "error", "message": f"agent returned {r.status_code}"}
+                    return
+                buffer = ""
+                async for chunk in r.aiter_text():
+                    buffer += chunk
+                    while "\n\n" in buffer:
+                        block, buffer = buffer.split("\n\n", 1)
+                        data_lines: list[str] = []
+                        ev = "message"
+                        for line in block.split("\n"):
+                            if line.startswith(":"):
+                                continue
+                            if line.startswith("event:"):
+                                ev = line[6:].strip()
+                            elif line.startswith("data:"):
+                                data_lines.append(line[5:].lstrip())
+                        if not data_lines:
                             continue
-                        if line.startswith("event:"):
-                            ev = line[6:].strip()
-                        elif line.startswith("data:"):
-                            data_lines.append(line[5:].lstrip())
-                    if not data_lines:
-                        continue
-                    raw = "\n".join(data_lines)
-                    try:
-                        parsed = json.loads(raw)
-                    except json.JSONDecodeError:
-                        parsed = {"kind": ev, "_raw": raw}
-                    if "kind" not in parsed:
-                        parsed["kind"] = ev
-                    yield parsed
-                    _ = event_name  # keep linters quiet
+                        raw = "\n".join(data_lines)
+                        try:
+                            parsed = json.loads(raw)
+                        except json.JSONDecodeError:
+                            parsed = {"kind": ev, "_raw": raw}
+                        if "kind" not in parsed:
+                            parsed["kind"] = ev
+                        yield parsed
+    except Exception as err:  # noqa: BLE001  — agent unreachable / stream dropped
+        yield {"kind": "error", "message": f"agent unreachable: {err}"}
