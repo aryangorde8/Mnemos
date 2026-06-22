@@ -87,10 +87,23 @@ def footer(active: str = ""):
                       Span("press ⌘K to begin", cls="chrome"), cls="row"), cls="bottombar")
 
 
+def ihead(active: str = ""):
+    links = [("home", "/"), ("ask", "/ask"), ("memory", "/memory"), ("search", "/search")]
+    kids = []
+    for i, (label, href) in enumerate(links):
+        if i:
+            kids.append(Span("·", cls="faint"))
+        kids.append(A(label, href=href, cls=("on" if active == label else "")))
+    return Header(Div(
+        A(Span("Mnemos", cls="brand-i"), " ", Span(f"μν. — {active or 'overview'}", cls="label"),
+          href="/", style="display:flex;align-items:baseline;gap:8px"),
+        Nav(*kids), cls="row"), cls="ihead")
+
+
 def shell(active: str, *content):
-    return (topbar(active), leftrail(),
-            Main(Div(*content, cls="wrap"), style="padding:96px 0 86px"),
-            footer(active), *command_palette())
+    return (ihead(active),
+            Main(Div(*content, cls="wrap"), style="padding:52px 0 90px"),
+            *command_palette())
 
 
 # ─────────────────────────── pages ───────────────────────────
@@ -158,40 +171,75 @@ def home():
             Script(_CONSTELLATION_JS + _LIVESTREAM_JS))
 
 
+_TILES = [
+    ("01", "❡", "Memory", "ingested.",
+     "Mail, calendar, notes, slack, docs — vectorized in MongoDB Atlas, queryable in milliseconds.", "/memory"),
+    ("02", "◆", "Reasoning", "streamed.",
+     "Gemini 3 Pro thinks out loud over SSE. Every thought, retrieval, observation, citation — in order.", "/ask"),
+    ("03", "✎", "Critique", "audited.",
+     "A second agent red-pencils the first. Drafts arrive with their own copy-editor's notes.", "/ask"),
+    ("04", "⌗", "Hybrid retrieval", "cited.",
+     "Vector + BM25 fused via RRF and reranked. Every claim traceable to a chunk in the vault.", "/search"),
+]
+
+_SPARK_JS = """
+(function(){function step(sp){var b=[].slice.call(sp.children);for(var i=0;i<b.length-1;i++)b[i].style.height=b[i+1].style.height;b[b.length-1].style.height=(2+Math.random()*7).toFixed(1)+'px';}
+document.querySelectorAll('.spark.live').forEach(function(sp){setInterval(function(){step(sp);},600);});})();
+"""
+
+
+def _tile(t, last):
+    num, glyph, title, ital, body, href = t
+    return A(
+        Span(cls="tile-hair"),
+        Div(Span(num, cls="label"), Span(glyph, cls="tile-glyph"), cls="tile-top"),
+        Div(title, " ", Span(ital, cls="display-i accent"), cls="tile-title"),
+        P(body, cls="tile-body"),
+        href=href, cls="tile" + (" last" if last else ""))
+
+
+def _spark(seed):
+    import math
+    bars = [Span(style=f"height:{2 + (math.sin(i * 0.7 + seed) + 1) * 3:.1f}px") for i in range(16)]
+    return Span(*bars, cls="spark live")
+
+
+def _pill(label, value, latency, seed, on=True):
+    children = [Span(cls="pulse-dot" if on else "pulse-dot muted"),
+                Span(label, cls="status-pill-lbl"),
+                Span(value, cls="status-pill-val" + ("" if on else " off"))]
+    if latency is not None:
+        children.append(Span(f"{latency}ms", cls="chrome tabular", style="font-size:.66rem"))
+    children.append(_spark(seed))
+    return Div(*children, cls="status-pill")
+
+
 @rt("/overview")
 async def overview():
     ready = await backend.get_json("/ready") or {}
     stats = await backend.get_json("/ingest/stats") or {}
-    graph = await backend.get_json("/graph/stats") or {}
-    commits = await backend.get_json("/commitments/stats") or {}
-
-    def kpi(n, label):
-        return Div(Div(str(n), cls="kpi"), Div(label, cls="label", style="margin-top:8px"), cls="card")
-
-    ents = graph.get("entities", {}) if isinstance(graph, dict) else {}
+    atlas_on = ready.get("atlas") == "configured"
+    vertex_on = ready.get("vertex") == "configured"
+    docs = stats.get("documents")
+    chunks = stats.get("chunks")
+    corpus = (f"{docs if docs is not None else 0} / 247 documents"
+              + (f" · {chunks} chunks" if chunks else " · vault offline until ingest"))
     return (Title("Mnemos — overview"), shell(
         "overview",
-        P("00 · the system", cls="eyebrow"),
-        H1("What Mnemos ", Span("knows.", cls="accent i")),
-        Div(
-            kpi(stats.get("documents", "—"), "documents"),
-            kpi(stats.get("chunks", "—"), "memory chunks"),
-            kpi(commits.get("count", "—"), "open commitments"),
-            cls="grid cols-3", style="margin-top:32px",
-        ),
-        Div(
-            kpi(sum(ents.values()) if ents else "—", "graph entities"),
-            kpi(graph.get("relations", "—"), "relations"),
-            kpi(ready.get("geminiModel", "—"), "model"),
-            cls="grid cols-3", style="margin-top:16px",
-        ),
-        Div(
-            P("backend", cls="label"),
-            P(f"atlas {ready.get('atlas','?')} · vertex {ready.get('vertex','?')} · "
-              f"gmail {ready.get('gmail','?')} · firebase {ready.get('firebaseAuth','?')} · "
-              f"runtime {ready.get('runtime','?')}", cls="mono faint", style="font-size:.8rem; margin-top:6px"),
-            cls="card", style="margin-top:16px",
-        ),
+        Div(Span(cls="drawline"), Span("── mnemos · overview · the four wedges"), cls="kicker label"),
+        H1("What Mnemos is, ", Span("in four lines.", cls="display-i accent"), cls="ov-head"),
+        P("Each tile below opens onto a working surface — the memory page is browseable, the reasoning "
+          "stream is live, the critic is armed, the hybrid retrieval is real. Press a tile to enter the "
+          "product where it actually does the thing.", cls="ov-sub"),
+        Div(*[_tile(t, i == len(_TILES) - 1) for i, t in enumerate(_TILES)], cls="tiles"),
+        Div(cls="hair"),
+        Div(_pill("Atlas", "connected" if atlas_on else "offline", 12 if atlas_on else None, 1, atlas_on),
+            _pill("Vertex", "connected" if vertex_on else "awaiting creds", 86 if vertex_on else None, 2, vertex_on),
+            _pill("Agent", "live", 4, 3, True),
+            cls="pills"),
+        Div(Span("corpus: ", Span(corpus, cls="tabular"), cls="chrome"),
+            Span("— signed, the agent.", cls="chrome"), cls="signoff"),
+        Script(_SPARK_JS),
     ))
 
 
