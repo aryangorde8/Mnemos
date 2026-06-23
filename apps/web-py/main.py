@@ -75,24 +75,33 @@ def ask_run(q: str = "", v: str = ""):
 @rt("/ask/stream")
 async def ask_stream(q: str = "", v: str = ""):
     async def gen():
-        draft_action: dict | None = None
+        # collect proposed actions (email and/or meeting) + the email critique; last of each kind wins
+        by_kind: dict[str, dict] = {}
         critique: dict | None = None
         async for ev in backend.stream_events("/agent/ask", {"query": q}):
-            # capture the proposed draft + its critique to render the approval block at the end
             if ev.get("kind") == "observation":
                 data = (ev.get("result") or {}).get("data") or {}
-                if ev.get("name") == "draft_email" and data.get("actionId"):
-                    draft_action = {"id": data["actionId"], "kind": "draft_email", "status": "proposed",
-                                    "proposal": {"to": data.get("to", []), "cc": data.get("cc", []),
-                                                 "subject": data.get("subject", ""),
-                                                 "body": data.get("body", "")}}
-                elif ev.get("name") == "critique_draft" and data.get("verdict"):
+                name = ev.get("name")
+                if name == "draft_email" and data.get("actionId"):
+                    by_kind["draft_email"] = {
+                        "id": data["actionId"], "kind": "draft_email", "status": "proposed",
+                        "proposal": {"to": data.get("to", []), "cc": data.get("cc", []),
+                                     "subject": data.get("subject", ""), "body": data.get("body", "")}}
+                elif name == "schedule_meeting" and data.get("actionId"):
+                    by_kind["schedule_meeting"] = {
+                        "id": data["actionId"], "kind": "schedule_meeting", "status": "proposed",
+                        "proposal": {"title": data.get("title", ""), "attendees": data.get("attendees", []),
+                                     "proposedTimes": data.get("proposedTimes", []),
+                                     "durationMinutes": data.get("durationMinutes"),
+                                     "location": data.get("location"), "agenda": data.get("agenda"),
+                                     "preferredIdx": data.get("preferredIdx", 0)}}
+                elif name == "critique_draft" and data.get("verdict"):
                     critique = data
             frag = ask_s.render_event(ev)
             if frag is not None:
                 yield sse_message(frag)
             if ev.get("kind") in ("done", "error"):
-                block = ask_s.approval_block(draft_action, critique, v)
+                block = ask_s.approval_block(list(by_kind.values()), critique, v)
                 for part in (block if isinstance(block, tuple) else (block,)):
                     yield sse_message(part)
                 yield sse_message(Div(), event="done")

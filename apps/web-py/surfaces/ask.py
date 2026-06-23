@@ -142,24 +142,48 @@ def render_event(ev: dict):
     return None
 
 
-def approval_block(draft_action: dict | None, critique: dict | None, variant: str = DEFAULT):
-    """OOB fragment(s): the proposed action + the Critic's audit, placed to match the variant."""
+def _proposal_head():
+    return Div(surface_head("", "the proposal", Span("Held for your "),
+                            Span("approval.", cls="i accent")), style="margin-top:36px")
+
+
+def approval_block(actions, critique: dict | None, variant: str = DEFAULT):
+    """OOB fragment(s): the proposed action(s) + the Critic's audit, placed to match the variant.
+
+    Handles both emails (critic column) and meetings (full-width, no critic — meetings aren't audited).
+    `actions` is a list; a run may propose an email and/or a meeting.
+    """
+    actions = actions or []
+
+    def _email_critic(a):
+        return critique if a.get("kind") == "draft_email" else None
+
     if variant == "split-critic":
-        if not draft_action:
+        if not actions:
             return (Div(Div("no action proposed for this run.", cls="empty"),
                         id="ac-draft", hx_swap_oob="true"),
                     Div(id="ac-critic", hx_swap_oob="true"))
-        return (Div(draft_card(draft_action, critique, show_marks=True), id="ac-draft",
-                    hx_swap_oob="true"),
-                Div(critic_panel(critique), id="ac-critic", hx_swap_oob="true"))
-    if not draft_action:
+        drafts = [draft_card(a, _email_critic(a), show_marks=(a.get("kind") == "draft_email"))
+                  for a in actions]
+        first_crit = _email_critic(actions[0])
+        return (Div(*drafts, id="ac-draft", hx_swap_oob="true"),
+                Div(critic_panel(first_crit), id="ac-critic", hx_swap_oob="true"))
+
+    if not actions:
         return Div(id="ac-slot", hx_swap_oob="true")
-    if variant == "calm":
-        inner = Div(draft_card(draft_action, critique, show_marks=True),
-                    Div(critic_panel(critique), style="margin-top:18px"))
-    else:  # choreographed
-        inner = Div(Div(surface_head("", "the proposal", Span("Held for your "),
-                                     Span("approval.", cls="i accent")), style="margin-top:36px"),
-                    Div(draft_card(draft_action, critique, show_marks=True), Div(cls="vrule"),
-                        critic_panel(critique), cls="ac-grid"))
-    return Div(inner, id="ac-slot", hx_swap_oob="true")
+
+    cards = []
+    for a in actions:
+        if a.get("kind") == "draft_email":
+            crit = critique
+            if variant == "calm":
+                cards.append(Div(draft_card(a, crit, show_marks=True),
+                                 Div(critic_panel(crit), style="margin-top:18px"),
+                                 style="margin-bottom:24px"))
+            else:  # choreographed
+                cards.append(Div(draft_card(a, crit, show_marks=True), Div(cls="vrule"),
+                                 critic_panel(crit), cls="ac-grid", style="margin-bottom:18px"))
+        else:  # meeting (or other) — full-width card, no critic column
+            cards.append(Div(draft_card(a, None, show_marks=False), cls="ac-grid",
+                             style="grid-template-columns:1fr;margin-bottom:18px"))
+    return Div(_proposal_head(), *cards, id="ac-slot", hx_swap_oob="true")
