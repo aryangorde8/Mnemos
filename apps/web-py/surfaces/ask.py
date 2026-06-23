@@ -13,6 +13,7 @@ from urllib.parse import quote
 
 from fasthtml.common import Button, Div, Form, Input, P, Span  # type: ignore
 
+from assets import EDIT_JS
 from chrome import cite, draft_card, critic_panel, page, surface_head, variant_strip
 
 VARIANTS = [("calm", "calm"), ("choreographed", "choreographed"), ("split-critic", "split-critic")]
@@ -41,7 +42,7 @@ def render_page(variant: str = DEFAULT, ready: dict | None = None, vault: dict |
              hx_get="/ask/run", hx_target="#run", hx_swap="innerHTML"),
         Div(id="run", style="margin-top:8px"),
     )
-    return page("ask", body, ready=ready, vault=vault, strip=strip)
+    return page("ask", body, ready=ready, vault=vault, strip=strip, scripts=EDIT_JS)
 
 
 def _prompt_head(q, variant):

@@ -118,9 +118,13 @@ async def approve(v: str = "", i: int = 0):
 
 
 @rt("/approve/decide")
-async def approve_decide(aid: str = "", verdict: str = "approve"):
-    path = f"/actions/{aid}/{'approve' if verdict == 'approve' else 'reject'}"
-    res = await backend.post_json(path, {})
+async def approve_decide(aid: str = "", verdict: str = "approve", body: str = ""):
+    if verdict == "approve":
+        # include the edited body as `edits` so an inline edit is actually sent
+        payload = {"edits": {"body": body}} if (body or "").strip() else {}
+        res = await backend.post_json(f"/actions/{aid}/approve", payload)
+    else:
+        res = await backend.post_json(f"/actions/{aid}/reject", {})
     ok = isinstance(res, dict) and not res.get("error")
     return approve_s.decide_result(verdict, ok)
 

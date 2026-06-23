@@ -6,7 +6,7 @@ left nav rail (200px) + top status bar + ⌘K palette, content in `.page > .surf
 from __future__ import annotations
 
 from fasthtml.common import (  # type: ignore
-    A, Aside, Button, Div, Input, Main, Nav, NotStr, Script, Span,
+    A, Aside, Button, Div, Input, Main, Nav, NotStr, Script, Span, Textarea,
 )
 
 from assets import CLOCK_JS, CMDK_JS
@@ -205,30 +205,51 @@ def _proposal_bits(action: dict):
     return p.get("subject") or p.get("title") or "(action)", p.get("body") or p.get("agenda") or "", []
 
 
-def default_decide_bar(action: dict, blocking: bool):
-    return Div(
-        Button("✓ approve & send", cls="btn-d primary", disabled=blocking),
-        Button("¶ edit", cls="btn-d ghost"),
-        Button("✕ reject", cls="btn-d"),
-        (Span("⊘ critic blocks this send · resolve the blocking note first", cls="warn")
-         if blocking else Span(f"{action.get('kind','action')} · {action.get('status','proposed')}",
-                               cls="chrome")),
-        cls="decide")
+def default_decide_bar(action: dict, blocking: bool, is_email: bool = False):
+    """Working decision bar: approve & reject POST to /approve/decide; edit toggles inline editing.
+
+    For draft_email the approve request includes the (possibly edited) body textarea so an edit is
+    actually sent. The whole bar is swapped out (outerHTML) with the confirmation on success.
+    """
+    aid = action.get("id", "")
+    swap = {"hx_target": f"#decide-{aid}", "hx_swap": "outerHTML"}
+    if blocking:
+        approve = Button("✓ approve & send", cls="btn-d primary", disabled=True)
+    else:
+        approve = Button("✓ approve & send", cls="btn-d primary",
+                         hx_post=f"/approve/decide?aid={aid}&verdict=approve",
+                         hx_include=(f"#edit-{aid}" if is_email else None), **swap)
+    edit = (Button("¶ edit", cls="btn-d ghost", type="button", onclick=f"mnEdit('{aid}')")
+            if is_email else Button("¶ edit", cls="btn-d ghost", type="button", disabled=True))
+    reject = Button("✕ reject", cls="btn-d",
+                    hx_post=f"/approve/decide?aid={aid}&verdict=reject", **swap)
+    note = (Span("⊘ critic blocks this send · resolve the blocking note first", cls="warn")
+            if blocking else Span(f"{action.get('kind','action')} · {action.get('status','proposed')}",
+                                  cls="chrome"))
+    return Div(approve, edit, reject, note, id=f"decide-{aid}", cls="decide")
 
 
 def draft_card(action: dict, critique: dict | None = None, show_marks: bool = True, decide_bar=None):
+    aid = action.get("id", "")
     subject, body, meta = _proposal_bits(action)
     findings = (critique or {}).get("findings", []) if show_marks else []
     blocking = is_blocking(critique)
+    is_email = action.get("kind") == "draft_email"
     meta_block = Div(*[Span(Span(f"{k} ", cls="", style="color:var(--paper-faint)"),
                             f"{v}\n") for k, v in meta], cls="meta",
                      style="white-space:pre-wrap") if meta else ""
-    decide = decide_bar if decide_bar is not None else default_decide_bar(action, blocking)
+    view = (body_with_marks(body, findings) if show_marks
+            else Div(body, cls="body", style="white-space:pre-wrap"))
+    body_block = Div(
+        Div(view, id=f"view-{aid}"),
+        (Textarea(body, id=f"edit-{aid}", name="body", cls="field-edit", style="display:none")
+         if is_email else ""))
+    decide = decide_bar if decide_bar is not None else default_decide_bar(action, blocking, is_email)
     return Div(
         Div(action.get("kind", "draft"), cls="label", style="margin-bottom:12px"),
         meta_block,
         Div(subject, cls="subj"),
-        body_with_marks(body, findings) if show_marks else Div(body, cls="body", style="white-space:pre-wrap"),
+        body_block,
         decide,
         cls="draft")
 

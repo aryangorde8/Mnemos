@@ -8,7 +8,7 @@ Wired to the real /actions queue + per-action /actions/{id}/critique; approve/re
 """
 from fasthtml.common import A, Button, Div, P, Span, Table, Tbody, Td, Th, Thead, Tr  # type: ignore
 
-from assets import ACCORDION_JS
+from assets import ACCORDION_JS, EDIT_JS
 from chrome import draft_card, critic_panel, is_blocking, page, surface_head, variant_strip
 
 VARIANTS = [("queue", "queue"), ("review", "review"), ("ledger", "ledger")]
@@ -27,20 +27,6 @@ def _recipient(a):
     return ", ".join(to) if isinstance(to, list) else str(to)
 
 
-def _decide_bar(action, blocking):
-    aid = action.get("id", "")
-    approve = (Button("✓ approve & send", cls="btn-d primary", disabled=True) if blocking else
-               Button("✓ approve & send", cls="btn-d primary",
-                      hx_post=f"/approve/decide?aid={aid}&verdict=approve",
-                      hx_target=f"#dr-{aid}", hx_swap="innerHTML"))
-    return Div(approve, Button("¶ edit", cls="btn-d ghost"),
-               Button("✕ reject", cls="btn-d", hx_post=f"/approve/decide?aid={aid}&verdict=reject",
-                      hx_target=f"#dr-{aid}", hx_swap="innerHTML"),
-               (Span("⊘ critic blocks this send · resolve the blocking note first", cls="warn")
-                if blocking else Span(f"{action.get('kind','action')} · proposed", cls="chrome")),
-               Span(id=f"dr-{aid}", style="margin-left:auto"), cls="decide")
-
-
 def _sev_strip(critique):
     findings = (critique or {}).get("findings", [])
     if not findings:
@@ -54,7 +40,6 @@ def _sev_strip(critique):
 def _review(actions, index, critique):
     index = max(0, min(index, len(actions) - 1))
     action = actions[index]
-    blocking = is_blocking(critique)
     dots = [A(cls="qdot" + (" active" if i == index else ""), href=f"/approve?v=review&i={i}")
             for i in range(len(actions))]
     nav = Div(A("‹ prev", href=f"/approve?v=review&i={(index-1)%len(actions)}", cls="btn-d ghost"),
@@ -62,7 +47,7 @@ def _review(actions, index, critique):
               A("next ›", href=f"/approve?v=review&i={(index+1)%len(actions)}", cls="btn-d ghost"),
               Span(f"№{index+1:02d} / {len(actions):02d}", cls="chrome", style="margin-left:8px"),
               cls="qnav")
-    grid = Div(draft_card(action, critique, show_marks=True, decide_bar=_decide_bar(action, blocking)),
+    grid = Div(draft_card(action, critique, show_marks=True),
                Div(cls="vrule"), critic_panel(critique), cls="ac-grid")
     return Div(P("Page through the queue; approve with one click — unless the Critic blocks the send.",
                  cls="muted", style="max-width:60ch;margin:0 0 16px"), nav, grid), ""
@@ -81,7 +66,7 @@ def _queue(actions, critiques):
                    Span(f"{notes} notes", cls="chrome"),
                    Span("blocking" if blocking else "clean", cls="tag v" if blocking else "tag"),
                    Span("›", cls="acc-chev"), cls="acc-head")
-        body = Div(Div(draft_card(a, crit, show_marks=True, decide_bar=_decide_bar(a, blocking)),
+        body = Div(Div(draft_card(a, crit, show_marks=True),
                        Div(cls="vrule"), critic_panel(crit), cls="ac-grid",
                        style="border:none"), cls="acc-body")
         rows.append(Div(head, body, cls="acc-row" + (" blocking" if blocking else "")))
@@ -143,12 +128,12 @@ def render(variant: str = DEFAULT, actions: list[dict] | None = None, index: int
         body, scripts = _ledger(actions, critiques)
     else:
         body, scripts = _review(actions, index, critiques.get(actions[max(0, min(index, len(actions)-1))]["id"]))
-    return page("approve", head, body, ready=ready, vault=vault, scripts=scripts, strip=strip)
+    return page("approve", head, body, ready=ready, vault=vault, scripts=scripts + EDIT_JS, strip=strip)
 
 
 def decide_result(verdict: str, ok: bool):
     if not ok:
-        return Span("could not record decision", cls="warn")
+        return Div("could not record decision — is the agent reachable?", cls="decide-done warn")
     if verdict == "approve":
-        return Span("✓ approved · queued to send", cls="chrome", style="color:var(--saffron)")
-    return Span("✕ rejected · removed", cls="chrome", style="color:var(--paper-faint)")
+        return Div("✓ approved · sent", cls="decide-done", style="color:var(--saffron)")
+    return Div("✕ rejected · removed from queue", cls="decide-done faint")

@@ -251,6 +251,9 @@ body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
 .draft .meta b{color:var(--paper-faint);font-weight:500}
 .draft .subj{font-family:'Instrument Serif',serif;font-style:italic;font-size:24px;color:var(--paper);margin:14px 0 12px}
 .draft .body{font-size:15px;color:var(--paper-dim);line-height:1.7;white-space:pre-wrap}
+.field-edit{width:100%;min-height:170px;background:var(--ink-2);border:1px solid var(--rule-strong);color:var(--paper-dim);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.7;padding:12px 14px;resize:vertical;outline:none}
+.field-edit:focus{border-color:var(--saffron)}
+.decide-done{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 0;margin-top:24px;border-top:1px solid var(--rule)}
 .mark{text-decoration:underline wavy var(--saffron);text-underline-offset:3px;cursor:help}
 .mark sup{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--saffron)}
 .decide{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--rule)}

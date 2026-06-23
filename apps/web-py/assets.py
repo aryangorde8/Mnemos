@@ -127,6 +127,13 @@ function select(ph,idx){cells.forEach(function(c,i){c.classList.toggle('active',
 cells.forEach(function(c,i){c.addEventListener('click',function(){select(c.getAttribute('data-phase'),i);});});})();
 """
 
+# ── draft card · toggle inline edit (view ↔ editable textarea) ──
+EDIT_JS = """
+window.mnEdit=function(aid){var v=document.getElementById('view-'+aid),e=document.getElementById('edit-'+aid);
+if(!e)return;var editing=e.style.display!=='none';e.style.display=editing?'none':'block';
+if(v)v.style.display=editing?'':'none';if(!editing){e.focus();}};
+"""
+
 # ── approve · queue: accordion (one row open at a time) ──
 ACCORDION_JS = """
 (function(){var rows=[].slice.call(document.querySelectorAll('.acc-row'));
