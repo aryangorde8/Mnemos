@@ -134,7 +134,7 @@ async def approve_decide(aid: str = "", verdict: str = "approve",
     else:
         res = await backend.post_json(f"/actions/{aid}/reject", {})
     ok = isinstance(res, dict) and not res.get("error")
-    return approve_s.decide_result(verdict, ok)
+    return approve_s.decide_result(verdict, ok, res if isinstance(res, dict) else {})
 
 
 @rt("/memory")

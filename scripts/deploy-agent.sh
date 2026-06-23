@@ -76,6 +76,19 @@ if [[ "${MNEMOS_USE_MCP:-}" == "1" ]]; then
   SET_ENV+=",MNEMOS_USE_MCP=1"
 fi
 
+# Gmail OAuth — required for REAL email sending (otherwise the agent silently simulates sends).
+# Defaults the redirect URI to the production callback (.env.local typically points at localhost).
+if [[ -n "${GMAIL_OAUTH_CLIENT_ID:-}" && -n "${GMAIL_OAUTH_CLIENT_SECRET:-}" ]]; then
+  GMAIL_REDIRECT="${GMAIL_OAUTH_REDIRECT_URI:-}"
+  if [[ -z "$GMAIL_REDIRECT" || "$GMAIL_REDIRECT" == *localhost* ]]; then
+    GMAIL_REDIRECT="https://mnemos-agent.aryangorde.com/auth/google/callback"
+  fi
+  SET_ENV+=",GMAIL_OAUTH_CLIENT_ID=${GMAIL_OAUTH_CLIENT_ID},GMAIL_OAUTH_CLIENT_SECRET=${GMAIL_OAUTH_CLIENT_SECRET},GMAIL_OAUTH_REDIRECT_URI=${GMAIL_REDIRECT}"
+  echo "[deploy-agent] Gmail OAuth env included (redirect=${GMAIL_REDIRECT})"
+else
+  echo "[deploy-agent] WARNING: GMAIL_OAUTH_CLIENT_ID/SECRET not set — agent will SIMULATE email sends"
+fi
+
 if [[ -n "${SERVICE_ACCOUNT:-}" ]]; then
   EXTRA_ENV+=" --service-account=${SERVICE_ACCOUNT}"
 fi

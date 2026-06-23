@@ -131,9 +131,27 @@ def render(variant: str = DEFAULT, actions: list[dict] | None = None, index: int
     return page("approve", head, body, ready=ready, vault=vault, scripts=scripts + EDIT_JS, strip=strip)
 
 
-def decide_result(verdict: str, ok: bool):
+def decide_result(verdict: str, ok: bool, info: dict | None = None):
+    info = info or {}
     if not ok:
         return Div("could not record decision — is the agent reachable?", cls="decide-done warn")
-    if verdict == "approve":
-        return Div("✓ approved · sent", cls="decide-done", style="color:var(--saffron)")
-    return Div("✕ rejected · removed from queue", cls="decide-done faint")
+    if verdict == "reject":
+        return Div("✕ rejected · removed from queue", cls="decide-done faint")
+    # approve — report what actually happened, honestly
+    via = info.get("sentVia")
+    booked = info.get("bookedVia")
+    if via == "gmail":
+        return Div(f"✓ sent via Gmail{(' · ' + info['sentAs']) if info.get('sentAs') else ''}",
+                   cls="decide-done", style="color:var(--saffron)")
+    if info.get("gmailError"):
+        return Div(f"⚠ approved, but the Gmail send failed: {info['gmailError']}", cls="decide-done warn")
+    if via == "simulated":
+        return Div("✓ approved · simulated — the email was NOT actually sent (no Gmail account "
+                   "connected on the agent)", cls="decide-done", style="color:var(--vermilion)")
+    if booked == "google":
+        return Div("✓ approved · meeting booked on Google Calendar", cls="decide-done",
+                   style="color:var(--saffron)")
+    if booked == "simulated":
+        return Div("✓ approved · simulated — calendar not connected, no event created",
+                   cls="decide-done", style="color:var(--vermilion)")
+    return Div("✓ approved", cls="decide-done", style="color:var(--saffron)")
