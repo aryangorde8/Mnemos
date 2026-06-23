@@ -7,7 +7,7 @@ per-retriever sub-bars and latency budget are derived/illustrative (the backend 
 """
 from urllib.parse import quote
 
-from fasthtml.common import Div, Form, Input, NotStr, P, Script, Span  # type: ignore
+from fasthtml.common import Div, Input, NotStr, P, Script, Span  # type: ignore
 
 from assets import SEARCH_ANIMATE_JS, SEARCH_JS, SEARCH_SWAP_JS
 from chrome import page, surface_head, variant_strip
@@ -39,12 +39,14 @@ def render_page(variant: str = DEFAULT, ready: dict | None = None, vault: dict |
         P("Vector kNN over MongoDB Atlas, fused with BM25 lexical search via reciprocal rank fusion, "
           "then reranked. Watch the pipeline produce the ordering.", cls="muted",
           style="max-width:60ch;margin:0 0 18px"),
-        Form(
-            Input(name="q", cls="field", autocomplete="off", autofocus=True,
-                  value=_SAMPLE_Q, placeholder="inference SLO slip"),
-            Input(type="hidden", name="v", value=variant),
-            hx_get="/search/run", hx_target="#sresult", hx_swap="innerHTML"),
-        Div(P("vector + bm25 + rrf + rerank", cls="label", style="margin-top:10px")),
+        # active search: the input itself drives the request — updates as you type (debounced)
+        # and on Enter. `v` (the variant) rides along via hx-vals. No submit button by design.
+        Input(name="q", cls="field", autocomplete="off", autofocus=True, type="search",
+              value=_SAMPLE_Q, placeholder="inference SLO slip",
+              hx_get="/search/run", hx_target="#sresult", hx_swap="innerHTML",
+              hx_trigger="keyup changed delay:350ms, search",
+              hx_vals=f'{{"v":"{variant}"}}'),
+        Div(P("type to search · vector + bm25 + rrf + rerank", cls="label", style="margin-top:10px")),
         # pre-load the sample query so the chosen variant's layout is visible immediately
         Div(Div("retrieving…", cls="empty"), id="sresult", style="margin-top:18px",
             hx_get=f"/search/run?q={quote(_SAMPLE_Q)}&v={variant}", hx_trigger="load",
