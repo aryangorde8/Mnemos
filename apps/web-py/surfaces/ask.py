@@ -10,7 +10,7 @@ Driven by the real /agent/ask SSE; the approval/critic mount at the end via out-
 """
 from urllib.parse import quote
 
-from fasthtml.common import Div, Form, Input, P, Span  # type: ignore
+from fasthtml.common import Button, Div, Form, Input, P, Span  # type: ignore
 
 from chrome import cite, draft_card, critic_panel, page, surface_head, variant_strip
 
@@ -29,9 +29,14 @@ def render_page(variant: str = DEFAULT, ready: dict | None = None, vault: dict |
         P("Ask a question or issue a command. The agent retrieves context, reasons in a live stream, "
           "drafts the action — then the Critic audits it before you approve.", cls="muted",
           style="max-width:60ch;margin:0 0 18px"),
+        # explicit submit button → Enter and click both fire reliably (one run per submit,
+        # not per keystroke — each run is a real Gemini call).
         Form(Input(name="q", cls="field", autocomplete="off", autofocus=True,
                    placeholder="draft a decline to Marcus, propose Thursday 2pm"),
              Input(type="hidden", name="v", value=variant),
+             Div(Button("ask →", type="submit", cls="btn-d primary"),
+                 Span("press ↵ or click to run", cls="chrome"),
+                 style="display:flex;align-items:center;gap:14px;margin-top:14px"),
              hx_get="/ask/run", hx_target="#run", hx_swap="innerHTML"),
         Div(id="run", style="margin-top:8px"),
     )
