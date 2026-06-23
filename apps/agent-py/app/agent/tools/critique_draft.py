@@ -114,10 +114,19 @@ GROUNDING CONTEXT the primary agent claims to have used (this is your source of 
 Now audit. Return JSON only."""
 
     try:
-        result = await generate(prompt, system=CRITIC_SYSTEM, temperature=0.2, max_tokens=1200,
-                                response_mime_type="application/json")
+        # thinking_budget=0: on Gemini 3 Pro thinking tokens are deducted from max_output_tokens,
+        # so leaving it on starved the JSON to empty/truncated → "critic returned invalid JSON".
+        # Matches the other JSON-emitting tools (extract_graph, extract_commitments).
+        result = await generate(prompt, system=CRITIC_SYSTEM, temperature=0.2, max_tokens=2048,
+                                response_mime_type="application/json", thinking_budget=0)
+        raw = (result.text or "").strip()
+        if raw.startswith("```"):  # defensive: strip accidental code fences
+            raw = raw.lstrip("`")
+            if raw[:4].lower() == "json":
+                raw = raw[4:]
+            raw = raw.strip().rstrip("`").strip()
         try:
-            parsed = json.loads(result.text)
+            parsed = json.loads(raw)
         except json.JSONDecodeError:
             return {"ok": False, "error": "critic returned invalid JSON"}
 
