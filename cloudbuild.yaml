@@ -28,11 +28,11 @@ steps:
         set -euo pipefail
         TARGET="${_TARGET}"
         SVC="${_SERVICE_NAME}"
-        if [[ -z "$SVC" ]]; then SVC="mnemos-$TARGET"; fi
-        TAG="${_REGION}-docker.pkg.dev/$PROJECT_ID/mnemos/$SVC:$BUILD_ID"
-        echo "TARGET=$TARGET" > /workspace/.cb.env
-        echo "SERVICE=$SVC"  >> /workspace/.cb.env
-        echo "TAG=$TAG"      >> /workspace/.cb.env
+        if [[ -z "$$SVC" ]]; then SVC="mnemos-$$TARGET"; fi
+        TAG="${_REGION}-docker.pkg.dev/$PROJECT_ID/mnemos/$$SVC:$BUILD_ID"
+        echo "TARGET=$$TARGET" > /workspace/.cb.env
+        echo "SERVICE=$$SVC"  >> /workspace/.cb.env
+        echo "TAG=$$TAG"      >> /workspace/.cb.env
 
   - id: build
     name: gcr.io/cloud-builders/docker
@@ -42,10 +42,10 @@ steps:
       - |
         set -euo pipefail
         source /workspace/.cb.env
-        if [[ "$TARGET" == "web" ]]; then
-          docker build -f apps/web-py/Dockerfile -t "$TAG" .
+        if [[ "$$TARGET" == "web" ]]; then
+          docker build -f apps/web-py/Dockerfile -t "$$TAG" .
         else
-          docker build -f apps/agent-py/Dockerfile -t "$TAG" .
+          docker build -f apps/agent-py/Dockerfile -t "$$TAG" .
         fi
 
   - id: push
@@ -56,7 +56,7 @@ steps:
       - |
         set -euo pipefail
         source /workspace/.cb.env
-        docker push "$TAG"
+        docker push "$$TAG"
 
   - id: deploy
     name: gcr.io/cloud-builders/gcloud
@@ -67,20 +67,20 @@ steps:
         set -euo pipefail
         source /workspace/.cb.env
         EXTRA=()
-        if [[ "$TARGET" == "web" ]]; then
+        if [[ "$$TARGET" == "web" ]]; then
           EXTRA+=(--memory=512Mi --concurrency=80 --timeout=60)
           EXTRA+=(--set-env-vars="AGENT_URL=${_AGENT_URL}")
         else
           EXTRA+=(--memory=1Gi --concurrency=40 --timeout=600)
         fi
-        gcloud run deploy "$SERVICE" \
+        gcloud run deploy "$$SERVICE" \
           --project="$PROJECT_ID" \
           --region="${_REGION}" \
-          --image="$TAG" \
+          --image="$$TAG" \
           --platform=managed \
           --allow-unauthenticated \
           --port=8080 \
-          "${EXTRA[@]}"
+          "$${EXTRA[@]}"
 
 options:
   logging: CLOUD_LOGGING_ONLY
