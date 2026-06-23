@@ -118,10 +118,18 @@ async def approve(v: str = "", i: int = 0):
 
 
 @rt("/approve/decide")
-async def approve_decide(aid: str = "", verdict: str = "approve", body: str = ""):
+async def approve_decide(aid: str = "", verdict: str = "approve",
+                         body: str = "", to: str = "", subject: str = ""):
     if verdict == "approve":
-        # include the edited body as `edits` so an inline edit is actually sent
-        payload = {"edits": {"body": body}} if (body or "").strip() else {}
+        # apply any inline edits (to / subject / body) so an edited draft is what gets sent
+        edits: dict = {}
+        if (body or "").strip():
+            edits["body"] = body
+        if (subject or "").strip():
+            edits["subject"] = subject
+        if (to or "").strip():
+            edits["to"] = [t.strip() for t in to.split(",") if t.strip()]
+        payload = {"edits": edits} if edits else {}
         res = await backend.post_json(f"/actions/{aid}/approve", payload)
     else:
         res = await backend.post_json(f"/actions/{aid}/reject", {})

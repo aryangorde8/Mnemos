@@ -235,22 +235,30 @@ def draft_card(action: dict, critique: dict | None = None, show_marks: bool = Tr
     findings = (critique or {}).get("findings", []) if show_marks else []
     blocking = is_blocking(critique)
     is_email = action.get("kind") == "draft_email"
+    p = action.get("proposal", {}) or {}
     meta_block = Div(*[Span(Span(f"{k} ", cls="", style="color:var(--paper-faint)"),
                             f"{v}\n") for k, v in meta], cls="meta",
                      style="white-space:pre-wrap") if meta else ""
-    view = (body_with_marks(body, findings) if show_marks
-            else Div(body, cls="body", style="white-space:pre-wrap"))
-    body_block = Div(
-        Div(view, id=f"view-{aid}"),
-        (Textarea(body, id=f"edit-{aid}", name="body", cls="field-edit", style="display:none")
-         if is_email else ""))
+    body_view = (body_with_marks(body, findings) if show_marks
+                 else Div(body, cls="body", style="white-space:pre-wrap"))
+    view = Div(meta_block, Div(subject, cls="subj"), body_view, id=f"view-{aid}")
+    # editable to / subject / body (draft_email only); included on approve as edits
+    if is_email:
+        to_val = p.get("to") if isinstance(p.get("to"), list) else ([p.get("to")] if p.get("to") else [])
+        edit = Div(
+            Div("to", cls="label", style="margin-bottom:4px"),
+            Input(name="to", value=", ".join(to_val), cls="field-edit-line"),
+            Div("subject", cls="label", style="margin:12px 0 4px"),
+            Input(name="subject", value=p.get("subject", ""), cls="field-edit-line"),
+            Div("body", cls="label", style="margin:12px 0 4px"),
+            Textarea(body, name="body", cls="field-edit"),
+            id=f"edit-{aid}", style="display:none")
+    else:
+        edit = ""
     decide = decide_bar if decide_bar is not None else default_decide_bar(action, blocking, is_email)
     return Div(
         Div(action.get("kind", "draft"), cls="label", style="margin-bottom:12px"),
-        meta_block,
-        Div(subject, cls="subj"),
-        body_block,
-        decide,
+        view, edit, decide,
         cls="draft")
 
 

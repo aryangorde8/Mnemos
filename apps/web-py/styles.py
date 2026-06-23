@@ -253,6 +253,8 @@ body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
 .draft .body{font-size:15px;color:var(--paper-dim);line-height:1.7;white-space:pre-wrap}
 .field-edit{width:100%;min-height:170px;background:var(--ink-2);border:1px solid var(--rule-strong);color:var(--paper-dim);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.7;padding:12px 14px;resize:vertical;outline:none}
 .field-edit:focus{border-color:var(--saffron)}
+.field-edit-line{width:100%;background:var(--ink-2);border:1px solid var(--rule-strong);color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:13px;padding:8px 10px;outline:none}
+.field-edit-line:focus{border-color:var(--saffron)}
 .decide-done{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 0;margin-top:24px;border-top:1px solid var(--rule)}
 .mark{text-decoration:underline wavy var(--saffron);text-underline-offset:3px;cursor:help}
 .mark sup{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--saffron)}
