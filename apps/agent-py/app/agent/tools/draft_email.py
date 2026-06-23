@@ -84,8 +84,13 @@ Rules:
 - Do NOT include the subject line in the body.
 - Do NOT include "To:" / "From:" headers."""
 
-        result = await generate(prompt, temperature=0.55, max_tokens=700)
+        # thinking_budget=0: on Gemini 3 Pro, thinking tokens are deducted from max_output_tokens,
+        # so leaving it on starved the body to empty. The agent already reasoned in the ReAct loop;
+        # this call just writes the text (matches debate/search/extract tools).
+        result = await generate(prompt, temperature=0.55, max_tokens=1024, thinking_budget=0)
         body = result.text.strip()
+        if not body:  # never store an empty draft — surface a clear error to the loop instead
+            return {"ok": False, "error": "draft generation returned an empty body; retry with more context"}
         proposal = {"to": to, "cc": cc, "subject": subject, "body": body, "intent": intent}
 
         action_id = None
