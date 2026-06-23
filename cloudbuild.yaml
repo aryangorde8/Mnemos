@@ -68,7 +68,8 @@ steps:
         source /workspace/.cb.env
         EXTRA=()
         if [[ "$$TARGET" == "web" ]]; then
-          EXTRA+=(--memory=512Mi --concurrency=80 --timeout=60)
+          # 300s request timeout so long SSE runs (ask: draft + critique) aren't cut off
+          EXTRA+=(--memory=512Mi --concurrency=80 --timeout=300)
           EXTRA+=(--set-env-vars="AGENT_URL=${_AGENT_URL}")
         else
           EXTRA+=(--memory=1Gi --concurrency=40 --timeout=600)

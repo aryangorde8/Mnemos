@@ -8,6 +8,7 @@ are identical across variants; only the layout differs:
 
 Driven by the real /agent/ask SSE; the approval/critic mount at the end via out-of-band swaps.
 """
+import time
 from urllib.parse import quote
 
 from fasthtml.common import Button, Div, Form, Input, P, Span  # type: ignore
@@ -93,9 +94,18 @@ def _node(kind_cls, kind_label, ts, *body):
                cls=f"node {kind_cls}")
 
 
+def _ts(at) -> str:
+    """The agent sends `at` as epoch-millis (int); render it as a mono HH:MM:SS gutter stamp."""
+    if isinstance(at, (int, float)):
+        return time.strftime("%H:%M:%S", time.localtime(at / 1000))
+    if isinstance(at, str):
+        return at[-12:-4] or at[:8]
+    return ""
+
+
 def render_event(ev: dict):
     kind = ev.get("kind")
-    ts = (ev.get("at", "") or "")[-12:-4] if ev.get("at") else ""
+    ts = _ts(ev.get("at"))
     if kind == "thought":
         return Span(ev.get("chunk", ""), cls="thought-txt", style="display:inline")
     if kind == "tool_call":
