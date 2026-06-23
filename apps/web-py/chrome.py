@@ -191,16 +191,38 @@ def body_with_marks(text: str, findings: list[dict]):
     return Div(*segments, cls="body")
 
 
+def _fmt_dt(iso: str) -> str:
+    """ISO datetime → a readable 'Thu Jun 25 · 5:00 PM' (falls back to the raw string)."""
+    if not iso:
+        return "—"
+    try:
+        from datetime import datetime
+        dt = datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+        return dt.strftime("%a %b %-d · %-I:%M %p")
+    except (ValueError, TypeError):
+        return str(iso)
+
+
 def _proposal_bits(action: dict):
     p = action.get("proposal", {}) or {}
     kind = action.get("kind")
     if kind == "draft_email":
-        meta = [("to", p.get("to", "—")), ("subject", p.get("subject", "—"))]
+        to = p.get("to")
+        to_str = ", ".join(to) if isinstance(to, list) else (to or "—")
+        meta = [("to", to_str), ("subject", p.get("subject", "—"))]
         if p.get("cc"):
-            meta.insert(1, ("cc", p.get("cc")))
+            cc = p.get("cc")
+            meta.insert(1, ("cc", ", ".join(cc) if isinstance(cc, list) else cc))
         return p.get("subject") or "(no subject)", p.get("body") or "", meta
     if kind == "schedule_meeting":
-        meta = [("with", ", ".join(p.get("attendees", [])) or "—"), ("when", p.get("start", "—"))]
+        times = p.get("proposedTimes") or []
+        idx = p.get("preferredIdx") or 0
+        when = times[idx] if 0 <= idx < len(times) else (times[0] if times else "")
+        meta = [("with", ", ".join(p.get("attendees", [])) or "—"), ("when", _fmt_dt(when))]
+        if p.get("durationMinutes"):
+            meta.append(("duration", f"{p['durationMinutes']} min"))
+        if p.get("location"):
+            meta.append(("location", p["location"]))
         return p.get("title") or "(meeting)", p.get("agenda") or "", meta
     return p.get("subject") or p.get("title") or "(action)", p.get("body") or p.get("agenda") or "", []
 
