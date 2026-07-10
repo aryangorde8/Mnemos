@@ -18,6 +18,7 @@ on main, so tools and the ReAct loop call it unchanged. Gemini-only params
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from dataclasses import dataclass
@@ -26,6 +27,20 @@ from typing import Any, AsyncIterator
 import httpx
 
 from app.config import is_embeddings_configured, is_llm_configured, settings
+
+# Free-tier TPM/RPM limits (Groq/Cohere) surface as 429s mid-run — a ReAct
+# loop re-sends its growing context every turn, so multi-turn asks hit the
+# window routinely. Retry with the server's retry-after instead of dying.
+_MAX_429_RETRIES = 3
+_DEFAULT_BACKOFF_S = 22.0
+_MAX_BACKOFF_S = 90.0
+
+
+def _retry_after_s(resp: httpx.Response) -> float:
+    try:
+        return min(float(resp.headers.get("retry-after", _DEFAULT_BACKOFF_S)) + 1.0, _MAX_BACKOFF_S)
+    except ValueError:
+        return _DEFAULT_BACKOFF_S
 
 _GEN_TIMEOUT = httpx.Timeout(connect=10.0, read=180.0, write=30.0, pool=10.0)
 _STREAM_TIMEOUT = httpx.Timeout(connect=10.0, read=600.0, write=30.0, pool=10.0)
@@ -103,10 +118,15 @@ async def generate(
         payload["response_format"] = {"type": "json_object"}
 
     async with httpx.AsyncClient(timeout=_GEN_TIMEOUT) as client:
-        resp = await client.post(f"{settings.llm_base_url}/chat/completions",
-                                 headers=_chat_headers(), json=payload)
-        resp.raise_for_status()
-        data = resp.json()
+        for attempt in range(_MAX_429_RETRIES + 1):
+            resp = await client.post(f"{settings.llm_base_url}/chat/completions",
+                                     headers=_chat_headers(), json=payload)
+            if resp.status_code == 429 and attempt < _MAX_429_RETRIES:
+                await asyncio.sleep(_retry_after_s(resp))
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+            break
 
     choice = (data.get("choices") or [{}])[0]
     text = (choice.get("message") or {}).get("content") or ""
@@ -127,9 +147,14 @@ async def _cohere_embed(texts: list[str], input_type: str) -> list[list[float]]:
     headers = {"Authorization": f"Bearer {settings.cohere_api_key}",
                "Content-Type": "application/json"}
     async with httpx.AsyncClient(timeout=_EMBED_TIMEOUT) as client:
-        resp = await client.post(_COHERE_EMBED_URL, headers=headers, json=payload)
-        resp.raise_for_status()
-        data = resp.json()
+        for attempt in range(_MAX_429_RETRIES + 1):
+            resp = await client.post(_COHERE_EMBED_URL, headers=headers, json=payload)
+            if resp.status_code == 429 and attempt < _MAX_429_RETRIES:
+                await asyncio.sleep(_retry_after_s(resp))
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+            break
     return [list(v) for v in data["embeddings"]["float"]]
 
 
@@ -190,43 +215,51 @@ async def stream_generate(
     finish: str | None = None
 
     async with httpx.AsyncClient(timeout=_STREAM_TIMEOUT) as client:
-        async with client.stream("POST", f"{settings.llm_base_url}/chat/completions",
-                                 headers=_chat_headers(), json=payload) as resp:
-            if resp.status_code >= 400:
-                body = (await resp.aread()).decode("utf-8", "replace")[:500]
-                raise RuntimeError(f"llm stream error {resp.status_code}: {body}")
-            async for line in resp.aiter_lines():
-                if not line.startswith("data:"):
+        for attempt in range(_MAX_429_RETRIES + 1):
+            async with client.stream("POST", f"{settings.llm_base_url}/chat/completions",
+                                     headers=_chat_headers(), json=payload) as resp:
+                # 429 arrives with the headers, before any chunk is yielded —
+                # safe to back off and retry the whole request.
+                if resp.status_code == 429 and attempt < _MAX_429_RETRIES:
+                    await resp.aread()
+                    await asyncio.sleep(_retry_after_s(resp))
                     continue
-                raw = line[5:].strip()
-                if raw == "[DONE]":
-                    break
-                try:
-                    obj = json.loads(raw)
-                except json.JSONDecodeError:
-                    continue
-                u = (obj.get("x_groq") or {}).get("usage") or obj.get("usage")
-                if u:
-                    usage = u
-                choices = obj.get("choices") or []
-                if not choices:
-                    continue
-                choice = choices[0]
-                delta = choice.get("delta") or {}
-                if delta.get("content"):
-                    yield StreamChunk(text=delta["content"])
-                for tc in delta.get("tool_calls") or []:
-                    idx = tc.get("index", 0)
-                    slot = pending.setdefault(idx, {"id": "", "name": "", "arguments": ""})
-                    if tc.get("id"):
-                        slot["id"] = tc["id"]
-                    fn = tc.get("function") or {}
-                    if fn.get("name"):
-                        slot["name"] = fn["name"]
-                    if fn.get("arguments"):
-                        slot["arguments"] += fn["arguments"]
-                if choice.get("finish_reason"):
-                    finish = str(choice["finish_reason"])
+                if resp.status_code >= 400:
+                    body = (await resp.aread()).decode("utf-8", "replace")[:500]
+                    raise RuntimeError(f"llm stream error {resp.status_code}: {body}")
+                async for line in resp.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    raw = line[5:].strip()
+                    if raw == "[DONE]":
+                        break
+                    try:
+                        obj = json.loads(raw)
+                    except json.JSONDecodeError:
+                        continue
+                    u = (obj.get("x_groq") or {}).get("usage") or obj.get("usage")
+                    if u:
+                        usage = u
+                    choices = obj.get("choices") or []
+                    if not choices:
+                        continue
+                    choice = choices[0]
+                    delta = choice.get("delta") or {}
+                    if delta.get("content"):
+                        yield StreamChunk(text=delta["content"])
+                    for tc in delta.get("tool_calls") or []:
+                        idx = tc.get("index", 0)
+                        slot = pending.setdefault(idx, {"id": "", "name": "", "arguments": ""})
+                        if tc.get("id"):
+                            slot["id"] = tc["id"]
+                        fn = tc.get("function") or {}
+                        if fn.get("name"):
+                            slot["name"] = fn["name"]
+                        if fn.get("arguments"):
+                            slot["arguments"] += fn["arguments"]
+                    if choice.get("finish_reason"):
+                        finish = str(choice["finish_reason"])
+            break
 
     # Flush completed tool calls (arguments accumulate across deltas, so they
     # are only reliably complete once the stream ends).
