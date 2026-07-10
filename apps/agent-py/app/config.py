@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     # swap provider by changing base URL + model + key, no code change.
     llm_base_url: str = Field("https://api.groq.com/openai/v1", alias="LLM_BASE_URL")
     llm_model: str = Field("llama-3.3-70b-versatile", alias="LLM_MODEL")
+    # Bulk extraction (graph/commitments) runs on a small model with its own
+    # per-model quota — a full-corpus rebuild (~400k tokens) can't fit in the
+    # 70B free-tier daily budget (100k TPD), and shouldn't ride it anyway.
+    llm_extract_model: str = Field("llama-3.1-8b-instant", alias="LLM_EXTRACT_MODEL")
     groq_api_key: str = Field("", alias="GROQ_API_KEY")
 
     # Embeddings — Cohere. embed-english-v3.0 = 1024-dim; the Atlas vector

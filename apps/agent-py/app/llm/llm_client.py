@@ -96,10 +96,12 @@ async def generate(
     max_tokens: int = 2048,
     response_mime_type: str | None = None,
     thinking_budget: int | None = None,  # Gemini-ism; accepted and ignored
+    model: str | None = None,  # override for bulk jobs (extraction) — defaults to llm_model
 ) -> GenerateResult:
     """Single-shot generation (used by critic, rerank, extraction, drafts)."""
     if not is_llm_configured():
         raise RuntimeError("llm: GROQ_API_KEY not configured")
+    model = model or settings.llm_model
 
     messages: list[dict] = []
     if system:

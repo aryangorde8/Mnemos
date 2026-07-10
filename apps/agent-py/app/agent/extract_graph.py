@@ -5,6 +5,7 @@ import json
 import time
 from collections import defaultdict
 
+from app.config import settings
 from app.db.mongo import chunks
 from app.lib.graph import clear_graph, entity_key, insert_relation, upsert_entity
 from app.llm.llm_client import generate
@@ -77,7 +78,7 @@ async def run_graph_extraction(*, rebuild: bool):
                 f"--- chunkId: {c['chunkId']} | {c['source']} | {c['title']} "
                 f"{('| ' + c['date']) if c['date'] else ''} ---\n{c['text']}" for c in batch)
             prompt = f"Extract entities and relations from these {len(batch)} chunks. Return JSON only.\n\n{body}"
-            r = await generate(prompt, system=SYSTEM, temperature=0.1, max_tokens=3500,
+            r = await generate(prompt, system=SYSTEM, temperature=0.1, max_tokens=3500, model=settings.llm_extract_model,
                                response_mime_type="application/json", thinking_budget=0)
             parsed = {}
             try:
