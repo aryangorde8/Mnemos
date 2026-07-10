@@ -109,7 +109,7 @@ async def generate(
     messages.append({"role": "user", "content": prompt})
 
     payload: dict = {
-        "model": settings.llm_model,
+        "model": model,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
@@ -135,7 +135,8 @@ async def generate(
     choice = (data.get("choices") or [{}])[0]
     text = (choice.get("message") or {}).get("content") or ""
     finish = choice.get("finish_reason")
-    return GenerateResult(text=text, model=settings.llm_model,
+    # report the model the API says served the call, not what we asked for
+    return GenerateResult(text=text, model=data.get("model") or model,
                           finish_reason=str(finish) if finish is not None else None)
 
 
