@@ -16,6 +16,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.5"
+    }
   }
 }
 
@@ -36,8 +44,35 @@ variable "instance_type" {
 }
 
 variable "key_name" {
-  description = "Name of an EXISTING EC2 key pair (create one in the console first)"
+  description = "Name of an EXISTING EC2 key pair. Leave empty to auto-generate one (private key written to ./mnemos-tf.pem)."
   type        = string
+  default     = ""
+}
+
+# Auto-generated key pair when var.key_name is empty — no console step needed.
+# NOTE: the private key lives in terraform state and ./mnemos-tf.pem (0400);
+# fine for a demo box, rotate for anything serious.
+resource "tls_private_key" "mnemos" {
+  count     = var.key_name == "" ? 1 : 0
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "mnemos" {
+  count      = var.key_name == "" ? 1 : 0
+  key_name   = "mnemos-tf"
+  public_key = tls_private_key.mnemos[0].public_key_openssh
+}
+
+resource "local_sensitive_file" "pem" {
+  count           = var.key_name == "" ? 1 : 0
+  filename        = "${path.module}/mnemos-tf.pem"
+  content         = tls_private_key.mnemos[0].private_key_pem
+  file_permission = "0400"
+}
+
+locals {
+  effective_key_name = var.key_name != "" ? var.key_name : aws_key_pair.mnemos[0].key_name
 }
 
 variable "ssh_cidr" {
@@ -100,7 +135,7 @@ resource "aws_security_group" "mnemos" {
 resource "aws_instance" "mnemos" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
-  key_name               = var.key_name
+  key_name               = local.effective_key_name
   vpc_security_group_ids = [aws_security_group.mnemos.id]
 
   root_block_device {
@@ -140,6 +175,6 @@ output "public_ip" {
 }
 
 output "ssh_command" {
-  value       = "ssh -i <path-to-key.pem> ubuntu@${aws_eip.mnemos.public_ip}"
+  value       = "ssh -i ${var.key_name == "" ? "${path.module}/mnemos-tf.pem" : "<path-to-your-key.pem>"} ubuntu@${aws_eip.mnemos.public_ip}"
   description = "SSH into the box (wait ~2 min after apply for cloud-init to finish)"
 }
