@@ -1,7 +1,7 @@
 """Batched embedding — port of apps/agent/src/ingest/embedder.ts."""
 from __future__ import annotations
 
-from app.llm.genai_client import embed
+from app.llm.llm_client import embed
 
 BATCH = 5
 

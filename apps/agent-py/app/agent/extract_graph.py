@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from app.db.mongo import chunks
 from app.lib.graph import clear_graph, entity_key, insert_relation, upsert_entity
-from app.llm.genai_client import generate
+from app.llm.llm_client import generate
 
 SYSTEM = """You extract a structured memory graph from a senior PM's corpus (emails, calendar, meeting notes, shared docs, slack, personal jots).
 

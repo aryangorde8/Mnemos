@@ -1,7 +1,9 @@
-"""Typed runtime config — mirrors apps/agent/src/config.ts.
+"""Typed runtime config — AWS variant (zero Google stack).
 
-Loads the same repo-root .env.local both apps share, so the Python backend runs
-against identical Atlas + Vertex + OAuth credentials.
+Loads the same repo-root .env.local both apps share in local dev; in the
+docker-compose / EC2 deployment the values come from the container env
+(deploy/aws/.env). LLM = any OpenAI-compatible endpoint (Groq free tier by
+default); embeddings = Cohere (1024-dim, asymmetric task types).
 """
 from pathlib import Path
 
@@ -13,8 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 _ENV_FILE = Path(__file__).resolve().parents[3] / ".env.local"
 
 # Export .env.local into os.environ so libraries that read the environment
-# directly (the google-genai SDK reads GOOGLE_APPLICATION_CREDENTIALS / ADC,
-# the Gmail OAuth helpers read GMAIL_OAUTH_*) see the same values.
+# directly (the Gmail OAuth helpers read GMAIL_OAUTH_*) see the same values.
 load_dotenv(_ENV_FILE)
 
 
@@ -26,8 +27,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # The Python backend runs on a distinct port so it can coexist with the
-    # TypeScript one during the parity migration.
     agent_port: int = Field(8787, alias="AGENT_PORT")
     agent_py_port: int = Field(8788, alias="AGENT_PY_PORT")
 
@@ -36,15 +35,18 @@ class Settings(BaseSettings):
     mongodb_vector_index: str = Field("mnemos_vector_index", alias="MONGODB_VECTOR_INDEX")
     mongodb_text_index: str = Field("mnemos_text_index", alias="MONGODB_TEXT_INDEX")
 
-    google_cloud_project: str = Field("", alias="GOOGLE_CLOUD_PROJECT")
-    google_cloud_location: str = Field("us-central1", alias="GOOGLE_CLOUD_LOCATION")
-    google_application_credentials: str = Field("", alias="GOOGLE_APPLICATION_CREDENTIALS")
-    # Gemini 3.x preview is served from the global endpoint; embeddings stay regional.
-    vertex_gemini_model: str = Field("gemini-3.1-pro-preview", alias="VERTEX_GEMINI_MODEL")
-    vertex_gemini_location: str = Field("global", alias="VERTEX_GEMINI_LOCATION")
-    vertex_embedding_model: str = Field("text-embedding-004", alias="VERTEX_EMBEDDING_MODEL")
+    # LLM — any OpenAI-compatible chat endpoint. Groq free tier by default;
+    # swap provider by changing base URL + model + key, no code change.
+    llm_base_url: str = Field("https://api.groq.com/openai/v1", alias="LLM_BASE_URL")
+    llm_model: str = Field("llama-3.3-70b-versatile", alias="LLM_MODEL")
+    groq_api_key: str = Field("", alias="GROQ_API_KEY")
 
-    mnemos_use_mcp: str = Field("0", alias="MNEMOS_USE_MCP")
+    # Embeddings — Cohere. embed-english-v3.0 = 1024-dim; the Atlas vector
+    # index must be built with numDimensions matching embedding_dim.
+    cohere_api_key: str = Field("", alias="COHERE_API_KEY")
+    cohere_embed_model: str = Field("embed-english-v3.0", alias="COHERE_EMBED_MODEL")
+    embedding_dim: int = Field(1024, alias="EMBEDDING_DIM")
+
     firebase_project_id: str = Field("", alias="FIREBASE_PROJECT_ID")
     mnemos_web_url: str = Field("", alias="MNEMOS_WEB_URL")
 
@@ -56,5 +58,9 @@ def is_mongo_configured() -> bool:
     return settings.mongodb_uri.startswith("mongodb")
 
 
-def is_vertex_configured() -> bool:
-    return len(settings.google_cloud_project) > 0
+def is_llm_configured() -> bool:
+    return len(settings.groq_api_key) > 0
+
+
+def is_embeddings_configured() -> bool:
+    return len(settings.cohere_api_key) > 0

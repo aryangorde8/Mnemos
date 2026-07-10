@@ -7,7 +7,7 @@ import time
 
 from app.db.mongo import chunks
 from app.lib.commitments import clear_commitments, is_alex, upsert_commitment
-from app.llm.genai_client import generate
+from app.llm.llm_client import generate
 
 SYSTEM = """You extract OPEN COMMITMENTS from a senior PM (Alex Chen)'s corpus — emails, calendar, meeting notes, shared docs, slack, personal jots.
 

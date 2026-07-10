@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import is_mongo_configured, is_vertex_configured, settings
+from app.config import is_embeddings_configured, is_llm_configured, is_mongo_configured, settings
 from app.lib.firebase_auth import firebase_middleware, is_firebase_configured
 
 app = FastAPI(title="mnemos-agent-py")
@@ -45,14 +45,15 @@ async def ready() -> dict:
     )
     return {
         "atlas": "configured" if is_mongo_configured() else "missing",
-        "vertex": "configured" if is_vertex_configured() else "missing",
+        "llm": "configured" if is_llm_configured() else "missing",
+        "embeddings": "configured" if is_embeddings_configured() else "missing",
         "gmail": "configured" if gmail_configured else "missing",
         "firebaseAuth": "enforced" if is_firebase_configured() else "open",
-        "mcp": "enabled" if settings.mnemos_use_mcp != "0" else "disabled",
-        "geminiModel": settings.vertex_gemini_model,
-        "embeddingModel": settings.vertex_embedding_model,
-        "region": settings.google_cloud_location,
-        "runtime": "python",
+        "llmModel": settings.llm_model,
+        "llmBaseUrl": settings.llm_base_url,
+        "embeddingModel": settings.cohere_embed_model,
+        "embeddingDim": settings.embedding_dim,
+        "runtime": "python-aws",
     }
 
 

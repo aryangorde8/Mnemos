@@ -6,7 +6,7 @@ import json
 from app.agent.types import ToolDef
 from app.lib.actions import get_action
 from app.lib.critique import save_critique
-from app.llm.genai_client import generate
+from app.llm.llm_client import generate
 
 CRITIC_SYSTEM = """You are the Critic — an adversarial reviewer for drafts authored by another agent for Alex Chen, a senior PM.
 

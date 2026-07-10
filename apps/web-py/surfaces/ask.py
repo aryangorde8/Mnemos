@@ -18,7 +18,7 @@ from chrome import cite, draft_card, critic_panel, page, surface_head, variant_s
 
 VARIANTS = [("calm", "calm"), ("choreographed", "choreographed"), ("split-critic", "split-critic")]
 DEFAULT = "choreographed"
-_MODEL = "gemini-3-pro"
+_MODEL = "llama-3.3-70b"  # fallback label; /ready's llmModel wins when available
 
 
 def render_page(variant: str = DEFAULT, ready: dict | None = None, vault: dict | None = None):

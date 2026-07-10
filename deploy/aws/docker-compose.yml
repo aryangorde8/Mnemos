@@ -1,0 +1,31 @@
+# Mnemos on one EC2 box — web is public on :80, agent stays internal.
+# The web app talks to the agent server-side via AGENT_URL, so the agent
+# never needs public exposure; 127.0.0.1:8788 is bound host-local only for
+# /ready checks and one-time setup (ingest, index script).
+#
+# Usage (on the EC2 instance, from deploy/aws/):
+#   cp .env.example .env   # fill in MONGODB_URI, GROQ_API_KEY, COHERE_API_KEY
+#   docker compose up -d --build
+name: mnemos
+
+services:
+  agent:
+    build:
+      context: ../..
+      dockerfile: apps/agent-py/Dockerfile
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8788:8080"   # host-local only — not internet-reachable
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web-py/Dockerfile
+    environment:
+      AGENT_URL: http://agent:8080
+    ports:
+      - "80:8080"
+    depends_on:
+      - agent
+    restart: unless-stopped

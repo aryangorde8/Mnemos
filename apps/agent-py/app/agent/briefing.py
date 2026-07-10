@@ -9,7 +9,7 @@ from app.agent.tools.get_briefing_context import tool as briefing_context_tool
 from app.config import settings
 from app.db.mongo import documents
 from app.lib.briefings import save_briefing
-from app.llm.genai_client import stream_generate
+from app.llm.llm_client import stream_generate
 
 SYSTEM = """You are Mnemos, drafting a meeting briefing for a senior PM named Alex Chen. Produce a tight, editorial 1-pager that Alex could read in 60 seconds and walk into the room prepared.
 
@@ -95,7 +95,7 @@ async def run_briefing(*, event_id: str | None = None, event_title: str | None =
 
         collected = ""
         async for chunk in stream_generate(system=SYSTEM,
-                                           contents=[{"role": "user", "parts": [{"text": _build_user_prompt(data)}]}],
+                                           messages=[{"role": "user", "content": _build_user_prompt(data)}],
                                            tools=None, temperature=0.35, max_tokens=1400):
             if chunk.text:
                 collected += chunk.text
@@ -106,7 +106,7 @@ async def run_briefing(*, event_id: str | None = None, event_title: str | None =
             "eventId": ObjectId(ev["id"]), "eventTitle": ev["title"], "eventWhen": ev.get("when"),
             "eventLocation": ev.get("location"), "attendees": ev.get("attendees") or [],
             "markdown": collected.strip(), "contextSummary": ctx.get("summary"),
-            "citations": citations, "model": settings.vertex_gemini_model,
+            "citations": citations, "model": settings.llm_model,
             "createdAt": datetime.now(timezone.utc),
         })
         yield {"kind": "saved", "briefingId": briefing_id, "eventTitle": ev["title"],

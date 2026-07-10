@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from app.agent.debate_prompts import DEVIL_SYSTEM, PRIMARY_SYSTEM, SYNTHESIZER_SYSTEM
 from app.agent.react_loop import run_agent
-from app.llm.genai_client import generate
+from app.llm.llm_client import generate
 
 router = APIRouter()
 

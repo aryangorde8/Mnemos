@@ -4,7 +4,7 @@ from __future__ import annotations
 from app.agent.types import ToolDef
 from app.config import settings
 from app.db.mongo import chunks, documents
-from app.llm.genai_client import embed_query
+from app.llm.llm_client import embed_query
 
 _DECL = {
     "name": "get_briefing_context",

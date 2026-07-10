@@ -6,7 +6,7 @@ from pathlib import Path
 
 from app.agent.types import ToolDef
 from app.lib.actions import record_action
-from app.llm.genai_client import generate
+from app.llm.llm_client import generate
 
 _DEFAULT_VOICE = (
     'Alex Chen\'s voice: warm but direct; lowercase-leaning openings; uses em-dashes; signs "a." '
