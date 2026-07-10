@@ -38,7 +38,7 @@ Rules:
 - chunkId: the chunkId the evidence came from.
 - Do NOT hallucinate. An empty list is fine. Output JSON only; first character '{'."""
 
-BATCH_SIZE = 12
+BATCH_SIZE = 6   # small batches: prompt + max_tokens must fit free-tier per-request TPM admission
 RELEVANT = ["email", "calendar", "meeting_notes", "shared_doc", "slack", "notes"]
 
 
@@ -70,7 +70,7 @@ async def run_commitment_extraction(*, rebuild: bool):
                 f"--- chunkId: {c['chunkId']} | {c['source']} | {c['title']} "
                 f"{('| ' + c['date']) if c['date'] else ''} ---\n{c['text']}" for c in batch)
             prompt = f"Extract open commitments from these {len(batch)} chunks. Return JSON only.\n\n{body}"
-            r = await generate(prompt, system=SYSTEM, temperature=0.1, max_tokens=8192,
+            r = await generate(prompt, system=SYSTEM, temperature=0.1, max_tokens=3500,
                                response_mime_type="application/json", thinking_budget=0)
             parsed = {}
             try:

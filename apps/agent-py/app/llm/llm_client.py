@@ -124,7 +124,9 @@ async def generate(
             if resp.status_code == 429 and attempt < _MAX_429_RETRIES:
                 await asyncio.sleep(_retry_after_s(resp))
                 continue
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                # keep the provider's body — it names which limit (TPM/TPD) was hit
+                raise RuntimeError(f"llm error {resp.status_code}: {resp.text[:300]}")
             data = resp.json()
             break
 
@@ -152,7 +154,8 @@ async def _cohere_embed(texts: list[str], input_type: str) -> list[list[float]]:
             if resp.status_code == 429 and attempt < _MAX_429_RETRIES:
                 await asyncio.sleep(_retry_after_s(resp))
                 continue
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                raise RuntimeError(f"embed error {resp.status_code}: {resp.text[:300]}")
             data = resp.json()
             break
     return [list(v) for v in data["embeddings"]["float"]]
