@@ -16,6 +16,34 @@ DEFAULT = "review"
 _SEV_COLOR = {"high": "var(--vermilion)", "medium": "var(--saffron)", "low": "var(--paper-muted)"}
 
 
+_GSTRIP_STYLE = ("display:flex;align-items:center;gap:12px;flex-wrap:wrap;"
+                 "border:1px solid var(--rule);padding:12px 16px;margin:0 0 22px")
+
+
+def _google_strip(google: dict | None):
+    """Connection state banner: approvals here either send real Gmail / book real Calendar
+    events (connected) or simulate. When disconnected this is where you fix it."""
+    if not isinstance(google, dict):
+        return ""  # agent unreachable — the surface already degrades elsewhere
+    if google.get("connected"):
+        email = google.get("email") or "google account"
+        scope = ("real gmail + calendar" if google.get("calendar") else "real gmail")
+        return Div(Span(cls="pulse-dot"), Span("google · live", cls="chrome"),
+                   Span(f"connected as {email} — approvals send {scope}", cls="label"),
+                   cls="gconnect", style=_GSTRIP_STYLE)
+    if google.get("configured"):
+        return Div(Span(cls="pulse-dot saffron"), Span("google · simulated", cls="chrome"),
+                   Span("approvals will NOT actually send until a Google account is connected",
+                        cls="label"),
+                   A("connect google →", href=google.get("connectUrl") or "#",
+                     cls="btn-d primary", style="margin-left:auto"),
+                   cls="gconnect", style=_GSTRIP_STYLE)
+    return Div(Span(cls="pulse-dot muted"), Span("google · simulated", cls="chrome"),
+               Span("GMAIL_OAUTH_CLIENT_ID / _SECRET / _REDIRECT_URI are not set on the agent "
+                    "(see .env.example)", cls="label"),
+               cls="gconnect", style=_GSTRIP_STYLE)
+
+
 def _subject(a):
     p = a.get("proposal", {}) or {}
     return p.get("subject") or p.get("title") or "(untitled)"
@@ -118,8 +146,9 @@ def render(variant: str = DEFAULT, actions: list[dict] | None = None, index: int
     strip = variant_strip("/approve", variant, VARIANTS, meta="03 · approve · the differentiator")
     head = surface_head("03", "approve · the action queue",
                         Span("What the Critic "), Span("flagged.", cls="i accent"))
+    gstrip = _google_strip((ready or {}).get("google"))
     if not actions:
-        return page("approve", head,
+        return page("approve", head, gstrip,
                     Div("the queue is empty — ask the agent to draft something, then approve it here.",
                         cls="empty"), ready=ready, vault=vault, strip=strip)
     if variant == "queue":
@@ -128,7 +157,7 @@ def render(variant: str = DEFAULT, actions: list[dict] | None = None, index: int
         body, scripts = _ledger(actions, critiques)
     else:
         body, scripts = _review(actions, index, critiques.get(actions[max(0, min(index, len(actions)-1))]["id"]))
-    return page("approve", head, body, ready=ready, vault=vault, scripts=scripts + EDIT_JS, strip=strip)
+    return page("approve", head, gstrip, body, ready=ready, vault=vault, scripts=scripts + EDIT_JS, strip=strip)
 
 
 def decide_result(verdict: str, ok: bool, info: dict | None = None):

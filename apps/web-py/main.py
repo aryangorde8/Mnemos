@@ -37,10 +37,12 @@ app, rt = fast_app(pico=False, hdrs=(_FONTS, Style(NotStr(CSS)), _SSE_EXT), html
 
 async def _chrome():
     """Fetch the bits the global chrome needs (status pills + vault foot), tolerant of a down agent."""
-    ready, stats = await asyncio.gather(
-        backend.get_json("/ready"), backend.get_json("/ingest/stats"))
+    ready, stats, google = await asyncio.gather(
+        backend.get_json("/ready"), backend.get_json("/ingest/stats"), backend.google_status())
     ready = ready if isinstance(ready, dict) else {}
     stats = stats if isinstance(stats, dict) else {}
+    if google is not None:
+        ready["google"] = {**google, "connectUrl": backend.google_connect_url()}
     docs, chunks = stats.get("documents"), stats.get("chunks")
     vault = {"items": docs if isinstance(docs, int) else None,
              "chunks": chunks if isinstance(chunks, int) else None}

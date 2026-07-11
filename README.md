@@ -80,6 +80,27 @@ npm run dev:web     # FastHTML frontend on http://localhost:3000
 npm run seed -- --load     # generate + ingest corpus + build graph/ledger (~5–10 min)
 ```
 
+## Real Gmail + Calendar
+
+Approvals **simulate** sends until a Google account is connected. To make them real:
+
+1. **Google Cloud Console** → enable the **Gmail API** and **Google Calendar API**, create an
+   **OAuth 2.0 Client** (type: *Web application*), and register the redirect URI(s):
+   - local: `http://localhost:8787/auth/google/callback`
+   - deployed: `https://<your-agent-domain>/auth/google/callback`
+2. Put the client credentials in `.env.local` (never commit them):
+   `GMAIL_OAUTH_CLIENT_ID`, `GMAIL_OAUTH_CLIENT_SECRET`, `GMAIL_OAUTH_REDIRECT_URI`.
+3. Restart the agent, open **/approve**, and click **connect google →** (one-time consent).
+   The `google` pill in the topbar flips to `live`; approving now sends real email via
+   `gmail.send` and books real events via `calendar.events`.
+
+For Cloud Run deploys, set the repo secrets `GMAIL_OAUTH_CLIENT_ID` / `GMAIL_OAUTH_CLIENT_SECRET`
+and the repo variable `GMAIL_OAUTH_REDIRECT_URI` — the deploy workflow provisions them onto the
+agent service automatically.
+
+> While the OAuth consent screen is in *Testing* mode, add yourself as a test user; Google
+> expires refresh tokens after 7 days in that mode. Publish the app to keep the connection alive.
+
 ## Deploy
 
 ```bash
