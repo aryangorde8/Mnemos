@@ -69,7 +69,10 @@ async def status():
             "email": tokens.get("email"),
         })
     except Exception as err:  # noqa: BLE001
-        return JSONResponse(status_code=500, content={"configured": True, "connected": False, "error": str(err)})
+        # Status must degrade, not fail: token storage being down doesn't change
+        # what we know (configured, not connected) — report it with the error.
+        return JSONResponse({"configured": True, "connected": False, "calendar": False,
+                             "error": str(err)})
 
 
 @router.post("/auth/google/disconnect")

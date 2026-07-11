@@ -9,6 +9,27 @@ import httpx
 
 AGENT = os.environ.get("AGENT_URL", "http://localhost:8787")
 
+# The agent URL the *browser* can reach — the Google OAuth consent flow round-trips
+# through the agent, so the connect link must use a public URL, not an internal one.
+# Defaults to AGENT, which is browser-reachable in both the local (localhost:8787)
+# and deployed (public Cloud Run URL) setups.
+AGENT_PUBLIC = os.environ.get("AGENT_PUBLIC_URL", AGENT)
+
+
+def google_connect_url() -> str:
+    """Where the browser starts the one-time Google OAuth consent."""
+    return f"{AGENT_PUBLIC}/auth/google/start"
+
+
+async def google_status() -> dict | None:
+    """Google OAuth state from the agent (configured / connected / email).
+
+    None when the agent is unreachable or errored — callers should render nothing
+    rather than guess.
+    """
+    data = await get_json("/auth/google/status")
+    return data if isinstance(data, dict) else None
+
 
 async def get_json(path: str, params: dict | None = None) -> dict | list | None:
     try:

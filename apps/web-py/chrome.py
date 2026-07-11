@@ -92,6 +92,18 @@ def _pill(label, value, state):
     return Div(Span(cls=dot), Span(label), Span(value, cls=vcls), cls="pill")
 
 
+def _google_pill(google: dict | None):
+    """Google OAuth pill: live (sends real email/events) · connect (configured, awaiting
+    consent) · simulated (no GMAIL_OAUTH_* on the agent). Nothing when the agent is down."""
+    if not isinstance(google, dict):
+        return ""
+    if google.get("connected"):
+        return _pill("google", "live", "on")
+    if google.get("configured"):
+        return _pill("google", "connect", "pending")
+    return _pill("google", "simulated", "off")
+
+
 def topbar(active: str, ready: dict | None = None):
     ready = ready or {}
     _, path, label, _, _ = _SURF_BY_ID.get(active, ("", "/" + active, active, "", ""))
@@ -103,6 +115,7 @@ def topbar(active: str, ready: dict | None = None):
         Div(cls="spacer"),
         _pill("atlas", "connected" if atlas == "on" else "offline", atlas),
         _pill("vertex", "streaming" if vertex == "on" else "awaiting", vertex),
+        _google_pill(ready.get("google")),
         _pill("critic", "armed", "pending"),
         Span("--:--:--", id="clock", cls="chrome num", style="margin:0 6px"),
         Button(Span("?", cls="q"), Span("ask"), Span("⌘K", cls="k"),
