@@ -76,6 +76,13 @@ if [[ "${MNEMOS_USE_MCP:-}" == "1" ]]; then
   SET_ENV+=",MNEMOS_USE_MCP=1"
 fi
 
+# Gemini API key — routes LLM + embedding calls through the free-tier Gemini API
+# instead of paid Vertex (takes precedence when set).
+if [[ -n "${GEMINI_API_KEY:-}" ]]; then
+  SET_ENV+=",GEMINI_API_KEY=${GEMINI_API_KEY}"
+  echo "[deploy-agent] GEMINI_API_KEY set — LLM calls route via the Gemini API (free tier), not Vertex"
+fi
+
 # Gmail OAuth — required for REAL email sending (otherwise the agent silently simulates sends).
 # Defaults the redirect URI to the production callback (.env.local typically points at localhost).
 if [[ -n "${GMAIL_OAUTH_CLIENT_ID:-}" && -n "${GMAIL_OAUTH_CLIENT_SECRET:-}" ]]; then

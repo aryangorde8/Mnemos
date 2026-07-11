@@ -101,6 +101,29 @@ agent service automatically.
 > While the OAuth consent screen is in *Testing* mode, add yourself as a test user; Google
 > expires refresh tokens after 7 days in that mode. Publish the app to keep the connection alive.
 
+## Zero-cost LLM mode (Gemini API free tier)
+
+By default the agent calls Gemini through **Vertex AI**, which bills per call — by far the
+largest line item in this stack (everything else fits Cloud Run's always-free tier + Atlas M0).
+To run the LLM for free instead, create an API key at
+[aistudio.google.com/apikey](https://aistudio.google.com/apikey) and set:
+
+```
+GEMINI_API_KEY=your-ai-studio-key
+VERTEX_GEMINI_MODEL=gemini-flash-latest
+```
+
+All Gemini + embedding traffic then routes through the Gemini API free tier — no GCP billing
+account involved. The key takes precedence over Vertex when both are configured, so unsetting
+it is all it takes to switch back. Caveats:
+
+- The free tier covers **flash-class models** only (Pro is paid on the Gemini API); flash
+  limits (order of 10 req/min, ~1.5k req/day) are ample for demos.
+- Google may use free-tier inputs to improve its products — fine for the synthetic demo
+  corpus; use paid Vertex for anything sensitive.
+- For Cloud Run, add `GEMINI_API_KEY` as a repo secret — the deploy workflow and
+  `scripts/deploy-agent.sh` provision it onto the agent automatically.
+
 ## Deploy
 
 ```bash

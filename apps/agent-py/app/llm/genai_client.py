@@ -1,9 +1,10 @@
-"""Gemini + embeddings via the official google-genai SDK on Vertex AI.
+"""Gemini + embeddings via the official google-genai SDK.
 
-Mirrors apps/agent/src/lib/vertex.ts, but uses the SDK instead of raw REST.
-The LLM runs on the `global` endpoint (Gemini 3.x preview); embeddings run on
-the regional endpoint — same split as the TypeScript backend. Auth comes from
-GOOGLE_APPLICATION_CREDENTIALS / ADC, picked up by the SDK automatically.
+Two transports, one code path:
+- GEMINI_API_KEY set  → the Gemini API (AI Studio free tier; no GCP billing).
+- otherwise           → Vertex AI: the LLM on the `global` endpoint (Gemini 3.x
+  preview), embeddings on the regional endpoint — same split as the TS backend.
+  Auth from GOOGLE_APPLICATION_CREDENTIALS / ADC, picked up by the SDK.
 """
 from __future__ import annotations
 
@@ -14,11 +15,15 @@ from typing import Any, AsyncIterator
 from google import genai
 from google.genai import types
 
-from app.config import is_vertex_configured, settings
+from app.config import is_llm_configured, settings
+
+_NOT_CONFIGURED = "llm not configured — set GEMINI_API_KEY (free tier) or GOOGLE_CLOUD_PROJECT (Vertex)"
 
 
 @lru_cache(maxsize=1)
 def _llm_client() -> genai.Client:
+    if settings.gemini_api_key:
+        return genai.Client(api_key=settings.gemini_api_key)
     return genai.Client(
         vertexai=True,
         project=settings.google_cloud_project,
@@ -28,6 +33,8 @@ def _llm_client() -> genai.Client:
 
 @lru_cache(maxsize=1)
 def _embed_client() -> genai.Client:
+    if settings.gemini_api_key:
+        return genai.Client(api_key=settings.gemini_api_key)
     return genai.Client(
         vertexai=True,
         project=settings.google_cloud_project,
@@ -52,8 +59,8 @@ async def generate(
     thinking_budget: int | None = None,
 ) -> GenerateResult:
     """Single-shot generation (used by critic, rerank, extraction, drafts)."""
-    if not is_vertex_configured():
-        raise RuntimeError("vertex: GOOGLE_CLOUD_PROJECT not configured")
+    if not is_llm_configured():
+        raise RuntimeError(_NOT_CONFIGURED)
 
     cfg = types.GenerateContentConfig(
         temperature=temperature,
@@ -80,8 +87,8 @@ async def generate(
 
 async def embed(texts: list[str]) -> list[list[float]]:
     """Embed documents (RETRIEVAL_DOCUMENT)."""
-    if not is_vertex_configured():
-        raise RuntimeError("vertex: GOOGLE_CLOUD_PROJECT not configured")
+    if not is_llm_configured():
+        raise RuntimeError(_NOT_CONFIGURED)
     if not texts:
         return []
     resp = await _embed_client().aio.models.embed_content(
@@ -94,8 +101,8 @@ async def embed(texts: list[str]) -> list[list[float]]:
 
 async def embed_query(text: str) -> list[float]:
     """Embed a query (RETRIEVAL_QUERY)."""
-    if not is_vertex_configured():
-        raise RuntimeError("vertex: GOOGLE_CLOUD_PROJECT not configured")
+    if not is_llm_configured():
+        raise RuntimeError(_NOT_CONFIGURED)
     resp = await _embed_client().aio.models.embed_content(
         model=settings.vertex_embedding_model,
         contents=text,
@@ -129,8 +136,8 @@ async def stream_generate(
     deltas, function calls (with the raw Part so the loop can echo them back and
     preserve thoughtSignature), usage, and finish reasons.
     """
-    if not is_vertex_configured():
-        raise RuntimeError("vertex: GOOGLE_CLOUD_PROJECT not configured")
+    if not is_llm_configured():
+        raise RuntimeError(_NOT_CONFIGURED)
 
     cfg = types.GenerateContentConfig(
         temperature=temperature,
