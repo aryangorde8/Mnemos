@@ -1,0 +1,25 @@
+# Caddy — automatic HTTPS (Let's Encrypt) + reverse proxy.
+#
+# Caddy issues and renews TLS certs on its own once these hostnames resolve to
+# this box and ports 80/443 are open. Replace the two hostnames and the ACME
+# email below if your domain differs.
+
+{
+	email admin@aryangorde.com
+}
+
+# Frontend (FastHTML). flush_interval -1 streams the SSE endpoints
+# (/ask/stream, /debate/stream, /briefings/stream) without buffering.
+mnemos.aryangorde.com {
+	reverse_proxy web:8080 {
+		flush_interval -1
+	}
+}
+
+# Agent backend (FastAPI). Handles the Google OAuth callback, so it must be
+# publicly reachable on the same hostname registered in the OAuth client.
+mnemos-agent.aryangorde.com {
+	reverse_proxy agent:8080 {
+		flush_interval -1
+	}
+}
