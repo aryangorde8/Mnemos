@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     vertex_gemini_location: str = Field("global", alias="VERTEX_GEMINI_LOCATION")
     vertex_embedding_model: str = Field("text-embedding-004", alias="VERTEX_EMBEDDING_MODEL")
 
+    # Free-tier alternative to Vertex: an AI Studio key routes ALL Gemini +
+    # embedding calls through the Gemini API (takes precedence when set).
+    gemini_api_key: str = Field("", alias="GEMINI_API_KEY")
+
     mnemos_use_mcp: str = Field("0", alias="MNEMOS_USE_MCP")
     firebase_project_id: str = Field("", alias="FIREBASE_PROJECT_ID")
     mnemos_web_url: str = Field("", alias="MNEMOS_WEB_URL")
@@ -58,3 +62,16 @@ def is_mongo_configured() -> bool:
 
 def is_vertex_configured() -> bool:
     return len(settings.google_cloud_project) > 0
+
+
+def is_llm_configured() -> bool:
+    """Gemini is callable via either transport: API key (free tier) or Vertex."""
+    return bool(settings.gemini_api_key) or is_vertex_configured()
+
+
+def llm_mode() -> str:
+    """Which transport serves Gemini calls — the API key wins when both are set,
+    since routing through the free tier is the whole point of setting it."""
+    if settings.gemini_api_key:
+        return "gemini_api"
+    return "vertex" if is_vertex_configured() else "missing"

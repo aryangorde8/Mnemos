@@ -108,13 +108,16 @@ def topbar(active: str, ready: dict | None = None):
     ready = ready or {}
     _, path, label, _, _ = _SURF_BY_ID.get(active, ("", "/" + active, active, "", ""))
     atlas = "on" if ready.get("atlas") == "configured" else "pending"
-    vertex = "on" if ready.get("vertex") == "configured" else "pending"
+    # llm: gemini_api (free tier) | vertex | missing; older agents only send `vertex`
+    llm = ready.get("llm") or ("vertex" if ready.get("vertex") == "configured" else "missing")
+    llm_value, llm_state = {"gemini_api": ("api · free", "on"),
+                            "vertex": ("vertex", "on")}.get(llm, ("awaiting", "pending"))
     return Div(
         Div(Span(path, cls="path"), Span("·", style="color:var(--paper-faint)"),
             Span(label, cls="here"), cls="crumb"),
         Div(cls="spacer"),
         _pill("atlas", "connected" if atlas == "on" else "offline", atlas),
-        _pill("vertex", "streaming" if vertex == "on" else "awaiting", vertex),
+        _pill("gemini", llm_value, llm_state),
         _google_pill(ready.get("google")),
         _pill("critic", "armed", "pending"),
         Span("--:--:--", id="clock", cls="chrome num", style="margin:0 6px"),

@@ -74,6 +74,11 @@ steps:
         else
           EXTRA+=(--memory=1Gi --concurrency=40 --timeout=600)
         fi
+        # Cost guardrails, enforced on every deploy: `gcloud run deploy` PRESERVES
+        # unspecified settings, so a min-instances/CPU-allocation change made once
+        # in the Console would silently persist forever (≈₹150/day per warm vCPU).
+        # Scale to zero + CPU only during requests keeps the demo in the free tier.
+        EXTRA+=(--min-instances=0 --max-instances=4 --cpu-throttling)
         gcloud run deploy "$$SERVICE" \
           --project="$PROJECT_ID" \
           --region="${_REGION}" \

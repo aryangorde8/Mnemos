@@ -79,3 +79,9 @@ jobs:
               --project "${{ vars.GCP_PROJECT_ID }}" \
               --update-env-vars "GMAIL_OAUTH_CLIENT_ID=${{ secrets.GMAIL_OAUTH_CLIENT_ID }},GMAIL_OAUTH_CLIENT_SECRET=${{ secrets.GMAIL_OAUTH_CLIENT_SECRET }},GMAIL_OAUTH_REDIRECT_URI=${{ vars.GMAIL_OAUTH_REDIRECT_URI }}"
           fi
+          # route Gemini through the free-tier API instead of paid Vertex when a key is provided
+          if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
+            gcloud run services update mnemos-agent --region "$GCP_REGION" \
+              --project "${{ vars.GCP_PROJECT_ID }}" \
+              --update-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}"
+          fi
