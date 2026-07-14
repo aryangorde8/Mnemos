@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     # Amazon Bedrock (Converse API). Credentials come from the standard AWS env
     # (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY) or an instance role.
     bedrock_model_id: str = Field(
-        "apac.anthropic.claude-sonnet-4-20250514-v1:0", alias="BEDROCK_MODEL_ID")
+        "global.anthropic.claude-sonnet-4-5-20250929-v1:0", alias="BEDROCK_MODEL_ID")
     bedrock_region: str = Field("", alias="BEDROCK_REGION")
 
     mnemos_use_mcp: str = Field("0", alias="MNEMOS_USE_MCP")
