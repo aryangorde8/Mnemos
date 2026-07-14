@@ -40,14 +40,18 @@ SSH in (Lightsail → instance → **Connect using SSH**, or your own terminal),
 then:
 
 ```bash
-sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
-sudo usermod -aG docker $USER && newgrp docker
+curl -fsSL https://get.docker.com | sudo sh   # Docker + the compose plugin
+sudo usermod -aG docker $USER                  # run docker without sudo
+sudo apt-get install -y git
+newgrp docker                                  # refresh group in this shell
 
-# Only if you chose the $10/2 GB plan — 2 GB swap so the image build doesn't OOM:
+# Only if you chose a 2 GB plan — 2 GB swap so the image build doesn't OOM:
 # sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile \
 #   && sudo mkswap /swapfile && sudo swapon /swapfile \
 #   && echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
+
+Verify: `docker --version && docker compose version && git --version`.
 
 ## 4. Get the code + secrets
 
