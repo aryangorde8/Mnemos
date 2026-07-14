@@ -59,26 +59,42 @@ def main() -> None:
         existing = {i["name"]: i for i in chunks.list_search_indexes()}
 
         def _vector_dims(idx: dict) -> int | None:
-            for f in (idx.get("latestDefinition") or {}).get("fields", []):
-                if f.get("type") == "vector":
-                    return f.get("numDimensions")
-            return None
+            # Search the index metadata for numDimensions wherever Atlas nests it
+            # (latestDefinition / definition / statusDetail shapes have varied).
+            found: list[int] = []
 
+            def walk(node):
+                if isinstance(node, dict):
+                    if isinstance(node.get("numDimensions"), int):
+                        found.append(node["numDimensions"])
+                    for v in node.values():
+                        walk(v)
+                elif isinstance(node, list):
+                    for v in node:
+                        walk(v)
+
+            walk(idx)
+            return found[0] if found else None
+
+        import time
         for model in (vector_index, text_index):
             name = model.document["name"]
+            is_vector = model.document["type"] == "vectorSearch"
             if name in existing:
-                # The vector index must match the active model's dimension — if it
-                # drifted (e.g. switched embedding provider), drop and recreate it.
-                cur_dims = _vector_dims(existing[name]) if model.document["type"] == "vectorSearch" else None
-                if cur_dims is not None and cur_dims != DIMS:
-                    print(f'index "{name}" is {cur_dims}-d but need {DIMS}-d — recreating')
-                    chunks.drop_search_index(name)
-                    import time
-                    while name in {i["name"] for i in chunks.list_search_indexes()}:
-                        time.sleep(2)  # wait for the drop to finalize before recreating
-                else:
+                if not is_vector:
                     print(f'index "{name}" already exists')
                     continue
+                # The vector index must match the active model's dimension. Recreate
+                # unless it's confirmed already at DIMS (treat unknown as a mismatch,
+                # so a provider/dimension switch always takes effect).
+                cur_dims = _vector_dims(existing[name])
+                if cur_dims == DIMS:
+                    print(f'vector index "{name}" already at {DIMS}-d')
+                    continue
+                print(f'vector index "{name}" is {cur_dims}-d, need {DIMS}-d — recreating')
+                chunks.drop_search_index(name)
+                while name in {i["name"] for i in chunks.list_search_indexes()}:
+                    time.sleep(2)  # wait for the drop to finalize before recreating
             created = chunks.create_search_index(model)
             print(f'created {model.document["type"]} index "{created}" on {settings.mongodb_db}.chunks')
         print("note: Atlas takes ~1–3 minutes to build each index before queries return results.")

@@ -23,7 +23,14 @@ from app.llm.neutral import to_bedrock_messages, tools_to_bedrock
 @lru_cache(maxsize=1)
 def _client():
     import boto3  # imported lazily so the module loads without boto3 present
-    return boto3.client("bedrock-runtime", region_name=settings.bedrock_region or None)
+    from botocore.config import Config
+    # Adaptive retries absorb Titan's per-account throttling during bulk re-embeds.
+    cfg = Config(retries={"max_attempts": 10, "mode": "adaptive"})
+    return boto3.client("bedrock-runtime", region_name=settings.bedrock_region or None, config=cfg)
+
+
+# Cap concurrent embedding calls so bulk re-embeds don't trip Bedrock throttling.
+_EMBED_CONCURRENCY = asyncio.Semaphore(2)
 
 
 def _embed_one(text: str) -> list[float]:
@@ -34,10 +41,16 @@ def _embed_one(text: str) -> list[float]:
 
 
 async def embed(texts: list[str]) -> list[list[float]]:
-    """Titan embeddings. Titan is single-input, so texts are embedded in threads."""
+    """Titan embeddings. Titan is single-input, so texts are embedded concurrently
+    but capped by a semaphore to stay under per-account throttling limits."""
     if not texts:
         return []
-    return await asyncio.gather(*[asyncio.to_thread(_embed_one, t) for t in texts])
+
+    async def one(t: str) -> list[float]:
+        async with _EMBED_CONCURRENCY:
+            return await asyncio.to_thread(_embed_one, t)
+
+    return await asyncio.gather(*[one(t) for t in texts])
 
 
 async def generate(prompt: str, *, system: str | None, temperature: float,
