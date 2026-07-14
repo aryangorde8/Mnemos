@@ -44,9 +44,18 @@ class Settings(BaseSettings):
     vertex_gemini_location: str = Field("global", alias="VERTEX_GEMINI_LOCATION")
     vertex_embedding_model: str = Field("text-embedding-004", alias="VERTEX_EMBEDDING_MODEL")
 
-    # Free-tier alternative to Vertex: an AI Studio key routes ALL Gemini +
-    # embedding calls through the Gemini API (takes precedence when set).
+    # Free-tier alternative to Vertex: an AI Studio key routes Gemini + embedding
+    # calls through the Gemini API (used unless a provider is forced below).
     gemini_api_key: str = Field("", alias="GEMINI_API_KEY")
+
+    # LLM provider for generation/streaming: "bedrock" | "gemini" | "vertex" | ""
+    # (auto). Embeddings always run on Gemini/Vertex (keeps the Atlas index dim).
+    llm_provider: str = Field("", alias="LLM_PROVIDER")
+    # Amazon Bedrock (Converse API). Credentials come from the standard AWS env
+    # (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY) or an instance role.
+    bedrock_model_id: str = Field(
+        "apac.anthropic.claude-sonnet-4-20250514-v1:0", alias="BEDROCK_MODEL_ID")
+    bedrock_region: str = Field("", alias="BEDROCK_REGION")
 
     mnemos_use_mcp: str = Field("0", alias="MNEMOS_USE_MCP")
     firebase_project_id: str = Field("", alias="FIREBASE_PROJECT_ID")
@@ -64,14 +73,31 @@ def is_vertex_configured() -> bool:
     return len(settings.google_cloud_project) > 0
 
 
-def is_llm_configured() -> bool:
-    """Gemini is callable via either transport: API key (free tier) or Vertex."""
-    return bool(settings.gemini_api_key) or is_vertex_configured()
-
-
-def llm_mode() -> str:
-    """Which transport serves Gemini calls — the API key wins when both are set,
-    since routing through the free tier is the whole point of setting it."""
+def llm_provider() -> str:
+    """Which backend serves generation/streaming: 'bedrock' | 'gemini_api' | 'vertex'
+    | 'missing'. LLM_PROVIDER forces it; otherwise infer from what's configured."""
+    forced = (settings.llm_provider or "").strip().lower()
+    if forced in ("bedrock", "gemini", "gemini_api", "vertex"):
+        return "gemini_api" if forced == "gemini" else forced
     if settings.gemini_api_key:
         return "gemini_api"
     return "vertex" if is_vertex_configured() else "missing"
+
+
+def is_bedrock() -> bool:
+    return llm_provider() == "bedrock"
+
+
+def is_llm_configured() -> bool:
+    """Generation is callable via Bedrock, the Gemini API, or Vertex."""
+    return llm_provider() != "missing"
+
+
+def is_embeddings_configured() -> bool:
+    """Embeddings always run on Gemini/Vertex regardless of the generation backend."""
+    return bool(settings.gemini_api_key) or is_vertex_configured()
+
+
+# Back-compat alias — /ready and the web pill read this.
+def llm_mode() -> str:
+    return llm_provider()

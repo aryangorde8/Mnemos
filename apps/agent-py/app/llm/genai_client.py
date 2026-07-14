@@ -8,6 +8,7 @@ Two transports, one code path:
 """
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, AsyncIterator
@@ -15,9 +16,13 @@ from typing import Any, AsyncIterator
 from google import genai
 from google.genai import types
 
-from app.config import is_llm_configured, settings
+from app.config import is_bedrock, is_embeddings_configured, is_llm_configured, settings
+from app.llm.neutral import to_gemini_contents
 
-_NOT_CONFIGURED = "llm not configured — set GEMINI_API_KEY (free tier) or GOOGLE_CLOUD_PROJECT (Vertex)"
+_NOT_CONFIGURED = ("llm not configured — set LLM_PROVIDER=bedrock (+ AWS creds), "
+                   "GEMINI_API_KEY (free tier), or GOOGLE_CLOUD_PROJECT (Vertex)")
+_NO_EMBEDDINGS = ("embeddings not configured — set GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT "
+                  "(embeddings run on Gemini/Vertex even when generation uses Bedrock)")
 
 
 @lru_cache(maxsize=1)
@@ -62,6 +67,14 @@ async def generate(
     if not is_llm_configured():
         raise RuntimeError(_NOT_CONFIGURED)
 
+    if is_bedrock():
+        # response_mime_type / thinking_budget are Gemini-only; the prompts already
+        # instruct JSON and callers strip fences, so Bedrock needs neither.
+        from app.llm import bedrock_client
+        text, stop = await bedrock_client.generate(
+            prompt, system=system, temperature=temperature, max_tokens=max_tokens)
+        return GenerateResult(text=text, model=settings.bedrock_model_id, finish_reason=stop)
+
     cfg = types.GenerateContentConfig(
         temperature=temperature,
         max_output_tokens=max_tokens,
@@ -87,8 +100,8 @@ async def generate(
 
 async def embed(texts: list[str]) -> list[list[float]]:
     """Embed documents (RETRIEVAL_DOCUMENT)."""
-    if not is_llm_configured():
-        raise RuntimeError(_NOT_CONFIGURED)
+    if not is_embeddings_configured():
+        raise RuntimeError(_NO_EMBEDDINGS)
     if not texts:
         return []
     resp = await _embed_client().aio.models.embed_content(
@@ -101,8 +114,8 @@ async def embed(texts: list[str]) -> list[list[float]]:
 
 async def embed_query(text: str) -> list[float]:
     """Embed a query (RETRIEVAL_QUERY)."""
-    if not is_llm_configured():
-        raise RuntimeError(_NOT_CONFIGURED)
+    if not is_embeddings_configured():
+        raise RuntimeError(_NO_EMBEDDINGS)
     resp = await _embed_client().aio.models.embed_content(
         model=settings.vertex_embedding_model,
         contents=text,
@@ -139,6 +152,16 @@ async def stream_generate(
     if not is_llm_configured():
         raise RuntimeError(_NOT_CONFIGURED)
 
+    if is_bedrock():
+        from app.llm import bedrock_client
+        async for item in bedrock_client.stream(
+            system=system, messages=contents, tools=tools,
+            temperature=temperature, max_tokens=max_tokens,
+        ):
+            yield StreamChunk(text=item.get("text"), function_call=item.get("tool_call"),
+                              usage=item.get("usage"), finish_reason=item.get("finish_reason"))
+        return
+
     cfg = types.GenerateContentConfig(
         temperature=temperature,
         max_output_tokens=max_tokens,
@@ -154,7 +177,7 @@ async def stream_generate(
 
     stream = await _llm_client().aio.models.generate_content_stream(
         model=settings.vertex_gemini_model,
-        contents=contents,
+        contents=to_gemini_contents(contents),
         config=cfg,
     )
     async for chunk in stream:
@@ -167,7 +190,8 @@ async def stream_generate(
                 elif getattr(part, "function_call", None):
                     fc = part.function_call
                     yield StreamChunk(
-                        function_call={"name": fc.name, "args": dict(fc.args or {})},
+                        function_call={"id": uuid.uuid4().hex[:8], "name": fc.name,
+                                       "args": dict(fc.args or {})},
                         thought_signature=ts,
                         part=part,
                     )

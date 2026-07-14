@@ -7,11 +7,10 @@ automatically and fed back into the same turn.
 """
 from __future__ import annotations
 
+import json
 import time
 import uuid
 from typing import AsyncIterator
-
-from google.genai import types
 
 from app.agent.prompts import SYSTEM_PROMPT, user_framing
 from app.agent.tools.registry import DECLARATIONS, TOOL_REGISTRY
@@ -63,11 +62,14 @@ async def run_agent(
 ) -> AsyncIterator[dict]:
     started = time.time()
     run_id = str(uuid.uuid4())
-    contents: list[types.Content] = []
+    # Provider-neutral conversation (app.llm.neutral): each backend converts at
+    # call time, so the loop is identical on Bedrock, Gemini, and Vertex.
+    messages: list[dict] = []
     if history:
         for turn in history:
-            contents.append(types.Content(role=turn["role"], parts=[types.Part(text=turn["text"])]))
-    contents.append(types.Content(role="user", parts=[types.Part(text=user_framing(query))]))
+            role = "assistant" if turn["role"] in ("assistant", "model") else "user"
+            messages.append({"role": role, "parts": [{"text": turn["text"]}]})
+    messages.append({"role": "user", "parts": [{"text": user_framing(query)}]})
 
     all_citations: list[dict] = []
     usage = {"prompt": 0, "candidates": 0, "thoughts": 0, "total": 0}
@@ -78,25 +80,22 @@ async def run_agent(
     turn = 0
     while turn < max_turns:
         turn += 1
-        collected_parts: list = []
-        tool_calls: list[dict] = []
+        collected_text: list[str] = []
+        tool_calls: list[dict] = []  # each {"id", "name", "args"}
 
         try:
             async for chunk in stream_generate(
                 system=system_prompt or SYSTEM_PROMPT,
-                contents=contents,
+                contents=messages,
                 tools=DECLARATIONS,
                 temperature=0.4,
                 max_tokens=2048,
             ):
                 if chunk.text:
                     yield {"kind": "thought", "chunk": chunk.text, "at": _now()}
-                    if chunk.part is not None:
-                        collected_parts.append(chunk.part)
+                    collected_text.append(chunk.text)
                 if chunk.function_call:
                     tool_calls.append(chunk.function_call)
-                    if chunk.part is not None:
-                        collected_parts.append(chunk.part)
                 if chunk.usage:
                     usage.update({
                         "prompt": chunk.usage["prompt"], "candidates": chunk.usage["candidates"],
@@ -108,7 +107,7 @@ async def run_agent(
 
         # No tool calls → final answer turn.
         if not tool_calls:
-            final_text = "".join(getattr(p, "text", None) or "" for p in collected_parts)
+            final_text = "".join(collected_text)
             if not final_text:
                 yield {"kind": "error", "message": "model returned no content and no tool call", "at": _now()}
                 return
@@ -125,13 +124,19 @@ async def run_agent(
                    }, "at": _now()}
             return
 
-        # Record the full model turn (text + function calls) verbatim.
-        contents.append(types.Content(role="model", parts=collected_parts))
+        # Record the model turn (text + tool calls) as a neutral assistant message.
+        assistant_parts: list = []
+        joined = "".join(collected_text)
+        if joined:
+            assistant_parts.append({"text": joined})
+        for tc in tool_calls:
+            assistant_parts.append({"tool_call": tc})
+        messages.append({"role": "assistant", "parts": assistant_parts})
 
         response_parts: list = []
         drafted_this_turn: list[str] = []
         for call in tool_calls:
-            call_id = str(uuid.uuid4())[:8]
+            call_id = call["id"]  # matches the tool_call id in the assistant turn
             tool = TOOL_REGISTRY.get(call["name"])
             yield {"kind": "tool_call", "id": call_id, "name": call["name"], "args": call["args"], "at": _now()}
 
@@ -159,15 +164,18 @@ async def run_agent(
 
             yield {"kind": "observation", "id": call_id, "name": call["name"],
                    "result": result, "durationMs": duration_ms, "at": _now()}
-            response_parts.append(types.Part(function_response=types.FunctionResponse(
-                name=call["name"], response=_trim_for_model(result))))
+            response_parts.append({"tool_result": {
+                "id": call_id, "name": call["name"], "content": _trim_for_model(result)}})
 
         # ── ENFORCE THE CRITIC ──
+        # The model didn't call critique_draft itself, so there's no matching
+        # tool_call — feed the audit back as a text note (a synthetic tool_result
+        # would be rejected by Bedrock's strict tool protocol).
         critic = TOOL_REGISTRY.get("critique_draft")
         for action_id in drafted_this_turn:
             if action_id in critiqued_action_ids or not critic:
                 continue
-            call_id = str(uuid.uuid4())[:8]
+            call_id = uuid.uuid4().hex[:8]
             yield {"kind": "tool_call", "id": call_id, "name": "critique_draft",
                    "args": {"action_id": action_id, "auto": True}, "at": _now()}
             t0 = time.time()
@@ -181,9 +189,9 @@ async def run_agent(
                 all_citations.extend(result["citations"])
             yield {"kind": "observation", "id": call_id, "name": "critique_draft",
                    "result": result, "durationMs": duration_ms, "at": _now()}
-            response_parts.append(types.Part(function_response=types.FunctionResponse(
-                name="critique_draft", response=_trim_for_model(result))))
+            response_parts.append({"text":
+                f"[auto-critic] Audit of draft {action_id}: {json.dumps(_trim_for_model(result))}"})
 
-        contents.append(types.Content(role="user", parts=response_parts))
+        messages.append({"role": "user", "parts": response_parts})
 
     yield {"kind": "error", "message": f"exceeded max turns ({max_turns}) without final answer", "at": _now()}

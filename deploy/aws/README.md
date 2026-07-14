@@ -15,9 +15,27 @@ No Google Cloud: the agent talks to MongoDB Atlas + the Gemini API directly.
 ## 0. Before you start
 
 - A MongoDB Atlas connection string (unchanged — Atlas is not on GCP).
-- A Gemini API key: <https://aistudio.google.com/apikey> (free, no billing).
+- **Amazon Bedrock** enabled (see step 0a) — generation runs on Claude via Bedrock.
+- A Gemini API key: <https://aistudio.google.com/apikey> — used **only for embeddings**
+  now (one lightweight call per search, nowhere near the generation rate limits).
 - Your existing Google OAuth client id/secret.
 - Access to your domain's DNS (to point `mnemos` + `mnemos-agent` at the box).
+
+## 0a. Enable Amazon Bedrock (LLM)
+
+Generation uses Claude on Bedrock — no free-tier rate-limit wall, billed to your
+AWS credit.
+
+1. Console → **Amazon Bedrock** → **Model access** (pick a region, e.g. Mumbai
+   `ap-south-1`) → **Enable** a Claude model. Copy its exact **model ID /
+   inference-profile ID** — that string goes in `BEDROCK_MODEL_ID`, and its
+   region in `BEDROCK_REGION`. (Availability varies by region; the value in
+   `.env.example` is only a default.)
+2. Console → **IAM** → create a user (programmatic access) with an inline policy
+   allowing `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream` on
+   `*`. Copy its **access key id + secret** → `AWS_ACCESS_KEY_ID` /
+   `AWS_SECRET_ACCESS_KEY` in `.env`.
+   *(Lightsail instances have no IAM role, so the agent authenticates with these keys.)*
 
 ## 1. Create the Lightsail instance
 
@@ -57,13 +75,23 @@ Verify: `docker --version && docker compose version && git --version`.
 
 ```bash
 git clone https://github.com/aryangorde8/Mnemos.git
-cd Mnemos/deploy/aws
+cd Mnemos && git checkout claude/calendar-gmail-integration-cpn5jb && cd deploy/aws
 cp .env.example .env
-nano .env          # fill in MONGODB_URI, GEMINI_API_KEY, GMAIL_OAUTH_* (save: Ctrl-O, Enter, Ctrl-X)
+nano .env          # save: Ctrl-O, Enter, Ctrl-X
 ```
 
-Leave the URL / model lines as-is unless your domain differs. If you edit the
-hostnames, change them in `Caddyfile` too (and the ACME `email`).
+Fill in `.env`:
+
+| Variable | What to paste |
+|---|---|
+| `MONGODB_URI` | your Atlas connection string |
+| `BEDROCK_MODEL_ID` / `BEDROCK_REGION` | the model ID + region you enabled in step 0a |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | the IAM user keys from step 0a |
+| `GEMINI_API_KEY` | Gemini key (embeddings only) |
+| `GMAIL_OAUTH_CLIENT_ID` / `GMAIL_OAUTH_CLIENT_SECRET` | your OAuth credentials |
+
+Leave the URL lines as-is unless your domain differs. If you edit the hostnames,
+change them in `Caddyfile` too (and the ACME `email`).
 
 ## 5. Point DNS at the box
 
@@ -93,12 +121,13 @@ containers keep running and auto-restart on reboot).
 
 ```bash
 curl https://mnemos-agent.aryangorde.com/health          # {"status":"ok",...}
-curl https://mnemos-agent.aryangorde.com/ready           # llm: gemini_api, gmail: configured
+curl https://mnemos-agent.aryangorde.com/ready           # llm: bedrock, gmail: configured
 ```
 
 Then open `https://mnemos.aryangorde.com`, go to **/approve**, and click
 **connect google** once to re-authorize on the new host. The topbar pill should
-read `gemini · api · free` and `google · live`.
+read `bedrock · claude` and `google · live`. Run an `/ask` query to confirm the
+agent streams (that exercises the Bedrock tool-calling loop end to end).
 
 ## 8. AWS cost guardrails
 
@@ -123,8 +152,12 @@ still used by the AWS deployment.
 
 ### LLM note
 
-This runs the LLM on the **Gemini API free tier** — the cheapest path and still
-Google-billing-free. If you'd rather keep everything inside AWS, **Amazon
-Bedrock** (Claude on AWS) is the native option, but it's a code change to
-`app/llm/genai_client.py` (different SDK + model), not just config — ask and I
-can scope it.
+Generation runs on **Amazon Bedrock (Claude)** — draws down your AWS credit, no
+free-tier rate limits. Switching providers is just `LLM_PROVIDER`: unset it (or
+set `gemini`/`vertex`) to fall back to Gemini/Vertex with the same code.
+
+**Embeddings stay on Gemini** (`text-embedding-004`) so the existing Atlas vector
+index keeps working — that's why a `GEMINI_API_KEY` is still needed. Volume is
+tiny (one call per search). Going 100% off Google would mean re-embedding the
+corpus with a Bedrock model (e.g. Titan) and rebuilding the Atlas index at the
+new dimension — a separate migration, not required to run.

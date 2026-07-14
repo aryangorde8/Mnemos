@@ -46,7 +46,7 @@ async def ready() -> dict:
     return {
         "atlas": "configured" if is_mongo_configured() else "missing",
         "vertex": "configured" if is_vertex_configured() else "missing",
-        "llm": llm_mode(),  # gemini_api (free tier) | vertex | missing
+        "llm": llm_mode(),  # bedrock | gemini_api (free tier) | vertex | missing
         "gmail": "configured" if gmail_configured else "missing",
         "firebaseAuth": "enforced" if is_firebase_configured() else "open",
         "mcp": "enabled" if settings.mnemos_use_mcp != "0" else "disabled",
