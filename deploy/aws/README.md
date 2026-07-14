@@ -15,10 +15,9 @@ No Google Cloud: the agent talks to MongoDB Atlas + the Gemini API directly.
 ## 0. Before you start
 
 - A MongoDB Atlas connection string (unchanged — Atlas is not on GCP).
-- **Amazon Bedrock** enabled (see step 0a) — generation runs on Claude via Bedrock.
-- A Gemini API key: <https://aistudio.google.com/apikey> — used **only for embeddings**
-  now (one lightweight call per search, nowhere near the generation rate limits).
-- Your existing Google OAuth client id/secret.
+- **Amazon Bedrock** enabled (see step 0a) — both generation (Claude) and
+  embeddings (Titan) run on Bedrock, so **no Google API key is needed**.
+- Your existing Google OAuth client id/secret (still used for Gmail send + Calendar).
 - Access to your domain's DNS (to point `mnemos` + `mnemos-agent` at the box).
 
 ## 0a. Enable Amazon Bedrock (LLM)
@@ -87,8 +86,9 @@ Fill in `.env`:
 | `MONGODB_URI` | your Atlas connection string |
 | `BEDROCK_MODEL_ID` / `BEDROCK_REGION` | the model ID + region you enabled in step 0a |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | the IAM user keys from step 0a |
-| `GEMINI_API_KEY` | Gemini key (embeddings only) |
 | `GMAIL_OAUTH_CLIENT_ID` / `GMAIL_OAUTH_CLIENT_SECRET` | your OAuth credentials |
+
+(`GEMINI_API_KEY` stays empty — embeddings run on Bedrock Titan now.)
 
 Leave the URL lines as-is unless your domain differs. If you edit the hostnames,
 change them in `Caddyfile` too (and the ACME `email`).
@@ -116,6 +116,21 @@ docker compose up -d --build
 First run builds both images (~2–4 min) and Caddy auto-issues TLS certs once
 DNS resolves. Watch logs with `docker compose logs -f` (Ctrl-C to stop tailing;
 containers keep running and auto-restart on reboot).
+
+## 6a. Re-embed the corpus for Titan (one-time)
+
+The demo corpus was embedded with a Google model (768-d); Bedrock Titan vectors
+are 1024-d, so re-embed every chunk with Titan and rebuild the vector index at
+the new dimension. Run inside the agent container (it has the code, AWS creds,
+and Atlas access):
+
+```bash
+docker compose exec -T agent python apps/agent-py/scripts/reembed_chunks.py
+docker compose exec -T agent python apps/agent-py/scripts/setup_mongo_index.py
+```
+
+The re-embed takes a few minutes; the index then needs ~1–3 min to build in
+Atlas. (Skip this only if the corpus was already embedded with Titan.)
 
 ## 7. Verify
 

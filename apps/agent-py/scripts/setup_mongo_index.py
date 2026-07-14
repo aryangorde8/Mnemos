@@ -12,9 +12,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # apps/agent-py
 from pymongo import MongoClient  # noqa: E402
 from pymongo.operations import SearchIndexModel  # noqa: E402
 
-from app.config import settings  # noqa: E402 (loads .env.local)
+from app.config import embedding_dims, settings  # noqa: E402 (loads .env.local)
 
-DIMS = 768
+DIMS = embedding_dims()  # 768 (Gemini/Vertex) or the Titan dim (Bedrock)
 
 vector_index = SearchIndexModel(
     name=settings.mongodb_vector_index,
@@ -56,13 +56,31 @@ def main() -> None:
             db.create_collection("chunks")
             print(f"created collection {settings.mongodb_db}.chunks")
         chunks = db["chunks"]
-        existing = {i["name"] for i in chunks.list_search_indexes()}
+        existing = {i["name"]: i for i in chunks.list_search_indexes()}
+
+        def _vector_dims(idx: dict) -> int | None:
+            for f in (idx.get("latestDefinition") or {}).get("fields", []):
+                if f.get("type") == "vector":
+                    return f.get("numDimensions")
+            return None
+
         for model in (vector_index, text_index):
-            if model.document["name"] in existing:
-                print(f'index "{model.document["name"]}" already exists')
-                continue
-            name = chunks.create_search_index(model)
-            print(f'created {model.document["type"]} index "{name}" on {settings.mongodb_db}.chunks')
+            name = model.document["name"]
+            if name in existing:
+                # The vector index must match the active model's dimension — if it
+                # drifted (e.g. switched embedding provider), drop and recreate it.
+                cur_dims = _vector_dims(existing[name]) if model.document["type"] == "vectorSearch" else None
+                if cur_dims is not None and cur_dims != DIMS:
+                    print(f'index "{name}" is {cur_dims}-d but need {DIMS}-d — recreating')
+                    chunks.drop_search_index(name)
+                    import time
+                    while name in {i["name"] for i in chunks.list_search_indexes()}:
+                        time.sleep(2)  # wait for the drop to finalize before recreating
+                else:
+                    print(f'index "{name}" already exists')
+                    continue
+            created = chunks.create_search_index(model)
+            print(f'created {model.document["type"]} index "{created}" on {settings.mongodb_db}.chunks')
         print("note: Atlas takes ~1–3 minutes to build each index before queries return results.")
     finally:
         client.close()

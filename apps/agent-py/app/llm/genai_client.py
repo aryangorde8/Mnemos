@@ -16,7 +16,9 @@ from typing import Any, AsyncIterator
 from google import genai
 from google.genai import types
 
-from app.config import is_bedrock, is_embeddings_configured, is_llm_configured, settings
+from app.config import (
+    embed_provider, is_bedrock, is_embeddings_configured, is_llm_configured, settings,
+)
 from app.llm.neutral import to_gemini_contents
 
 _NOT_CONFIGURED = ("llm not configured — set LLM_PROVIDER=bedrock (+ AWS creds), "
@@ -104,6 +106,9 @@ async def embed(texts: list[str]) -> list[list[float]]:
         raise RuntimeError(_NO_EMBEDDINGS)
     if not texts:
         return []
+    if embed_provider() == "bedrock":
+        from app.llm import bedrock_client
+        return await bedrock_client.embed(texts)
     resp = await _embed_client().aio.models.embed_content(
         model=settings.vertex_embedding_model,
         contents=texts,
@@ -116,6 +121,9 @@ async def embed_query(text: str) -> list[float]:
     """Embed a query (RETRIEVAL_QUERY)."""
     if not is_embeddings_configured():
         raise RuntimeError(_NO_EMBEDDINGS)
+    if embed_provider() == "bedrock":
+        from app.llm import bedrock_client
+        return (await bedrock_client.embed([text]))[0]
     resp = await _embed_client().aio.models.embed_content(
         model=settings.vertex_embedding_model,
         contents=text,

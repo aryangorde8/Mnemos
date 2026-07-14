@@ -57,6 +57,12 @@ class Settings(BaseSettings):
         "global.anthropic.claude-sonnet-4-5-20250929-v1:0", alias="BEDROCK_MODEL_ID")
     bedrock_region: str = Field("", alias="BEDROCK_REGION")
 
+    # Embedding provider: "bedrock" | "gemini" | "vertex" | "" (auto). Bedrock uses
+    # Titan; its dimension must match the Atlas vector index (rebuild on change).
+    embed_provider: str = Field("", alias="EMBED_PROVIDER")
+    bedrock_embed_model: str = Field("amazon.titan-embed-text-v2:0", alias="BEDROCK_EMBED_MODEL")
+    bedrock_embed_dims: int = Field(1024, alias="BEDROCK_EMBED_DIMS")
+
     mnemos_use_mcp: str = Field("0", alias="MNEMOS_USE_MCP")
     firebase_project_id: str = Field("", alias="FIREBASE_PROJECT_ID")
     mnemos_web_url: str = Field("", alias="MNEMOS_WEB_URL")
@@ -93,9 +99,26 @@ def is_llm_configured() -> bool:
     return llm_provider() != "missing"
 
 
+def embed_provider() -> str:
+    """Which backend serves embeddings: 'bedrock' | 'gemini_api' | 'vertex' | 'missing'.
+    EMBED_PROVIDER forces it; otherwise infer (Gemini key, then Vertex, then Bedrock)."""
+    forced = (settings.embed_provider or "").strip().lower()
+    if forced in ("bedrock", "gemini", "gemini_api", "vertex"):
+        return "gemini_api" if forced == "gemini" else forced
+    if settings.gemini_api_key:
+        return "gemini_api"
+    if is_vertex_configured():
+        return "vertex"
+    return "bedrock" if is_bedrock() else "missing"
+
+
+def embedding_dims() -> int:
+    """Vector dimension of the active embedding model — must match the Atlas index."""
+    return settings.bedrock_embed_dims if embed_provider() == "bedrock" else 768
+
+
 def is_embeddings_configured() -> bool:
-    """Embeddings always run on Gemini/Vertex regardless of the generation backend."""
-    return bool(settings.gemini_api_key) or is_vertex_configured()
+    return embed_provider() != "missing"
 
 
 # Back-compat alias — /ready and the web pill read this.

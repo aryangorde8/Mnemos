@@ -26,6 +26,20 @@ def _client():
     return boto3.client("bedrock-runtime", region_name=settings.bedrock_region or None)
 
 
+def _embed_one(text: str) -> list[float]:
+    import json
+    body = json.dumps({"inputText": text, "dimensions": settings.bedrock_embed_dims, "normalize": True})
+    resp = _client().invoke_model(modelId=settings.bedrock_embed_model, body=body)
+    return json.loads(resp["body"].read())["embedding"]
+
+
+async def embed(texts: list[str]) -> list[list[float]]:
+    """Titan embeddings. Titan is single-input, so texts are embedded in threads."""
+    if not texts:
+        return []
+    return await asyncio.gather(*[asyncio.to_thread(_embed_one, t) for t in texts])
+
+
 async def generate(prompt: str, *, system: str | None, temperature: float,
                    max_tokens: int) -> tuple[str, str | None]:
     """Single-shot Converse. Returns (text, stop_reason)."""
