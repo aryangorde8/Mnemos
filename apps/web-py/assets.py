@@ -123,6 +123,28 @@ if(!e)return;var editing=e.style.display!=='none';e.style.display=editing?'none'
 if(v)v.style.display=editing?'':'none';if(!editing){e.focus();}};
 """
 
+# ── custom black-themed dropdown (native <select> can't be dark-styled cross-browser) ──
+# Delegated on document so it works for htmx-swapped content. A trigger toggles its menu;
+# picking an option updates the label + hidden input; htmx on the option (filters) still fires.
+DROPDOWN_JS = """
+(function(){
+function closeAll(){document.querySelectorAll('[data-dd-menu]').forEach(function(m){m.setAttribute('hidden','');});}
+document.addEventListener('click',function(e){
+  var trg=e.target.closest('[data-dd-trigger]');
+  if(trg){var menu=trg.parentElement.querySelector('[data-dd-menu]');var wasOpen=!menu.hasAttribute('hidden');
+    closeAll();if(!wasOpen)menu.removeAttribute('hidden');e.preventDefault();return;}
+  var opt=e.target.closest('[data-dd-opt]');
+  if(opt){var dd=opt.closest('[data-dd]');
+    var v=dd.querySelector('[data-dd-val]');if(v)v.textContent=opt.textContent;
+    var inp=dd.querySelector('[data-dd-input]');if(inp)inp.value=opt.getAttribute('data-val');
+    dd.querySelectorAll('[data-dd-opt]').forEach(function(o){o.classList.remove('active');});
+    opt.classList.add('active');closeAll();return;}
+  closeAll();
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAll();});
+})();
+"""
+
 # ── approve · queue: accordion (one row open at a time) ──
 ACCORDION_JS = """
 (function(){var rows=[].slice.call(document.querySelectorAll('.acc-row'));
