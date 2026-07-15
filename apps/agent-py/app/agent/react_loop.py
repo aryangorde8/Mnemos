@@ -24,8 +24,16 @@ def _now() -> int:
 
 
 def _estimate_cost(prompt_tokens: int, output_tokens: int) -> float:
-    """Gemini 3 Pro Preview: $1.25/1M input, $10/1M output (thinking billed as output)."""
-    usd = (prompt_tokens / 1_000_000) * 1.25 + (output_tokens / 1_000_000) * 10.0
+    """Rough USD estimate from public list prices per 1M tokens (input, output),
+    keyed by the active generation provider."""
+    from app.config import llm_provider
+    prices = {
+        "bedrock": (3.0, 15.0),       # Claude Sonnet 4.5 on Bedrock
+        "gemini_api": (0.075, 0.30),  # Gemini Flash (free/paid tier)
+        "vertex": (1.25, 10.0),       # Gemini Pro on Vertex
+    }
+    pin, pout = prices.get(llm_provider(), (3.0, 15.0))
+    usd = (prompt_tokens / 1_000_000) * pin + (output_tokens / 1_000_000) * pout
     return round(usd * 10000) / 10000
 
 

@@ -70,8 +70,10 @@ async def ask(v: str = ""):
 
 
 @rt("/ask/run")
-def ask_run(q: str = "", v: str = ""):
-    return ask_s.render_run(q, v)
+async def ask_run(q: str = "", v: str = ""):
+    ready = await backend.get_json("/ready") or {}
+    model = ready.get("modelLabel") or "Claude"
+    return ask_s.render_run(q, v, model=model)
 
 
 @rt("/ask/stream")

@@ -121,6 +121,36 @@ def is_embeddings_configured() -> bool:
     return embed_provider() != "missing"
 
 
+def active_model() -> str:
+    """The generation model id currently in use."""
+    return settings.bedrock_model_id if is_bedrock() else settings.vertex_gemini_model
+
+
+def active_model_label() -> str:
+    """Human-friendly name of the active generation model, e.g. 'Claude Sonnet 4.5'."""
+    p = llm_provider()
+    if p == "bedrock":
+        import re
+        mid = settings.bedrock_model_id.lower()
+        fam = ("Claude Opus" if "opus" in mid else "Claude Haiku" if "haiku" in mid
+               else "Claude Sonnet" if "sonnet" in mid else "Claude")
+        m = re.search(r"(?:sonnet|opus|haiku)-(\d+)(?:-(\d+))?", mid)
+        ver = f" {m.group(1)}.{m.group(2)}" if m and m.group(2) else (f" {m.group(1)}" if m else "")
+        return f"{fam}{ver}"
+    if p == "gemini_api":
+        return "Gemini (API)"
+    if p == "vertex":
+        return "Gemini (Vertex)"
+    return "not configured"
+
+
+def active_embedding_label() -> str:
+    """Human-friendly name of the active embedding model."""
+    if embed_provider() == "bedrock":
+        return "Titan (Bedrock)"
+    return settings.vertex_embedding_model
+
+
 # Back-compat alias — /ready and the web pill read this.
 def llm_mode() -> str:
     return llm_provider()

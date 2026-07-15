@@ -6,7 +6,7 @@ import time
 from bson import ObjectId
 
 from app.agent.tools.get_briefing_context import tool as briefing_context_tool
-from app.config import settings
+from app.config import active_model, settings
 from app.db.mongo import documents
 from app.lib.briefings import save_briefing
 from app.llm.genai_client import stream_generate
@@ -106,7 +106,7 @@ async def run_briefing(*, event_id: str | None = None, event_title: str | None =
             "eventId": ObjectId(ev["id"]), "eventTitle": ev["title"], "eventWhen": ev.get("when"),
             "eventLocation": ev.get("location"), "attendees": ev.get("attendees") or [],
             "markdown": collected.strip(), "contextSummary": ctx.get("summary"),
-            "citations": citations, "model": settings.vertex_gemini_model,
+            "citations": citations, "model": active_model(),
             "createdAt": datetime.now(timezone.utc),
         })
         yield {"kind": "saved", "briefingId": briefing_id, "eventTitle": ev["title"],

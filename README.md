@@ -16,7 +16,7 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 
 ## What's special
 
-- **Hybrid retrieval** — every memory query runs `$vectorSearch` *and* `$search` (BM25) in parallel, merges via Reciprocal Rank Fusion, then optionally reranks with a fast Gemini pass. The reasoning stream renders the pipeline live; `/search` lets you scrub through each phase to see what it produced.
+- **Hybrid retrieval** — every memory query runs `$vectorSearch` *and* `$search` (BM25) in parallel, merges via Reciprocal Rank Fusion, then optionally reranks with a fast LLM pass. The reasoning stream renders the pipeline live; `/search` lets you scrub through each phase to see what it produced.
 - **Critic sub-agent** — after every drafted email, a second adversarial agent audits the draft against the cited context. Flags unsupported claims, hallucinated specifics, voice mismatches, safety issues. Renders inline below the ApprovalCard.
 - **Graph-augmented retrieval** — when the agent identifies a key entity, it walks the memory graph (people, projects, relations) and pulls in chunks no keyword search would find. The traversal animates inline in the reasoning stream.
 - **Multi-agent debate** — `/debate` runs Primary + Devil's Advocate in parallel on the same query, then a Synthesizer produces the consensus answer.
@@ -60,9 +60,10 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 |---|---|
 | Frontend | Python 3.12 + FastHTML (HTMX + SSE), server-rendered, no build step ([apps/web-py](apps/web-py)) |
 | Agent | Python 3.12 + FastAPI, hand-rolled ReAct loop, Server-Sent Events ([apps/agent-py](apps/agent-py)) |
-| LLM | Gemini 3.1 Pro (preview) via Vertex AI through the official `google-genai` SDK (streaming + function calling + thinking control) |
+| LLM | Claude (Sonnet 4.5) via Amazon Bedrock Converse — streaming + function calling; pluggable to Gemini/Vertex via `LLM_PROVIDER` |
+| Embeddings | Amazon Titan v2 (Bedrock), 1024-d; pluggable via `EMBED_PROVIDER` |
 | Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) + a graph collection, via `motor` (async driver) |
-| Hosting | Cloud Run (web + agent), scale-to-zero, custom subdomains |
+| Hosting | AWS Lightsail (web + agent + Caddy via docker-compose) — see [deploy/aws](deploy/aws); Cloud Run also supported |
 
 ## Local setup
 
@@ -101,28 +102,22 @@ agent service automatically.
 > While the OAuth consent screen is in *Testing* mode, add yourself as a test user; Google
 > expires refresh tokens after 7 days in that mode. Publish the app to keep the connection alive.
 
-## Zero-cost LLM mode (Gemini API free tier)
+## LLM provider
 
-By default the agent calls Gemini through **Vertex AI**, which bills per call — by far the
-largest line item in this stack (everything else fits Cloud Run's always-free tier + Atlas M0).
-To run the LLM for free instead, create an API key at
-[aistudio.google.com/apikey](https://aistudio.google.com/apikey) and set:
+Generation and embeddings are provider-pluggable, selected by env vars — no code change to
+switch:
 
-```
-GEMINI_API_KEY=your-ai-studio-key
-VERTEX_GEMINI_MODEL=gemini-flash-latest
-```
+| Env | Options | Default |
+|---|---|---|
+| `LLM_PROVIDER` | `bedrock` (Claude) · `gemini` (AI Studio key) · `vertex` | Bedrock when AWS creds present |
+| `EMBED_PROVIDER` | `bedrock` (Titan) · `gemini` · `vertex` | follows the LLM provider |
 
-All Gemini + embedding traffic then routes through the Gemini API free tier — no GCP billing
-account involved. The key takes precedence over Vertex when both are configured, so unsetting
-it is all it takes to switch back. Caveats:
-
-- The free tier covers **flash-class models** only (Pro is paid on the Gemini API); flash
-  limits (order of 10 req/min, ~1.5k req/day) are ample for demos.
-- Google may use free-tier inputs to improve its products — fine for the synthetic demo
-  corpus; use paid Vertex for anything sensitive.
-- For Cloud Run, add `GEMINI_API_KEY` as a repo secret — the deploy workflow and
-  `scripts/deploy-agent.sh` provision it onto the agent automatically.
+The default deployment ([deploy/aws](deploy/aws)) runs **Claude Sonnet 4.5** and **Titan
+embeddings** on Amazon Bedrock — fully on AWS, no Google API key. The topbar pill and
+`/ready` report the live provider + model. To fall back to Gemini, set `LLM_PROVIDER=gemini`
+with a `GEMINI_API_KEY` (or `vertex` with a GCP project); embeddings follow unless
+`EMBED_PROVIDER` overrides. Titan v2 is 1024-d, so switching embedding provider requires a
+one-time re-embed + index rebuild (`scripts/reembed_chunks.py` + `scripts/setup_mongo_index.py`).
 
 ## Deploy
 
