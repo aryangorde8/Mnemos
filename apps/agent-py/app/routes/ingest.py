@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
+from bson import ObjectId
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
@@ -53,6 +54,40 @@ async def ingest_route(body: IngestBody) -> JSONResponse:
         return JSONResponse({"source": body.source, "chunks": n})
     except Exception as err:  # noqa: BLE001
         return JSONResponse(status_code=500, content={"error": "ingest_failed", "detail": str(err)})
+
+
+def _iso(v):
+    return v.isoformat() if isinstance(v, datetime) else v
+
+
+@router.get("/ingest/documents")
+async def list_documents(limit: int = 50) -> JSONResponse:
+    """Recent ingested documents (newest first) with a chunk count — powers the manage view."""
+    limit = max(1, min(limit, 200))
+    docs = await documents().find({}, sort=[("createdAt", -1)], limit=limit).to_list(length=None)
+    counts = {
+        c["_id"]: c["count"]
+        for c in await chunks().aggregate(
+            [{"$group": {"_id": "$documentId", "count": {"$sum": 1}}}]).to_list(length=None)
+    }
+    out = [{"id": str(d["_id"]), "source": d.get("source"),
+            "title": d.get("title") or "(untitled)",
+            "chunks": counts.get(d["_id"], 0), "createdAt": _iso(d.get("createdAt"))}
+           for d in docs]
+    return JSONResponse({"count": len(out), "documents": out})
+
+
+@router.delete("/ingest/documents/{doc_id}")
+async def delete_document(doc_id: str) -> JSONResponse:
+    """Remove a document and every chunk (vector) it produced — a real delete from the vault."""
+    if not ObjectId.is_valid(doc_id):
+        return JSONResponse(status_code=400, content={"error": "bad_id"})
+    oid = ObjectId(doc_id)
+    if not await documents().find_one({"_id": oid}):
+        return JSONResponse(status_code=404, content={"error": "not_found"})
+    removed = (await chunks().delete_many({"documentId": oid})).deleted_count
+    await documents().delete_one({"_id": oid})
+    return JSONResponse({"deleted": True, "id": doc_id, "chunksDeleted": removed})
 
 
 @router.get("/ingest/stats")

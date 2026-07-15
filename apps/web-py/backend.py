@@ -51,6 +51,15 @@ async def post_json(path: str, body: dict) -> dict | None:
         return {"error": str(err)}
 
 
+async def delete_json(path: str) -> dict | None:
+    try:
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.delete(f"{AGENT}{path}")
+            return r.json() if r.status_code < 400 else {"error": r.text}
+    except Exception as err:  # noqa: BLE001
+        return {"error": str(err)}
+
+
 async def stream_events(path: str, body: dict) -> AsyncIterator[dict]:
     """Proxy a backend SSE endpoint, yielding parsed event dicts (with `kind`).
 
