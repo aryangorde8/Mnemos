@@ -68,10 +68,18 @@ async def ingest(v: str = ""):
             *ingest_s.render(variant=v, stats=stats, ready=ready, vault=vault, documents=docs))
 
 
-async def _doc_list_fragment():
-    data = await backend.get_json("/ingest/documents", {"limit": 50}) or {}
+async def _doc_list_fragment(source: str = "all"):
+    params: dict = {"limit": 50}
+    if source and source != "all":
+        params["source"] = source
+    data = await backend.get_json("/ingest/documents", params) or {}
     docs = data.get("documents", []) if isinstance(data, dict) else []
-    return ingest_s.doc_list(docs)
+    return ingest_s.doc_list(docs, source or "all")
+
+
+@rt("/ingest/list")
+async def ingest_list(source: str = "all"):
+    return await _doc_list_fragment(source)
 
 
 @rt("/ingest/add")
@@ -79,14 +87,14 @@ async def ingest_add(title: str = "", body: str = "", source: str = "notes"):
     title, body = (title or "").strip(), (body or "").strip()
     if title and body:
         await backend.post_json("/ingest", {"source": source or "notes", "title": title, "body": body})
-    return await _doc_list_fragment()
+    return await _doc_list_fragment("all")
 
 
 @rt("/ingest/delete")
-async def ingest_delete(doc_id: str = ""):
+async def ingest_delete(doc_id: str = "", source: str = "all"):
     if (doc_id or "").strip():
         await backend.delete_json(f"/ingest/documents/{doc_id.strip()}")
-    return await _doc_list_fragment()
+    return await _doc_list_fragment(source or "all")
 
 
 @rt("/ask")

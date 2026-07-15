@@ -7,10 +7,10 @@
 All seeded from the real /ingest/stats (and /ingest/documents for manage).
 """
 from fasthtml.common import (  # type: ignore
-    A, Button, Div, Form, Input, Option, P, Select, Span, Table, Tbody, Td, Textarea, Tr,
+    A, Button, Div, Form, Input, P, Span, Table, Tbody, Td, Textarea, Tr,
 )
 
-from assets import INGEST_JS
+from assets import DROPDOWN_JS, INGEST_JS
 from chrome import page, surface_head, variant_strip
 
 VARIANTS = [("sources", "sources"), ("run", "ingest run"), ("manage", "add · delete")]
@@ -23,6 +23,28 @@ _SOURCES = [("✉", "Gmail", "email"), ("◷", "Google Calendar", "calendar"),
 # source values accepted by the agent's POST /ingest (SourceKind)
 _SRC_OPTS = [("notes", "notes"), ("email", "email"), ("calendar", "calendar"),
              ("meeting_notes", "meeting notes"), ("shared_doc", "shared doc"), ("slack", "slack")]
+_FILTER_OPTS = [("all", "all sources"), *_SRC_OPTS]
+
+
+def _dropdown(options, value, *, input_name=None, hx_get=None, hx_target=None):
+    """A custom black-themed dropdown (native <select> can't be dark-styled cross-browser).
+
+    input_name → renders a hidden <input> the surrounding form submits (the add-source picker).
+    hx_get     → each option issues an htmx GET (?source=<val>) into hx_target (the delete filter).
+    """
+    label = dict(options).get(value, value)
+    trigger = Button(Span(label, cls="dd-val", data_dd_val="1"), Span("▾", cls="dd-caret"),
+                     type="button", cls="dd-trigger", data_dd_trigger="1")
+    hidden = (Input(type="hidden", name=input_name, value=value, data_dd_input="1")
+              if input_name else "")
+    opts = []
+    for val, lab in options:
+        extra = ({"hx_get": f"{hx_get}?source={val}", "hx_target": hx_target, "hx_swap": "innerHTML"}
+                 if hx_get else {})
+        opts.append(Div(lab, cls="dd-opt" + (" active" if val == value else ""),
+                        data_dd_opt="1", data_val=val, **extra))
+    menu = Div(*opts, cls="dd-menu", hidden=True, data_dd_menu="1")
+    return Div(trigger, hidden, menu, cls="dd", data_dd="1")
 
 
 def _src_counts(stats):
@@ -95,11 +117,16 @@ def _sources_body(stats):
     )
 
 
-def doc_list(docs: list[dict] | None):
-    """Recent-documents list with a per-row delete — re-rendered after every add / delete."""
+def doc_list(docs: list[dict] | None, source: str = "all"):
+    """Recent-documents list with a per-row delete — re-rendered after every add / delete / filter.
+
+    `source` is the active filter; each delete preserves it so the list stays in the same category.
+    """
     docs = docs or []
     if not docs:
-        return Div("nothing ingested yet — add something above, or run the demo seed.", cls="empty")
+        msg = ("nothing ingested yet — add something above, or run the demo seed."
+               if source == "all" else f"no “{dict(_FILTER_OPTS).get(source, source)}” items in memory.")
+        return Div(msg, cls="empty")
     rows = []
     for d in docs:
         rows.append(Div(
@@ -108,7 +135,7 @@ def doc_list(docs: list[dict] | None):
                 Div(f"{d.get('chunks', 0)} chunks · {(d.get('createdAt') or '')[:10]}",
                     cls="chrome faint", style="margin-top:3px")),
             Button("✕ delete", cls="btn-d",
-                   hx_post=f"/ingest/delete?doc_id={d.get('id','')}",
+                   hx_post=f"/ingest/delete?doc_id={d.get('id','')}&source={source}",
                    hx_target="#doc-list", hx_swap="innerHTML",
                    hx_confirm="Delete this from memory? Its chunks are removed from the Atlas vault."),
             cls="doc-row",
@@ -123,9 +150,8 @@ def _manage_body(stats, docs):
     form = Form(
         Div(Input(name="title", cls="field", autocomplete="off", placeholder="title",
                   style="flex:1"),
-            Select(*[Option(label, value=val) for val, label in _SRC_OPTS], name="source",
-                   cls="field", style="max-width:190px"),
-            style="display:flex;gap:10px"),
+            _dropdown(_SRC_OPTS, "notes", input_name="source"),
+            style="display:flex;gap:14px;align-items:flex-end"),
         Textarea(name="body", cls="field", rows="4",
                  placeholder="paste the content Mnemos should remember…",
                  style="margin-top:10px;width:100%;resize:vertical"),
@@ -133,15 +159,21 @@ def _manage_body(stats, docs):
             Span("chunked, embedded with Titan, indexed into Atlas", cls="chrome"),
             style="display:flex;align-items:center;gap:14px;margin-top:10px"),
         hx_post="/ingest/add", hx_target="#doc-list", hx_swap="innerHTML")
+    filter_row = Div(
+        Span("in memory", cls="label"),
+        Span(f"· {documents:,} items · {chunks:,} chunks", cls="chrome faint"),
+        Div(Span("filter", cls="label", style="margin-right:10px"),
+            _dropdown(_FILTER_OPTS, "all", hx_get="/ingest/list", hx_target="#doc-list"),
+            style="display:flex;align-items:center;margin-left:auto"),
+        cls="dd-filter-row")
     return Div(
         surface_head("01", "ingest · manage memory",
                      Span("Add to — and "), Span("prune —", cls="i accent"), Span(" the vault.")),
-        P("Ingest a single item by hand, or delete anything already indexed. Deleting removes the "
-          "document and every vector it produced from Atlas.", cls="muted",
-          style="max-width:62ch;margin:0 0 22px"),
+        P("Ingest a single item by hand, or delete anything already indexed — pick a source to narrow "
+          "the list. Deleting removes the document and every vector it produced from Atlas.",
+          cls="muted", style="max-width:62ch;margin:0 0 22px"),
         form,
-        P(f"indexed · {documents:,} items · {chunks:,} chunks", cls="label",
-          style="margin:30px 0 6px"),
+        Div(filter_row, style="margin-top:30px"),
         Div(doc_list(docs), id="doc-list"),
     )
 
@@ -155,7 +187,7 @@ def render(variant: str = DEFAULT, stats: dict | None = None, ready: dict | None
     if variant == "sources":
         body, scripts = _sources_body(stats), ""
     elif variant == "manage":
-        body, scripts = _manage_body(stats, documents), ""
+        body, scripts = _manage_body(stats, documents), DROPDOWN_JS
     else:
         body, scripts = _run_body(stats), INGEST_JS
     return page("ingest", body, ready=ready, vault=vault, scripts=scripts, strip=strip)

@@ -61,10 +61,14 @@ def _iso(v):
 
 
 @router.get("/ingest/documents")
-async def list_documents(limit: int = 50) -> JSONResponse:
-    """Recent ingested documents (newest first) with a chunk count — powers the manage view."""
+async def list_documents(limit: int = 50, source: str | None = None) -> JSONResponse:
+    """Recent ingested documents (newest first) with a chunk count — powers the manage view.
+
+    `source` narrows to one kind (email / calendar / notes / …); omitted or 'all' means every source.
+    """
     limit = max(1, min(limit, 200))
-    docs = await documents().find({}, sort=[("createdAt", -1)], limit=limit).to_list(length=None)
+    flt = {"source": source} if source and source != "all" else {}
+    docs = await documents().find(flt, sort=[("createdAt", -1)], limit=limit).to_list(length=None)
     counts = {
         c["_id"]: c["count"]
         for c in await chunks().aggregate(

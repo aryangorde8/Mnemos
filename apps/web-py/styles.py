@@ -367,6 +367,18 @@ body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
 .stat-row .k{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--paper-faint)}
 .stat-row .v{font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--paper);font-variant-numeric:tabular-nums}
 
+/* ── ingest · manage: custom dark dropdown + document rows ── */
+.dd{position:relative;display:inline-block}
+.dd-trigger{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;min-width:170px;background:var(--ink-2);border:1px solid var(--rule-strong);color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.02em;padding:9px 12px;cursor:pointer;transition:border-color var(--snap) var(--ease)}
+.dd-trigger:hover{border-color:var(--paper-faint)}
+.dd-caret{color:var(--paper-faint);font-size:9px}
+.dd-menu{position:absolute;top:calc(100% + 4px);left:0;min-width:100%;background:var(--ink-1);border:1px solid var(--rule-strong);z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.55);max-height:280px;overflow-y:auto}
+.dd-menu[hidden]{display:none}
+.dd-opt{padding:9px 13px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);cursor:pointer;white-space:nowrap;transition:background var(--snap) var(--ease)}
+.dd-opt:hover{background:var(--ink-3);color:var(--paper)}
+.dd-opt.active{color:var(--vermilion)}
+.dd-filter-row{display:flex;align-items:center;gap:12px;margin:6px 0 4px}
+
 /* ── ask · calm + split-critic ── */
 .ask-calm{display:grid;grid-template-columns:1fr 380px;margin-top:26px;border:1px solid var(--rule)}
 .ask-3col{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;margin-top:26px;border:1px solid var(--rule)}
