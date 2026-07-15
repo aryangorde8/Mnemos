@@ -72,7 +72,7 @@ async def ask(v: str = ""):
 @rt("/ask/run")
 async def ask_run(q: str = "", v: str = ""):
     ready = await backend.get_json("/ready") or {}
-    model = ready.get("modelLabel") or "Claude"
+    model = ready.get("modelLabel") or "Amazon Nova"
     return ask_s.render_run(q, v, model=model)
 
 

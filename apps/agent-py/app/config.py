@@ -53,8 +53,13 @@ class Settings(BaseSettings):
     llm_provider: str = Field("", alias="LLM_PROVIDER")
     # Amazon Bedrock (Converse API). Credentials come from the standard AWS env
     # (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY) or an instance role.
+    # Default is Amazon Nova Pro: an AWS first-party model, so it needs no AWS
+    # Marketplace subscription — unlike Anthropic Claude, which India (AISPL)
+    # accounts can't subscribe to without an international card. Claude/Llama/
+    # Mistral all work here too by changing this id (Claude needs the card).
+    # The region prefix (apac./us./eu.) must match BEDROCK_REGION.
     bedrock_model_id: str = Field(
-        "global.anthropic.claude-sonnet-4-5-20250929-v1:0", alias="BEDROCK_MODEL_ID")
+        "apac.amazon.nova-pro-v1:0", alias="BEDROCK_MODEL_ID")
     bedrock_region: str = Field("", alias="BEDROCK_REGION")
 
     # Embedding provider: "bedrock" | "gemini" | "vertex" | "" (auto). Bedrock uses
@@ -126,17 +131,36 @@ def active_model() -> str:
     return settings.bedrock_model_id if is_bedrock() else settings.vertex_gemini_model
 
 
-def active_model_label() -> str:
-    """Human-friendly name of the active generation model, e.g. 'Claude Sonnet 4.5'."""
-    p = llm_provider()
-    if p == "bedrock":
-        import re
-        mid = settings.bedrock_model_id.lower()
+def _bedrock_label(model_id: str) -> str:
+    """Human-friendly name from a Bedrock model / inference-profile id, e.g.
+    'apac.amazon.nova-pro-v1:0' -> 'Amazon Nova Pro';
+    'global.anthropic.claude-sonnet-4-5-..' -> 'Claude Sonnet 4.5'."""
+    import re
+    mid = model_id.lower()
+    if "nova" in mid:
+        tier = ("Pro" if "nova-pro" in mid else "Lite" if "nova-lite" in mid
+                else "Micro" if "nova-micro" in mid else "Premier" if "nova-premier" in mid else "")
+        return f"Amazon Nova {tier}".strip()
+    if "titan" in mid:
+        return "Amazon Titan"
+    if "claude" in mid:
         fam = ("Claude Opus" if "opus" in mid else "Claude Haiku" if "haiku" in mid
                else "Claude Sonnet" if "sonnet" in mid else "Claude")
         m = re.search(r"(?:sonnet|opus|haiku)-(\d+)(?:-(\d+))?", mid)
         ver = f" {m.group(1)}.{m.group(2)}" if m and m.group(2) else (f" {m.group(1)}" if m else "")
         return f"{fam}{ver}"
+    if "mistral" in mid:
+        return "Mistral"
+    if "llama" in mid:
+        return "Llama"
+    return "Bedrock model"
+
+
+def active_model_label() -> str:
+    """Human-friendly name of the active generation model, e.g. 'Amazon Nova Pro'."""
+    p = llm_provider()
+    if p == "bedrock":
+        return _bedrock_label(settings.bedrock_model_id)
     if p == "gemini_api":
         return "Gemini (API)"
     if p == "vertex":
@@ -145,9 +169,15 @@ def active_model_label() -> str:
 
 
 def active_provider_short() -> str:
-    """One-word tag for the active generation provider, for compact UI chips:
-    'claude' on Bedrock, else 'gemini'."""
-    return "claude" if is_bedrock() else "gemini"
+    """One-word tag for the active generation model, for compact UI chips:
+    'nova' | 'claude' | 'titan' | 'mistral' | 'llama' on Bedrock, else 'gemini'."""
+    if is_bedrock():
+        mid = settings.bedrock_model_id.lower()
+        for tag in ("nova", "titan", "claude", "mistral", "llama"):
+            if tag in mid:
+                return tag
+        return "bedrock"
+    return "gemini"
 
 
 def active_embedding_label() -> str:

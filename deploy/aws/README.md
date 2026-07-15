@@ -1,7 +1,7 @@
 # Deploy Mnemos on AWS (Lightsail)
 
 One small always-on box runs both containers behind Caddy (automatic HTTPS).
-No Google Cloud for the LLM: both generation (Claude) and embeddings (Titan)
+No Google Cloud for the LLM: both generation (Amazon Nova) and embeddings (Titan)
 run on **Amazon Bedrock**, and the agent talks to MongoDB Atlas directly.
 
 - **Cost:** the $20/mo Lightsail plan (4 GB) — ~$110 over 5.5 months, which
@@ -16,21 +16,26 @@ run on **Amazon Bedrock**, and the agent talks to MongoDB Atlas directly.
 ## 0. Before you start
 
 - A MongoDB Atlas connection string (unchanged — Atlas is not on GCP).
-- **Amazon Bedrock** enabled (see step 0a) — both generation (Claude) and
+- **Amazon Bedrock** enabled (see step 0a) — both generation (Amazon Nova) and
   embeddings (Titan) run on Bedrock, so **no Google API key is needed**.
 - Your existing Google OAuth client id/secret (still used for Gmail send + Calendar).
 - Access to your domain's DNS (to point `mnemos` + `mnemos-agent` at the box).
 
 ## 0a. Enable Amazon Bedrock (LLM)
 
-Generation uses Claude on Bedrock — no free-tier rate-limit wall, billed to your
-AWS credit.
+Generation uses **Amazon Nova Pro** on Bedrock — no free-tier rate-limit wall,
+billed to your AWS credit. Nova is an AWS **first-party** model, so it needs no
+Marketplace subscription and works on India (AISPL) accounts **with no
+international card**. (Anthropic Claude is a Marketplace model and its
+subscription requires a valid international card — you'd get
+`INVALID_PAYMENT_INSTRUMENT` without one; switch `BEDROCK_MODEL_ID` to Claude
+once you have a card if you prefer it.)
 
 1. Console → **Amazon Bedrock** → **Model access** (pick a region, e.g. Mumbai
-   `ap-south-1`) → **Enable** a Claude model. Copy its exact **model ID /
-   inference-profile ID** — that string goes in `BEDROCK_MODEL_ID`, and its
-   region in `BEDROCK_REGION`. (Availability varies by region; the value in
-   `.env.example` is only a default.)
+   `ap-south-1`) → **Enable** an **Amazon Nova** model. Copy its exact **model ID /
+   inference-profile ID** — that string goes in `BEDROCK_MODEL_ID` (default
+   `apac.amazon.nova-pro-v1:0`), and its region in `BEDROCK_REGION`. (The region
+   prefix `apac.`/`us.`/`eu.` must match your region.)
 2. Console → **IAM** → create a user (programmatic access) with an inline policy
    allowing `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream` on
    `*`. Copy its **access key id + secret** → `AWS_ACCESS_KEY_ID` /
@@ -75,7 +80,7 @@ Verify: `docker --version && docker compose version && git --version`.
 
 ```bash
 git clone https://github.com/aryangorde8/Mnemos.git
-cd Mnemos && git checkout claude/calendar-gmail-integration-cpn5jb && cd deploy/aws
+cd Mnemos/deploy/aws          # main branch has everything (the AWS migration is merged)
 cp .env.example .env
 nano .env          # save: Ctrl-O, Enter, Ctrl-X
 ```
@@ -142,7 +147,7 @@ curl https://mnemos-agent.aryangorde.com/ready           # llm: bedrock, gmail: 
 
 Then open `https://mnemos.aryangorde.com`, go to **/approve**, and click
 **connect google** once to re-authorize on the new host. The topbar pill should
-read `bedrock · claude` and `google · live`. Run an `/ask` query to confirm the
+read `bedrock · nova` and `google · live`. Run an `/ask` query to confirm the
 agent streams (that exercises the Bedrock tool-calling loop end to end).
 
 ## 8. AWS cost guardrails
@@ -168,9 +173,12 @@ still used by the AWS deployment.
 
 ### LLM note
 
-Both **generation (Claude Sonnet 4.5)** and **embeddings (Titan Text v2)** run
+Both **generation (Amazon Nova Pro)** and **embeddings (Titan Text v2)** run
 on **Amazon Bedrock** — billed to your AWS credit, no free-tier rate limits and
-no Google API key. Switching providers is config-only: set `LLM_PROVIDER` /
+no Google API key. Nova is AWS first-party, so no Marketplace subscription / card
+is needed; switch `BEDROCK_MODEL_ID` to a Claude/Llama/Mistral id to change the
+generation model (Claude requires a card for its Marketplace subscription).
+Switching provider entirely is config-only too: set `LLM_PROVIDER` /
 `EMBED_PROVIDER` to `gemini` (with a `GEMINI_API_KEY`) or `vertex` (with a GCP
 project) to fall back with the same code.
 

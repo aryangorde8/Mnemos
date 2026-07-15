@@ -18,7 +18,7 @@ from chrome import cite, draft_card, critic_panel, page, surface_head, variant_s
 
 VARIANTS = [("calm", "calm"), ("choreographed", "choreographed"), ("split-critic", "split-critic")]
 DEFAULT = "choreographed"
-_MODEL_FALLBACK = "Claude"  # used only if /ready is unreachable
+_MODEL_FALLBACK = "Amazon Nova"  # used only if /ready is unreachable
 
 
 def render_page(variant: str = DEFAULT, ready: dict | None = None, vault: dict | None = None):

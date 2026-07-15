@@ -15,7 +15,7 @@
                          │ HTTPS + Server-Sent Events
 ┌────────────────────────┴─────────────────────────────────────┐
 │ Agent backend — Python 3.12 + FastAPI on AWS                 │
-│ • Amazon Bedrock — Claude Sonnet 4.5 (Converse API)          │
+│ • Amazon Bedrock — Amazon Nova Pro (Converse API)            │
 │ • hand-rolled ReAct loop with tool dispatching               │
 │ • provider-neutral message layer (Bedrock / Gemini / Vertex) │
 │ • emits thoughts / tool-calls / observations as SSE          │
@@ -39,11 +39,13 @@ box via `docker-compose` — see [../deploy/aws](../deploy/aws).
 
 | Role | Model | Provider | Notes |
 |---|---|---|---|
-| Generation + streaming | Claude Sonnet 4.5 | Amazon Bedrock (Converse) | tool-use + streaming; pluggable to Gemini/Vertex via `LLM_PROVIDER` |
+| Generation + streaming | Amazon Nova Pro (default) | Amazon Bedrock (Converse) | tool-use + streaming; model set by `BEDROCK_MODEL_ID` (Claude/Llama/Mistral selectable); pluggable to Gemini/Vertex via `LLM_PROVIDER` |
 | Embeddings | Amazon Titan Text v2 | Amazon Bedrock | 1024-dim, cosine; pluggable via `EMBED_PROVIDER` |
 
-The provider is chosen by env var (`LLM_PROVIDER` / `EMBED_PROVIDER`) with no code
-change; `/ready` and the topbar pill report the live provider + model.
+The model/provider is chosen by env var (`BEDROCK_MODEL_ID` / `LLM_PROVIDER` /
+`EMBED_PROVIDER`) with no code change; `/ready` and the topbar pill report the
+live model. Nova is AWS first-party (no Marketplace subscription); Claude works
+too but its subscription needs a valid international card on the account.
 
 ## Collections (MongoDB Atlas, db `mnemos`)
 
@@ -71,7 +73,7 @@ the dimension, so it requires a one-time re-embed + index rebuild
 ## Data flow — Q&A
 
 ```
-prompt → agent (ReAct, Claude) → search_memory tool (hybrid vector + BM25 + RRF)
+prompt → agent (ReAct, Nova) → search_memory tool (hybrid vector + BM25 + RRF)
        → optional expand_via_graph (entity walk) → cited answer + reasoning stream (SSE) → UI
 ```
 

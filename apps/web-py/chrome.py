@@ -110,8 +110,10 @@ def topbar(active: str, ready: dict | None = None):
     atlas = "on" if ready.get("atlas") == "configured" else "pending"
     # llm: bedrock | gemini_api (free tier) | vertex | missing; older agents only send `vertex`
     llm = ready.get("llm") or ("vertex" if ready.get("vertex") == "configured" else "missing")
+    # On Bedrock the pill shows the live model (nova | claude | …) via providerShort.
+    bedrock_model = ready.get("providerShort") or "model"
     llm_label, (llm_value, llm_state) = {
-        "bedrock": ("bedrock", ("claude", "on")),
+        "bedrock": ("bedrock", (bedrock_model, "on")),
         "gemini_api": ("gemini", ("api · free", "on")),
         "vertex": ("gemini", ("vertex", "on")),
     }.get(llm, ("gemini", ("awaiting", "pending")))

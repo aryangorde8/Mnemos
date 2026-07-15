@@ -6,10 +6,11 @@
 
 > **Post-hackathon update.** Mnemos was originally built and submitted on
 > Google Cloud (Gemini 3 Pro / Vertex AI / Cloud Run, Next.js + Node). It has
-> since migrated fully to **AWS** — **Claude Sonnet 4.5 on Amazon Bedrock**,
+> since migrated fully to **AWS** — **Amazon Nova Pro on Amazon Bedrock**,
 > **Amazon Titan** embeddings, and a **Python** stack (FastAPI agent + FastHTML
 > web) on **AWS Lightsail**. The copy below reflects the current system; the
-> retrieval/critic/graph design is unchanged.
+> retrieval/critic/graph design is unchanged. (The model is a one-var switch —
+> `BEDROCK_MODEL_ID` — so Claude/Llama/Mistral drop in too.)
 
 ---
 
@@ -86,7 +87,7 @@ slack, personal jots) once. From then on:
 |---|---|
 | Frontend | Python 3.12 + FastHTML (HTMX + SSE), server-rendered, no build step |
 | Agent | Python 3.12 + FastAPI, hand-rolled ReAct loop, Server-Sent Events |
-| LLM | Claude Sonnet 4.5 via Amazon Bedrock (Converse — streaming + function calling); pluggable to Gemini/Vertex via `LLM_PROVIDER` |
+| LLM | Amazon Bedrock (Converse — streaming + function calling); default Amazon Nova Pro, model set by `BEDROCK_MODEL_ID`; pluggable to Gemini/Vertex via `LLM_PROVIDER` |
 | Embeddings | Amazon Titan Text v2 (Bedrock), 1024-dim |
 | Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) + a graph collection |
 | MCP | MongoDB MCP Server (stdio, optional, gated by `MNEMOS_USE_MCP=1`) |
@@ -120,8 +121,8 @@ and the matching citation chip pulses; click to scroll it into view.
 
 **Cost/latency telemetry.** Token usage from every Bedrock stream event
 is accumulated across all turns. The done event carries `totalTokens`
-+ `estimatedCostUsd` (provider-aware pricing — Claude Sonnet 4.5 by
-default). Shown live in the reasoning stream header.
++ `estimatedCostUsd` (provider- and model-aware pricing — Amazon Nova Pro
+by default). Shown live in the reasoning stream header.
 
 **Calendar conflict detection.** `schedule_meeting` checks the corpus
 calendar for each proposed time window, tags slots free/conflict, and
@@ -149,9 +150,14 @@ to simulated send when not configured.
   returned "Model use case details have not been submitted." Submitting
   the Anthropic use-case form once (it propagates in ~15 min) unblocked
   live token streaming.
-- **Picking a non-Legacy Claude profile.** Some inference-profile IDs are
-  flagged Legacy and refuse to serve. We pin the `global.anthropic.
-  claude-sonnet-4-5` profile, which streams tool-use reliably.
+- **India Marketplace payment wall → Amazon Nova.** Anthropic Claude on
+  Bedrock is provisioned as an AWS Marketplace subscription, which India
+  (AISPL) accounts can't complete without an international card
+  (`INVALID_PAYMENT_INSTRUMENT`). We moved generation to **Amazon Nova Pro**
+  — an AWS first-party model, no Marketplace subscription — so it runs on the
+  AWS credit with no card. The provider-neutral layer made it a one-line
+  model-id change (Titan embeddings are first-party too, so `/search` was
+  never blocked).
 - **Titan throttled on the bulk re-embed.** Re-embedding the whole corpus
   fired too many parallel `InvokeModel` calls and hit `ThrottlingException`.
   A concurrency semaphore (2) plus adaptive retries made it steady.
@@ -216,8 +222,7 @@ to simulated send when not configured.
 ## Built With
 
 ```
-claude
-claude-sonnet-4-5
+amazon-nova
 amazon-bedrock
 amazon-titan
 mongodb-atlas-vector-search
@@ -266,7 +271,7 @@ docker
 | Repo URL | https://github.com/aryangorde8/Mnemos |
 | Track | MongoDB partner track |
 | License | Apache 2.0 |
-| Built With tags | claude-sonnet-4-5 · amazon-bedrock · amazon-titan · mongodb-atlas-vector-search · mongodb-atlas-search · mongodb-mcp-server · aws-lightsail · python · fastapi · fasthtml · htmx · server-sent-events |
+| Built With tags | amazon-nova · amazon-bedrock · amazon-titan · mongodb-atlas-vector-search · mongodb-atlas-search · mongodb-mcp-server · aws-lightsail · python · fastapi · fasthtml · htmx · server-sent-events |
 
 ## Gallery upload order
 

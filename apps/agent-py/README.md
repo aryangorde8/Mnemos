@@ -6,9 +6,10 @@ Bedrock via `boto3`, with `google-genai` as a pluggable fallback) + `motor`
 (async MongoDB) + `pydantic`**, with a **hand-rolled ReAct loop** (no agent
 framework — the orchestration is the point).
 
-Generation runs on **Claude Sonnet 4.5 (Amazon Bedrock)** and embeddings on
-**Amazon Titan Text v2**; both are selected by env var (`LLM_PROVIDER` /
-`EMBED_PROVIDER`) so the same loop runs on Bedrock, the Gemini API, or Vertex.
+Generation runs on **Amazon Nova Pro (Amazon Bedrock)** — model set by
+`BEDROCK_MODEL_ID` (Claude/Llama/Mistral drop in) — and embeddings on **Amazon
+Titan Text v2**; both are selected by env var (`LLM_PROVIDER` / `EMBED_PROVIDER`)
+so the same loop runs on Bedrock, the Gemini API, or Vertex.
 It shares the repo-root `.env.local`, the MongoDB Atlas collections, and the
 Google OAuth token store, so it runs against real data and an existing
 Gmail/Calendar connection with no re-auth. The FastHTML frontend

@@ -11,8 +11,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import (
-    active_embedding_label, active_model, active_model_label, embed_provider,
-    is_bedrock, is_mongo_configured, is_vertex_configured, llm_mode, settings,
+    active_embedding_label, active_model, active_model_label, active_provider_short,
+    embed_provider, is_bedrock, is_mongo_configured, is_vertex_configured, llm_mode, settings,
 )
 from app.lib.firebase_auth import firebase_middleware, is_firebase_configured
 
@@ -56,6 +56,7 @@ async def ready() -> dict:
         "mcp": "enabled" if settings.mnemos_use_mcp != "0" else "disabled",
         "model": active_model(),
         "modelLabel": active_model_label(),
+        "providerShort": active_provider_short(),
         "embeddingModel": active_embedding_label(),
         "region": settings.bedrock_region if is_bedrock() else settings.google_cloud_location,
         "runtime": "python",
