@@ -9,11 +9,11 @@
 | | Status check |
 |---|---|
 | Atlas vector + BM25 indexes both `READY` | hit `/ready` on the agent, expect `atlas: configured` |
-| Vertex Gemini 3 pro preview reachable | hit `/ready`, expect `vertex: configured` |
+| Claude on Bedrock reachable | hit `/ready`, expect `llm: bedrock` |
 | Prod corpus loaded | hit `/ingest/stats`, expect `documents: 242, chunks: 268` |
 | Memory graph extracted on prod | hit `/graph/stats`, expect `person: ≥36, project: ≥25, relations: ≥150` |
 | Voice fixture refreshed from live corpus | `scripts/fixtures/alex-voice.md` head should mention 24 sampled emails |
-| Cloud Run pre-warmed (no cold start) | both services have `min-instances=1` |
+| Box up (always-on, no cold start) | `docker compose ps` shows web + agent + caddy running |
 | Three demo prompts work end-to-end three takes in a row | rehearse before recording |
 | `mnemos.aryangorde.com` resolves with valid SSL | dig + curl check |
 
@@ -26,7 +26,7 @@
 - Fresh window, only the Mnemos tab open
 - DevTools closed, any browser banner dismissed
 - **Pre-load `/` once before recording** so the constellation canvas warms up and the first auto-trace has fired
-- **Pre-warm the agent** with one throwaway `/ask` call so Vertex TTFB is short on the live take
+- **Pre-warm the agent** with one throwaway `/ask` call so Bedrock TTFB is short on the live take
 - Voice-over only — no talking-head insert
 
 ---
@@ -61,7 +61,7 @@ entrance animation. Type the **exact** prompt:
 ⏎. Cut straight to `/ask?q=…&run=1`. The reasoning stream begins.
 
 **What the viewer sees** (in order):
-1. Run header pulses: `streaming · gemini-3.1-pro · vertex`
+1. Run header pulses: `streaming · claude-sonnet-4.5 · bedrock`
 2. Time chips appear in the left gutter, vermilion node marker pops
    on the rule (line 1)
 3. A `›` `search_memory` tool call with the args, then an `‹` observation
@@ -99,7 +99,7 @@ RA/Dec axes labeled in editorial mono.
 4. Pan/scroll slightly to show the four stat tiles at the bottom
 
 **VO.**
-> The graph isn't decorative. A second Gemini pass reads every chunk
+> The graph isn't decorative. A second model pass reads every chunk
 > and pulls people, projects, and commitments into Atlas as a third
 > retrieval modality — graph traversal, alongside vector and BM25.
 
@@ -204,7 +204,7 @@ row, fix it before continuing.
 
 - **Brave**. Use Chrome / Safari / Firefox.
 - **DevTools open** — kills the editorial composition.
-- **The long `*.run.app` URL** — only the pretty subdomain appears in the URL bar.
+- **The raw agent URL** (`mnemos-agent.…`) — only the pretty subdomain appears in the URL bar.
 - **Hover the agent backend URL** — it's hidden by design.
 - **Click the constellation more than twice** — once is "look, interactive",
   three times is "the demo is broken".

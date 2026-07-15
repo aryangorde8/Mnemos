@@ -15,16 +15,18 @@ VARIANTS = [("typographic", "typographic"), ("constellation", "constellation"),
             ("live-trace", "live trace")]
 DEFAULT = "constellation"
 
-_TILES = [
-    ("01", "❡", "Memory", "ingested.",
-     "Mail, calendar, notes, slack, docs — vectorized in MongoDB Atlas, queryable in milliseconds.", "/ingest"),
-    ("02", "◆", "Reasoning", "streamed.",
-     "Gemini 3 Pro thinks out loud over SSE. Every thought, retrieval, observation, citation — in order.", "/ask"),
-    ("03", "✎", "Critique", "audited.",
-     "A second agent red-pencils the first. Drafts arrive with their own copy-editor's notes.", "/approve"),
-    ("04", "⌗", "Hybrid retrieval", "cited.",
-     "Vector + BM25 fused via RRF and reranked. Every claim traceable to a chunk in the vault.", "/search"),
-]
+def _tiles(model="Claude"):
+    tiles = [
+        ("01", "❡", "Memory", "ingested.",
+         "Mail, calendar, notes, slack, docs — vectorized in MongoDB Atlas, queryable in milliseconds.", "/ingest"),
+        ("02", "◆", "Reasoning", "streamed.",
+         f"{model} thinks out loud over SSE. Every thought, retrieval, observation, citation — in order.", "/ask"),
+        ("03", "✎", "Critique", "audited.",
+         "A second agent red-pencils the first. Drafts arrive with their own copy-editor's notes.", "/approve"),
+        ("04", "⌗", "Hybrid retrieval", "cited.",
+         "Vector + BM25 fused via RRF and reranked. Every claim traceable to a chunk in the vault.", "/search"),
+    ]
+    return Div(*[_tile(t, i == len(tiles) - 1) for i, t in enumerate(tiles)], cls="tiles")
 
 
 def _tile(t, last):
@@ -32,10 +34,6 @@ def _tile(t, last):
     return A(Div(Span(num, cls="label"), Span(glyph, cls="tile-glyph"), cls="tile-top"),
              Div(title, " ", Span(verb, cls="i accent"), cls="tile-title"),
              P(body, cls="tile-body"), href=href, cls="tile" + (" last" if last else ""))
-
-
-def _tiles():
-    return Div(*[_tile(t, i == len(_TILES) - 1) for i, t in enumerate(_TILES)], cls="tiles")
 
 
 def _mini_panel():
@@ -49,13 +47,13 @@ def _cta(primary=True):
               A("the action queue", href="/approve", cls="btn-d ghost"), cls="hero-cta")
 
 
-def _typographic():
+def _typographic(model="Claude"):
     return Div(
         Div(kicker("00", "mnemos · the memory agent")),
         H1("An agent that takes ", Span("multi-step actions", cls="i accent"),
            Br(), "on top of your professional memory.", cls=""),
         P("Ingest your email, calendar, notes, slack, and docs. Mnemos reasons over the corpus with "
-          "Gemini 3 Pro, drafts the action, and a second Critic agent audits it — before you approve "
+          f"{model}, drafts the action, and a second Critic agent audits it — before you approve "
           "with one click.", cls="hero-sub", style="max-width:640px"),
         _cta(),
         Span("press ⌘K anywhere to ask · search · navigate", cls="chrome",
@@ -63,14 +61,14 @@ def _typographic():
         cls="hero-typo")
 
 
-def _constellation():
+def _constellation(model="Claude"):
     return Div(
         Canvas(id="constellation"), Div(cls="hero-fade"),
         Div(Div(kicker("00", "mnemos · the memory agent")),
             Div(Div(H1("Your professional memory,", Br(), Span("made navigable.", cls="i accent"),
                        cls="hero-h1"),
                     P("Ingest your email, calendar, notes, slack, and docs. Mnemos reasons over the "
-                      "corpus with Gemini 3 Pro, drafts the action, and a second ",
+                      f"corpus with {model}, drafts the action, and a second ",
                       Span("Critic agent", cls="saffron"),
                       " audits the draft — before you approve with one click.", cls="hero-sub"),
                     _cta(),
@@ -103,12 +101,13 @@ def _live_trace():
 def render(variant: str = DEFAULT, ready: dict | None = None, vault: dict | None = None):
     if variant not in dict(VARIANTS):
         variant = DEFAULT
+    model = (ready or {}).get("modelLabel") or "Claude"
     strip = variant_strip("/", variant, VARIANTS, meta="00 · home · pick a cold-open")
     if variant == "typographic":
-        body, scripts = _typographic(), ""
+        body, scripts = _typographic(model), ""
     elif variant == "live-trace":
         body, scripts = _live_trace(), TYPE_JS + LIVESTREAM_JS
     else:
-        body, scripts = _constellation(), CONSTELLATION_JS + LIVESTREAM_JS
-    return page("hero", body, _tiles(), ready=ready, vault=vault, full_bleed=True,
+        body, scripts = _constellation(model), CONSTELLATION_JS + LIVESTREAM_JS
+    return page("hero", body, _tiles(model), ready=ready, vault=vault, full_bleed=True,
                 scripts=scripts, strip=strip)

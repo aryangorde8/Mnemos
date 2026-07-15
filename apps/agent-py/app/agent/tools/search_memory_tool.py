@@ -10,7 +10,7 @@ _DECL = {
         "Hybrid retrieval across Alex's professional memory (emails, calendar, meeting notes, "
         "shared docs, slack, personal jots). Runs $vectorSearch (semantic) and $search (BM25) in "
         "parallel, merges via Reciprocal Rank Fusion, and optionally reranks the top candidates with "
-        "Gemini for harder queries. Returns ranked chunks with citations."
+        "an LLM pass for harder queries. Returns ranked chunks with citations."
     ),
     "parameters": {
         "type": "OBJECT",
@@ -22,7 +22,7 @@ _DECL = {
                 "enum": ["email", "calendar", "meeting_notes", "shared_doc", "slack", "notes"],
                 "description": "Optional filter to one source kind.",
             },
-            "rerank": {"type": "boolean", "description": "Set true to apply a Gemini rerank pass over the top candidates."},
+            "rerank": {"type": "boolean", "description": "Set true to apply an LLM rerank pass over the top candidates."},
         },
         "required": ["query"],
     },

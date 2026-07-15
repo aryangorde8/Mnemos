@@ -114,9 +114,9 @@ GROUNDING CONTEXT the primary agent claims to have used (this is your source of 
 Now audit. Return JSON only."""
 
     try:
-        # thinking_budget=0: on Gemini 3 Pro thinking tokens are deducted from max_output_tokens,
-        # so leaving it on starved the JSON to empty/truncated → "critic returned invalid JSON".
-        # Matches the other JSON-emitting tools (extract_graph, extract_commitments).
+        # thinking_budget=0: a Gemini-only hint (ignored on Bedrock). On Gemini 3 Pro thinking
+        # tokens are deducted from max_output_tokens, so leaving it on truncated the JSON →
+        # "critic returned invalid JSON". Matches the other JSON-emitting tools.
         result = await generate(prompt, system=CRITIC_SYSTEM, temperature=0.2, max_tokens=2048,
                                 response_mime_type="application/json", thinking_budget=0)
         raw = (result.text or "").strip()

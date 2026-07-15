@@ -4,7 +4,7 @@ Pipeline (same order as the TS tool):
   1. $vectorSearch over chunks.embedding (semantic, cosine)
   2. $search over chunks.{text,title} (lexical BM25 via lucene.english)
   3. Reciprocal Rank Fusion merges the two ranked lists (k=60)
-  4. Optional Gemini rerank over the top candidates
+  4. Optional LLM rerank over the top candidates (active generation provider)
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import json
 import time
 from typing import Any
 
-from app.config import settings
+from app.config import active_provider_short, settings
 from app.db.mongo import chunks
 from app.llm.genai_client import embed_query, generate
 
@@ -108,7 +108,7 @@ def _rrf_merge(lists: list[list[dict]], k: int) -> list[dict]:
     return arr
 
 
-async def _rerank_with_gemini(query: str, candidates: list[dict]) -> list[dict] | None:
+async def _rerank_with_llm(query: str, candidates: list[dict]) -> list[dict] | None:
     if len(candidates) <= 1:
         return candidates
     numbered = "\n\n".join(
@@ -199,7 +199,7 @@ async def search_memory(query: str, limit: int = 8, source: str | None = None,
         final = to_rerank
         reranked = False
         if rerank and len(to_rerank) > 1:
-            reorder = await _rerank_with_gemini(query, to_rerank)
+            reorder = await _rerank_with_llm(query, to_rerank)
             if reorder and len(reorder) == len(to_rerank):
                 final = reorder[:limit]
                 reranked = True
@@ -213,7 +213,7 @@ async def search_memory(query: str, limit: int = 8, source: str | None = None,
             f"vector {len(vector_hits)}",
             f"bm25 {len(text_hits)}",
             f"rrf → {len(merged)}",
-            f"rerank · gemini · top {len(final)}" if reranked else f"top {len(final)}",
+            f"rerank · {active_provider_short()} · top {len(final)}" if reranked else f"top {len(final)}",
         ]
         return _shape(query, final, phases, took_ms)
     except Exception as err:  # noqa: BLE001

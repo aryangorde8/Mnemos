@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # apps/agent-py
 
-from app.config import is_mongo_configured, is_vertex_configured  # noqa: E402
+from app.config import is_llm_configured, is_mongo_configured  # noqa: E402
 from app.db.mongo import documents  # noqa: E402
 from app.llm.genai_client import generate  # noqa: E402
 
@@ -82,8 +82,8 @@ async def main() -> None:
     if not is_mongo_configured():
         print("MONGODB_URI is required", file=sys.stderr)
         sys.exit(1)
-    if not is_vertex_configured():
-        print("GOOGLE_CLOUD_PROJECT is required", file=sys.stderr)
+    if not is_llm_configured():
+        print("no LLM provider configured — set LLM_PROVIDER + credentials", file=sys.stderr)
         sys.exit(1)
     print(f"[voice] sampling outbound emails (target={SAMPLE_SIZE})…")
     samples = await pick_sent_emails()

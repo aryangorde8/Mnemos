@@ -10,7 +10,10 @@ from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import is_mongo_configured, is_vertex_configured, llm_mode, settings
+from app.config import (
+    active_embedding_label, active_model, active_model_label, embed_provider,
+    is_bedrock, is_mongo_configured, is_vertex_configured, llm_mode, settings,
+)
 from app.lib.firebase_auth import firebase_middleware, is_firebase_configured
 
 app = FastAPI(title="mnemos-agent-py")
@@ -46,13 +49,15 @@ async def ready() -> dict:
     return {
         "atlas": "configured" if is_mongo_configured() else "missing",
         "vertex": "configured" if is_vertex_configured() else "missing",
-        "llm": llm_mode(),  # gemini_api (free tier) | vertex | missing
+        "llm": llm_mode(),  # bedrock | gemini_api (free tier) | vertex | missing
+        "embeddings": embed_provider(),  # bedrock (titan) | gemini_api | vertex | missing
         "gmail": "configured" if gmail_configured else "missing",
         "firebaseAuth": "enforced" if is_firebase_configured() else "open",
         "mcp": "enabled" if settings.mnemos_use_mcp != "0" else "disabled",
-        "geminiModel": settings.vertex_gemini_model,
-        "embeddingModel": settings.vertex_embedding_model,
-        "region": settings.google_cloud_location,
+        "model": active_model(),
+        "modelLabel": active_model_label(),
+        "embeddingModel": active_embedding_label(),
+        "region": settings.bedrock_region if is_bedrock() else settings.google_cloud_location,
         "runtime": "python",
     }
 

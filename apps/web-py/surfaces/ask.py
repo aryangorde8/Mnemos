@@ -18,7 +18,7 @@ from chrome import cite, draft_card, critic_panel, page, surface_head, variant_s
 
 VARIANTS = [("calm", "calm"), ("choreographed", "choreographed"), ("split-critic", "split-critic")]
 DEFAULT = "choreographed"
-_MODEL = "gemini-3-pro"
+_MODEL_FALLBACK = "Claude"  # used only if /ready is unreachable
 
 
 def render_page(variant: str = DEFAULT, ready: dict | None = None, vault: dict | None = None):
@@ -32,7 +32,7 @@ def render_page(variant: str = DEFAULT, ready: dict | None = None, vault: dict |
           "drafts the action — then the Critic audits it before you approve.", cls="muted",
           style="max-width:60ch;margin:0 0 18px"),
         # explicit submit button → Enter and click both fire reliably (one run per submit,
-        # not per keystroke — each run is a real Gemini call).
+        # not per keystroke — each run is a real model call).
         Form(Input(name="q", cls="field", autocomplete="off", autofocus=True,
                    placeholder="draft a decline to Marcus, propose Thursday 2pm"),
              Input(type="hidden", name="v", value=variant),
@@ -45,13 +45,13 @@ def render_page(variant: str = DEFAULT, ready: dict | None = None, vault: dict |
     return page("ask", body, ready=ready, vault=vault, strip=strip, scripts=EDIT_JS)
 
 
-def _prompt_head(q, variant):
+def _prompt_head(q, variant, model=_MODEL_FALLBACK):
     return Div(
         Div("your prompt", cls="label"),
         P(q, cls="prompt-q"),
         Div(Span(Span(cls="pulse-dot"), " streaming", cls="chrome",
                  style="display:inline-flex;align-items:center;gap:7px"),
-            Span(f"model · {_MODEL}", cls="chrome"), Span("retrieval · hybrid", cls="chrome"),
+            Span(f"model · {model}", cls="chrome"), Span("retrieval · hybrid", cls="chrome"),
             Span("↻ replay", cls="btn-d ghost", style="margin-left:auto;cursor:pointer",
                  hx_get=f"/ask/run?q={quote(q)}&v={variant}", hx_target="#run", hx_swap="innerHTML"),
             cls="prompt-meta"),
@@ -64,13 +64,13 @@ def _stream(q, variant):
                sse_swap="message", hx_swap="beforeend", sse_close="done")
 
 
-def render_run(q: str, variant: str = DEFAULT):
+def render_run(q: str, variant: str = DEFAULT, model: str = _MODEL_FALLBACK):
     q = (q or "").strip()
     if variant not in dict(VARIANTS):
         variant = DEFAULT
     if not q:
         return Div("type a question and press enter.", cls="empty")
-    head = _prompt_head(q, variant)
+    head = _prompt_head(q, variant, model)
     stream = _stream(q, variant)
     if variant == "calm":
         layout = Div(Div(stream, style="padding:18px 20px"),

@@ -1,0 +1,56 @@
+# Mnemos on a single Docker host (AWS Lightsail / EC2 / any VM).
+#
+# Two app containers on an internal network; Caddy in front terminates TLS and
+# routes each public subdomain to the right container. Nothing but Caddy is
+# exposed to the internet. See README.md in this folder for the full runbook.
+#
+#   docker compose up -d --build
+#
+# The build context is the repo root (two levels up) so the existing
+# Cloud-Run Dockerfiles work unchanged.
+
+services:
+  agent:
+    build:
+      context: ../..
+      dockerfile: apps/agent-py/Dockerfile
+    env_file: .env
+    environment:
+      PORT: "8080"
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web-py/Dockerfile
+    env_file: .env
+    environment:
+      PORT: "8080"
+      # Server-side calls stay on the internal compose network; the browser-facing
+      # OAuth "connect google" link uses AGENT_PUBLIC_URL from .env.
+      AGENT_URL: "http://agent:8080"
+    expose:
+      - "8080"
+    depends_on:
+      - agent
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - agent
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
