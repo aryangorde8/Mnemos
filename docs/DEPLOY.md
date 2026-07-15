@@ -2,10 +2,10 @@
 
 This is the one-page runbook for taking Mnemos from a local checkout to a
 public URL. The default target is a single **AWS Lightsail** box running both
-containers behind Caddy (automatic HTTPS); the LLM is **Claude Sonnet 4.5 on
-Amazon Bedrock** and embeddings are **Amazon Titan Text v2**. It assumes you
-have an AWS account, a MongoDB Atlas cluster, and a Google OAuth client (for
-Gmail send + Calendar).
+containers behind Caddy (automatic HTTPS); the LLM is **Amazon Nova Pro on
+Amazon Bedrock** (model-configurable via `BEDROCK_MODEL_ID`) and embeddings are
+**Amazon Titan Text v2**. It assumes you have an AWS account, a MongoDB Atlas
+cluster, and a Google OAuth client (for Gmail send + Calendar).
 
 > **The full box runbook lives in [../deploy/aws/README.md](../deploy/aws/README.md)** —
 > instance creation, DNS, Caddy, TLS, cost guardrails. This page covers the parts
@@ -46,8 +46,11 @@ the index at the new dimension.
 
 ## 2. Amazon Bedrock
 
-1. Console → **Amazon Bedrock** → **Model access** (pick a region) → enable a
-   Claude model. Copy its exact **model ID / inference-profile ID**.
+1. Console → **Amazon Bedrock** → **Model access** (pick a region) → enable an
+   **Amazon Nova** model. Copy its exact **model ID / inference-profile ID**.
+   (Nova is AWS first-party — no Marketplace subscription, so it works on India
+   accounts with no international card. Claude works too but its Marketplace
+   subscription requires a card.)
 2. Console → **IAM** → create a user with an inline policy allowing
    `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream`. Copy its
    access key id + secret.
@@ -55,7 +58,7 @@ the index at the new dimension.
 
 ```
 LLM_PROVIDER=bedrock
-BEDROCK_MODEL_ID=global.anthropic.claude-sonnet-4-5-20250929-v1:0
+BEDROCK_MODEL_ID=apac.amazon.nova-pro-v1:0   # region prefix must match BEDROCK_REGION
 BEDROCK_REGION=ap-south-1
 EMBED_PROVIDER=bedrock
 BEDROCK_EMBED_MODEL=amazon.titan-embed-text-v2:0
@@ -63,10 +66,6 @@ BEDROCK_EMBED_DIMS=1024
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 ```
-
-> Streaming (`converse_stream`) may require submitting Anthropic use-case
-> details for your account once — Bedrock returns a clear error with the link
-> if so; it propagates in ~15 min.
 
 ## 3. Seed the vault
 
@@ -125,8 +124,9 @@ sends real email via `gmail.send` and books real events via `calendar.events`.
 ## Cost notes
 
 - One always-on Lightsail box (2–4 GB) plus M0 free Atlas plus Bedrock
-  pay-per-call. Bedrock is billed per token (Claude Sonnet 4.5 ≈ $3 / $15 per
-  1M input/output tokens); Titan embeddings are negligible at this corpus size.
+  pay-per-call. Bedrock is billed per token (Amazon Nova Pro ≈ $0.80 / $3.20 per
+  1M input/output tokens — Claude is ≈ $3 / $15); Titan embeddings are
+  negligible at this corpus size.
 - Set an AWS **Budgets** alert so real charges can't start silently after any
   promotional credit runs out.
 

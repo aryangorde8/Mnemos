@@ -1,7 +1,7 @@
 # Mnemos — Build Brief
 
 > **Historical document — original hackathon build brief.** Mnemos has since
-> migrated off Google Cloud to **AWS**: **Claude Sonnet 4.5 on Amazon Bedrock**,
+> migrated off Google Cloud to **AWS**: **Amazon Nova Pro on Amazon Bedrock**,
 > **Amazon Titan** embeddings, a **Python** stack (FastAPI agent + FastHTML web),
 > and **AWS Lightsail** hosting. This brief captures the original hackathon plan
 > and constraints; for the current architecture see [README.md](README.md) and
@@ -37,8 +37,8 @@ cut it.
 
 ## Qualification rules — MUST haves (as submitted to the hackathon)
 
-- ✅ Built with **Gemini 3 Pro** (via Vertex AI) — *since migrated to Claude
-  Sonnet 4.5 on Amazon Bedrock; the LLM layer is provider-pluggable*
+- ✅ Built with **Gemini 3 Pro** (via Vertex AI) — *since migrated to Amazon
+  Nova Pro on Amazon Bedrock; the LLM layer is provider-pluggable*
 - ✅ Orchestrated via a hand-rolled ReAct loop
 - ✅ Integrates **MongoDB MCP Server** (github.com/mongodb-js/mongodb-mcp-server)
 - ✅ Hosted on a public URL
@@ -82,7 +82,7 @@ Current stack (post-migration); the hackathon original is noted where it differs
 |---|---|---|
 | Frontend | **Python 3.12 + FastHTML** (HTMX + SSE) | Server-rendered, no build step. *(originally Next.js 16 + TypeScript + Tailwind v4)* |
 | Components | **Built from scratch** | NO UI kit. Hand-built to match the aesthetic. |
-| LLM | **Claude Sonnet 4.5** via Amazon Bedrock (Converse) | Provider-pluggable via `LLM_PROVIDER`. *(originally Gemini 3 Pro via Vertex AI)* |
+| LLM | **Amazon Nova Pro** via Amazon Bedrock (Converse) | Model set by `BEDROCK_MODEL_ID` (Claude/Llama/Mistral selectable); provider-pluggable via `LLM_PROVIDER`. *(originally Gemini 3 Pro via Vertex AI)* |
 | Agent | **Hand-rolled ReAct loop** (Python + FastAPI) | No agent framework — orchestration is the point. |
 | Database | **MongoDB Atlas M0** (free tier) | With Atlas Vector Search |
 | MCP integration | **MongoDB MCP Server** | Official, open-source (optional, `MNEMOS_USE_MCP`) |

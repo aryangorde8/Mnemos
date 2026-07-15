@@ -1,8 +1,10 @@
 """Amazon Bedrock backend (Converse API) for generation + streaming tool use.
 
-Only the generation path lives here; embeddings stay on Gemini/Vertex (see
-genai_client). boto3's Converse stream is synchronous, so streaming is bridged
-to async via a worker thread feeding an asyncio.Queue — nothing blocks the loop.
+Model-agnostic: the Converse API is the same for Amazon Nova, Anthropic Claude,
+Meta Llama, and Mistral — the model is picked by BEDROCK_MODEL_ID. Titan
+embeddings also live here (embed/). boto3's Converse stream is synchronous, so
+streaming is bridged to async via a worker thread feeding an asyncio.Queue —
+nothing blocks the loop.
 
 Credentials come from the standard AWS chain (AWS_ACCESS_KEY_ID /
 AWS_SECRET_ACCESS_KEY env, shared config, or an instance role). Model access

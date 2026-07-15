@@ -60,7 +60,7 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 |---|---|
 | Frontend | Python 3.12 + FastHTML (HTMX + SSE), server-rendered, no build step ([apps/web-py](apps/web-py)) |
 | Agent | Python 3.12 + FastAPI, hand-rolled ReAct loop, Server-Sent Events ([apps/agent-py](apps/agent-py)) |
-| LLM | Claude (Sonnet 4.5) via Amazon Bedrock Converse — streaming + function calling; pluggable to Gemini/Vertex via `LLM_PROVIDER` |
+| LLM | Amazon Bedrock (Converse) — streaming + function calling; default **Amazon Nova Pro**, and Claude/Llama/Mistral selectable via `BEDROCK_MODEL_ID`; pluggable to Gemini/Vertex via `LLM_PROVIDER` |
 | Embeddings | Amazon Titan v2 (Bedrock), 1024-d; pluggable via `EMBED_PROVIDER` |
 | Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) + a graph collection, via `motor` (async driver) |
 | Hosting | AWS Lightsail (web + agent + Caddy via docker-compose) — see [deploy/aws](deploy/aws); Cloud Run also supported |
@@ -112,15 +112,19 @@ switch:
 
 | Env | Options | Default |
 |---|---|---|
-| `LLM_PROVIDER` | `bedrock` (Claude) · `gemini` (AI Studio key) · `vertex` | Bedrock when AWS creds present |
+| `LLM_PROVIDER` | `bedrock` · `gemini` (AI Studio key) · `vertex` | Bedrock when AWS creds present |
+| `BEDROCK_MODEL_ID` | any Bedrock model/inference-profile (Nova · Claude · Llama · Mistral) | `apac.amazon.nova-pro-v1:0` |
 | `EMBED_PROVIDER` | `bedrock` (Titan) · `gemini` · `vertex` | follows the LLM provider |
 
-The default deployment ([deploy/aws](deploy/aws)) runs **Claude Sonnet 4.5** and **Titan
-embeddings** on Amazon Bedrock — fully on AWS, no Google API key. The topbar pill and
-`/ready` report the live provider + model. To fall back to Gemini, set `LLM_PROVIDER=gemini`
-with a `GEMINI_API_KEY` (or `vertex` with a GCP project); embeddings follow unless
-`EMBED_PROVIDER` overrides. Titan v2 is 1024-d, so switching embedding provider requires a
-one-time re-embed + index rebuild (`scripts/reembed_chunks.py` + `scripts/setup_mongo_index.py`).
+The default deployment ([deploy/aws](deploy/aws)) runs **Amazon Nova Pro** and **Titan
+embeddings** on Amazon Bedrock — fully on AWS, no Google API key. Nova is an AWS first-party
+model, so it needs no Marketplace subscription and works on India accounts with no
+international card; set `BEDROCK_MODEL_ID` to a Claude id if you'd rather run Claude (its
+Marketplace subscription needs a card). The topbar pill and `/ready` report the live model.
+To fall back to Gemini, set `LLM_PROVIDER=gemini` with a `GEMINI_API_KEY` (or `vertex` with a
+GCP project); embeddings follow unless `EMBED_PROVIDER` overrides. Titan v2 is 1024-d, so
+switching embedding provider requires a one-time re-embed + index rebuild
+(`scripts/reembed_chunks.py` + `scripts/setup_mongo_index.py`).
 
 ## Deploy
 

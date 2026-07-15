@@ -9,7 +9,7 @@
 | | Status check |
 |---|---|
 | Atlas vector + BM25 indexes both `READY` | hit `/ready` on the agent, expect `atlas: configured` |
-| Claude on Bedrock reachable | hit `/ready`, expect `llm: bedrock` |
+| Bedrock reachable (Amazon Nova) | hit `/ready`, expect `llm: bedrock` |
 | Prod corpus loaded | hit `/ingest/stats`, expect `documents: 242, chunks: 268` |
 | Memory graph extracted on prod | hit `/graph/stats`, expect `person: ≥36, project: ≥25, relations: ≥150` |
 | Voice fixture refreshed from live corpus | `scripts/fixtures/alex-voice.md` head should mention 24 sampled emails |
@@ -61,7 +61,7 @@ entrance animation. Type the **exact** prompt:
 ⏎. Cut straight to `/ask?q=…&run=1`. The reasoning stream begins.
 
 **What the viewer sees** (in order):
-1. Run header pulses: `streaming · claude-sonnet-4.5 · bedrock`
+1. Run header pulses: `streaming · amazon nova pro · bedrock`
 2. Time chips appear in the left gutter, vermilion node marker pops
    on the rule (line 1)
 3. A `›` `search_memory` tool call with the args, then an `‹` observation

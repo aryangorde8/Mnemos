@@ -15,7 +15,7 @@ VARIANTS = [("typographic", "typographic"), ("constellation", "constellation"),
             ("live-trace", "live trace")]
 DEFAULT = "constellation"
 
-def _tiles(model="Claude"):
+def _tiles(model="Amazon Nova"):
     tiles = [
         ("01", "❡", "Memory", "ingested.",
          "Mail, calendar, notes, slack, docs — vectorized in MongoDB Atlas, queryable in milliseconds.", "/ingest"),
@@ -47,7 +47,7 @@ def _cta(primary=True):
               A("the action queue", href="/approve", cls="btn-d ghost"), cls="hero-cta")
 
 
-def _typographic(model="Claude"):
+def _typographic(model="Amazon Nova"):
     return Div(
         Div(kicker("00", "mnemos · the memory agent")),
         H1("An agent that takes ", Span("multi-step actions", cls="i accent"),
@@ -61,7 +61,7 @@ def _typographic(model="Claude"):
         cls="hero-typo")
 
 
-def _constellation(model="Claude"):
+def _constellation(model="Amazon Nova"):
     return Div(
         Canvas(id="constellation"), Div(cls="hero-fade"),
         Div(Div(kicker("00", "mnemos · the memory agent")),
@@ -101,7 +101,7 @@ def _live_trace():
 def render(variant: str = DEFAULT, ready: dict | None = None, vault: dict | None = None):
     if variant not in dict(VARIANTS):
         variant = DEFAULT
-    model = (ready or {}).get("modelLabel") or "Claude"
+    model = (ready or {}).get("modelLabel") or "Amazon Nova"
     strip = variant_strip("/", variant, VARIANTS, meta="00 · home · pick a cold-open")
     if variant == "typographic":
         body, scripts = _typographic(model), ""

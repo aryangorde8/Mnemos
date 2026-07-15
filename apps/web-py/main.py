@@ -60,7 +60,33 @@ async def home(v: str = ""):
 @rt("/ingest")
 async def ingest(v: str = ""):
     ready, vault, stats = await _chrome()
-    return (Title("Mnemos — ingest"), *ingest_s.render(variant=v, stats=stats, ready=ready, vault=vault))
+    docs = None
+    if v == "manage":
+        data = await backend.get_json("/ingest/documents", {"limit": 50}) or {}
+        docs = data.get("documents", []) if isinstance(data, dict) else []
+    return (Title("Mnemos — ingest"),
+            *ingest_s.render(variant=v, stats=stats, ready=ready, vault=vault, documents=docs))
+
+
+async def _doc_list_fragment():
+    data = await backend.get_json("/ingest/documents", {"limit": 50}) or {}
+    docs = data.get("documents", []) if isinstance(data, dict) else []
+    return ingest_s.doc_list(docs)
+
+
+@rt("/ingest/add")
+async def ingest_add(title: str = "", body: str = "", source: str = "notes"):
+    title, body = (title or "").strip(), (body or "").strip()
+    if title and body:
+        await backend.post_json("/ingest", {"source": source or "notes", "title": title, "body": body})
+    return await _doc_list_fragment()
+
+
+@rt("/ingest/delete")
+async def ingest_delete(doc_id: str = ""):
+    if (doc_id or "").strip():
+        await backend.delete_json(f"/ingest/documents/{doc_id.strip()}")
+    return await _doc_list_fragment()
 
 
 @rt("/ask")
@@ -72,7 +98,7 @@ async def ask(v: str = ""):
 @rt("/ask/run")
 async def ask_run(q: str = "", v: str = ""):
     ready = await backend.get_json("/ready") or {}
-    model = ready.get("modelLabel") or "Claude"
+    model = ready.get("modelLabel") or "Amazon Nova"
     return ask_s.render_run(q, v, model=model)
 
 
@@ -132,9 +158,13 @@ async def approve(v: str = "", i: int = 0):
 
 @rt("/approve/decide")
 async def approve_decide(aid: str = "", verdict: str = "approve",
-                         body: str = "", to: str = "", subject: str = ""):
+                         body: str = "", to: str = "", subject: str = "",
+                         title: str = "", attendees: str = "", when: str = "",
+                         duration: str = "", agenda: str = "", location: str = ""):
     if verdict == "approve":
-        # apply any inline edits (to / subject / body) so an edited draft is what gets sent
+        # apply any inline edits so an edited draft is what gets sent / booked. Email fields
+        # (to/subject/body) and meeting fields (title/attendees/when/…) are disjoint, so we just
+        # add whichever came back; the backend merges edits over the stored proposal.
         edits: dict = {}
         if (body or "").strip():
             edits["body"] = body
@@ -142,6 +172,23 @@ async def approve_decide(aid: str = "", verdict: str = "approve",
             edits["subject"] = subject
         if (to or "").strip():
             edits["to"] = [t.strip() for t in to.split(",") if t.strip()]
+        if (title or "").strip():
+            edits["title"] = title
+        if (attendees or "").strip():
+            edits["attendees"] = [a.strip() for a in attendees.split(",") if a.strip()]
+        if (when or "").strip():
+            # the edited start time becomes the single chosen slot
+            edits["proposedTimes"] = [when.strip()]
+            edits["preferredIdx"] = 0
+        if (duration or "").strip():
+            try:
+                edits["durationMinutes"] = int(float(duration))
+            except ValueError:
+                pass
+        if (agenda or "").strip():
+            edits["agenda"] = agenda
+        if (location or "").strip():
+            edits["location"] = location
         payload = {"edits": edits} if edits else {}
         res = await backend.post_json(f"/actions/{aid}/approve", payload)
     else:

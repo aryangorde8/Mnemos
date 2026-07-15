@@ -33,6 +33,7 @@ CMDK_ITEMS = [
     ("search", "⌗", '"inference SLO slip"', "vault · vector + bm25 + rrf", "/search"),
     ("search", "⌗", "meetings with K. Reyes", "vault · calendar + notes", "/search"),
     ("nav", "→", "ingest · connect a source", "/ingest", "/ingest"),
+    ("nav", "→", "ingest · add / delete memory", "/ingest?v=manage", "/ingest?v=manage"),
     ("nav", "→", "approve · the action queue", "/approve", "/approve"),
     ("nav", "→", "memory · constellations", "/memory", "/memory"),
     ("nav", "→", "search · pipeline", "/search", "/search"),
@@ -110,8 +111,10 @@ def topbar(active: str, ready: dict | None = None):
     atlas = "on" if ready.get("atlas") == "configured" else "pending"
     # llm: bedrock | gemini_api (free tier) | vertex | missing; older agents only send `vertex`
     llm = ready.get("llm") or ("vertex" if ready.get("vertex") == "configured" else "missing")
+    # On Bedrock the pill shows the live model (nova | claude | …) via providerShort.
+    bedrock_model = ready.get("providerShort") or "model"
     llm_label, (llm_value, llm_state) = {
-        "bedrock": ("bedrock", ("claude", "on")),
+        "bedrock": ("bedrock", (bedrock_model, "on")),
         "gemini_api": ("gemini", ("api · free", "on")),
         "vertex": ("gemini", ("vertex", "on")),
     }.get(llm, ("gemini", ("awaiting", "pending")))
@@ -222,6 +225,18 @@ def _fmt_dt(iso: str) -> str:
         return str(iso)
 
 
+def _to_dt_local(iso: str) -> str:
+    """ISO datetime → the 'YYYY-MM-DDTHH:MM' a <input type=datetime-local> expects (else '')."""
+    if not iso:
+        return ""
+    try:
+        from datetime import datetime
+        dt = datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+        return dt.strftime("%Y-%m-%dT%H:%M")
+    except (ValueError, TypeError):
+        return ""
+
+
 def _proposal_bits(action: dict):
     p = action.get("proposal", {}) or {}
     kind = action.get("kind")
@@ -246,22 +261,25 @@ def _proposal_bits(action: dict):
     return p.get("subject") or p.get("title") or "(action)", p.get("body") or p.get("agenda") or "", []
 
 
-def default_decide_bar(action: dict, blocking: bool, is_email: bool = False):
+def default_decide_bar(action: dict, blocking: bool, is_editable: bool = False):
     """Working decision bar: approve & reject POST to /approve/decide; edit toggles inline editing.
 
-    For draft_email the approve request includes the (possibly edited) body textarea so an edit is
-    actually sent. The whole bar is swapped out (outerHTML) with the confirmation on success.
+    For draft_email and schedule_meeting the approve request includes the (possibly edited) fields
+    from `#edit-{aid}` so an edit is actually sent/booked. The whole bar is swapped out (outerHTML)
+    with the confirmation on success.
     """
     aid = action.get("id", "")
+    is_meeting = action.get("kind") == "schedule_meeting"
+    label = "✓ approve & book" if is_meeting else "✓ approve & send"
     swap = {"hx_target": f"#decide-{aid}", "hx_swap": "outerHTML"}
     if blocking:
-        approve = Button("✓ approve & send", cls="btn-d primary", disabled=True)
+        approve = Button(label, cls="btn-d primary", disabled=True)
     else:
-        approve = Button("✓ approve & send", cls="btn-d primary",
+        approve = Button(label, cls="btn-d primary",
                          hx_post=f"/approve/decide?aid={aid}&verdict=approve",
-                         hx_include=(f"#edit-{aid}" if is_email else None), **swap)
+                         hx_include=(f"#edit-{aid}" if is_editable else None), **swap)
     edit = (Button("¶ edit", cls="btn-d ghost", type="button", onclick=f"mnEdit('{aid}')")
-            if is_email else Button("¶ edit", cls="btn-d ghost", type="button", disabled=True))
+            if is_editable else Button("¶ edit", cls="btn-d ghost", type="button", disabled=True))
     reject = Button("✕ reject", cls="btn-d",
                     hx_post=f"/approve/decide?aid={aid}&verdict=reject", **swap)
     note = (Span("⊘ critic blocks this send · resolve the blocking note first", cls="warn")
@@ -275,7 +293,10 @@ def draft_card(action: dict, critique: dict | None = None, show_marks: bool = Tr
     subject, body, meta = _proposal_bits(action)
     findings = (critique or {}).get("findings", []) if show_marks else []
     blocking = is_blocking(critique)
-    is_email = action.get("kind") == "draft_email"
+    kind = action.get("kind")
+    is_email = kind == "draft_email"
+    is_meeting = kind == "schedule_meeting"
+    is_editable = is_email or is_meeting
     p = action.get("proposal", {}) or {}
     meta_block = Div(*[Span(Span(f"{k} ", cls="", style="color:var(--paper-faint)"),
                             f"{v}\n") for k, v in meta], cls="meta",
@@ -283,7 +304,7 @@ def draft_card(action: dict, critique: dict | None = None, show_marks: bool = Tr
     body_view = (body_with_marks(body, findings) if show_marks
                  else Div(body, cls="body", style="white-space:pre-wrap"))
     view = Div(meta_block, Div(subject, cls="subj"), body_view, id=f"view-{aid}")
-    # editable to / subject / body (draft_email only); included on approve as edits
+    # inline edit form (draft_email / schedule_meeting) — included on approve as edits
     if is_email:
         to_val = p.get("to") if isinstance(p.get("to"), list) else ([p.get("to")] if p.get("to") else [])
         edit = Div(
@@ -294,9 +315,29 @@ def draft_card(action: dict, critique: dict | None = None, show_marks: bool = Tr
             Div("body", cls="label", style="margin:12px 0 4px"),
             Textarea(body, name="body", cls="field-edit"),
             id=f"edit-{aid}", style="display:none")
+    elif is_meeting:
+        times = p.get("proposedTimes") or []
+        pidx = p.get("preferredIdx") or 0
+        cur = times[pidx] if 0 <= pidx < len(times) else (times[0] if times else "")
+        attendees = p.get("attendees") or []
+        edit = Div(
+            Div("title", cls="label", style="margin-bottom:4px"),
+            Input(name="title", value=p.get("title", ""), cls="field-edit-line"),
+            Div("attendees (comma-separated)", cls="label", style="margin:12px 0 4px"),
+            Input(name="attendees", value=", ".join(attendees), cls="field-edit-line"),
+            Div("when", cls="label", style="margin:12px 0 4px"),
+            Input(name="when", type="datetime-local", value=_to_dt_local(cur), cls="field-edit-line"),
+            Div("duration (minutes)", cls="label", style="margin:12px 0 4px"),
+            Input(name="duration", type="number", min="5", step="5",
+                  value=str(p.get("durationMinutes") or 30), cls="field-edit-line"),
+            Div("location", cls="label", style="margin:12px 0 4px"),
+            Input(name="location", value=p.get("location") or "", cls="field-edit-line"),
+            Div("agenda", cls="label", style="margin:12px 0 4px"),
+            Textarea(p.get("agenda") or "", name="agenda", cls="field-edit"),
+            id=f"edit-{aid}", style="display:none")
     else:
         edit = ""
-    decide = decide_bar if decide_bar is not None else default_decide_bar(action, blocking, is_email)
+    decide = decide_bar if decide_bar is not None else default_decide_bar(action, blocking, is_editable)
     return Div(
         Div(action.get("kind", "draft"), cls="label", style="margin-bottom:12px"),
         view, edit, decide,

@@ -25,14 +25,19 @@ def _now() -> int:
 
 def _estimate_cost(prompt_tokens: int, output_tokens: int) -> float:
     """Rough USD estimate from public list prices per 1M tokens (input, output),
-    keyed by the active generation provider."""
-    from app.config import llm_provider
-    prices = {
-        "bedrock": (3.0, 15.0),       # Claude Sonnet 4.5 on Bedrock
-        "gemini_api": (0.075, 0.30),  # Gemini Flash (free/paid tier)
-        "vertex": (1.25, 10.0),       # Gemini Pro on Vertex
-    }
-    pin, pout = prices.get(llm_provider(), (3.0, 15.0))
+    keyed by the active generation provider (and model, on Bedrock)."""
+    from app.config import llm_provider, settings
+    provider = llm_provider()
+    if provider == "bedrock":
+        mid = settings.bedrock_model_id.lower()
+        bedrock_prices = {
+            "nova-micro": (0.035, 0.14), "nova-lite": (0.06, 0.24),
+            "nova-pro": (0.80, 3.20), "nova-premier": (2.50, 12.50),
+            "claude": (3.0, 15.0),
+        }
+        pin, pout = next((v for k, v in bedrock_prices.items() if k in mid), (0.80, 3.20))
+    else:
+        pin, pout = {"gemini_api": (0.075, 0.30), "vertex": (1.25, 10.0)}.get(provider, (0.80, 3.20))
     usd = (prompt_tokens / 1_000_000) * pin + (output_tokens / 1_000_000) * pout
     return round(usd * 10000) / 10000
 
