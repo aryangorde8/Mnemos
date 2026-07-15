@@ -1,14 +1,15 @@
 # Deploy Mnemos on AWS (Lightsail)
 
 One small always-on box runs both containers behind Caddy (automatic HTTPS).
-No Google Cloud: the agent talks to MongoDB Atlas + the Gemini API directly.
+No Google Cloud for the LLM: both generation (Claude) and embeddings (Titan)
+run on **Amazon Bedrock**, and the agent talks to MongoDB Atlas directly.
 
 - **Cost:** the $20/mo Lightsail plan (4 GB) — ~$110 over 5.5 months, which
   draws a $100 credit down to ~zero by year-end. The $10/mo plan (2 GB) also
-  works if you add swap (step 3).
-- **No code changes:** the app already supports a non-GCP host via
-  `GEMINI_API_KEY` (LLM without Vertex) and `AGENT_PUBLIC_URL` (browser-facing
-  OAuth link).
+  works if you add swap (step 3). Bedrock is billed per token on top.
+- **No code changes:** the provider is config-only — `LLM_PROVIDER=bedrock` /
+  `EMBED_PROVIDER=bedrock` (with AWS keys) select Bedrock; `AGENT_PUBLIC_URL`
+  sets the browser-facing OAuth link.
 
 ---
 
@@ -167,12 +168,13 @@ still used by the AWS deployment.
 
 ### LLM note
 
-Generation runs on **Amazon Bedrock (Claude)** — draws down your AWS credit, no
-free-tier rate limits. Switching providers is just `LLM_PROVIDER`: unset it (or
-set `gemini`/`vertex`) to fall back to Gemini/Vertex with the same code.
+Both **generation (Claude Sonnet 4.5)** and **embeddings (Titan Text v2)** run
+on **Amazon Bedrock** — billed to your AWS credit, no free-tier rate limits and
+no Google API key. Switching providers is config-only: set `LLM_PROVIDER` /
+`EMBED_PROVIDER` to `gemini` (with a `GEMINI_API_KEY`) or `vertex` (with a GCP
+project) to fall back with the same code.
 
-**Embeddings stay on Gemini** (`text-embedding-004`) so the existing Atlas vector
-index keeps working — that's why a `GEMINI_API_KEY` is still needed. Volume is
-tiny (one call per search). Going 100% off Google would mean re-embedding the
-corpus with a Bedrock model (e.g. Titan) and rebuilding the Atlas index at the
-new dimension — a separate migration, not required to run.
+Titan v2 is **1024-dim** vs. Gemini `text-embedding-004`'s 768, so the Atlas
+vector index is built at 1024 (step 6a re-embeds the corpus + rebuilds the index
+if it was previously embedded with a Google model). Keep `LLM_PROVIDER` and
+`EMBED_PROVIDER` on the same provider unless you re-embed after changing embed.

@@ -69,7 +69,9 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 
 ```bash
 cp .env.example .env.local
-# fill MONGODB_URI, GOOGLE_CLOUD_PROJECT, GOOGLE_APPLICATION_CREDENTIALS
+# fill MONGODB_URI + your LLM provider:
+#   Bedrock (default): LLM_PROVIDER=bedrock, EMBED_PROVIDER=bedrock, AWS_ACCESS_KEY_ID/SECRET, BEDROCK_REGION
+#   or Gemini API:     GEMINI_API_KEY   ·   or Vertex: GOOGLE_CLOUD_PROJECT + GOOGLE_APPLICATION_CREDENTIALS
 
 npm run setup:agent        # python venv + agent backend deps
 npm run setup:web          # python venv + frontend deps
@@ -95,8 +97,9 @@ Approvals **simulate** sends until a Google account is connected. To make them r
    The `google` pill in the topbar flips to `live`; approving now sends real email via
    `gmail.send` and books real events via `calendar.events`.
 
-For Cloud Run deploys, set the repo secrets `GMAIL_OAUTH_CLIENT_ID` / `GMAIL_OAUTH_CLIENT_SECRET`
-and the repo variable `GMAIL_OAUTH_REDIRECT_URI` — the deploy workflow provisions them onto the
+For the AWS deploy, put `GMAIL_OAUTH_CLIENT_ID` / `GMAIL_OAUTH_CLIENT_SECRET` /
+`GMAIL_OAUTH_REDIRECT_URI` in `deploy/aws/.env` (see [deploy/aws](deploy/aws)). For the legacy
+Cloud Run path, set them as repo secrets/variables — the deploy workflow provisions them onto the
 agent service automatically.
 
 > While the OAuth consent screen is in *Testing* mode, add yourself as a test user; Google

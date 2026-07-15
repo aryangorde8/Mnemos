@@ -1,195 +1,138 @@
 # Deploy
 
 This is the one-page runbook for taking Mnemos from a local checkout to a
-public Cloud Run URL. It assumes you have a Google Cloud project + billing,
-a MongoDB Atlas cluster, and Vertex AI Gemini access in the same region.
+public URL. The default target is a single **AWS Lightsail** box running both
+containers behind Caddy (automatic HTTPS); the LLM is **Claude Sonnet 4.5 on
+Amazon Bedrock** and embeddings are **Amazon Titan Text v2**. It assumes you
+have an AWS account, a MongoDB Atlas cluster, and a Google OAuth client (for
+Gmail send + Calendar).
 
-> **Order matters.** Deploy the agent first; capture its URL; then deploy the
-> web frontend with that URL baked into `NEXT_PUBLIC_AGENT_URL` at build time.
+> **The full box runbook lives in [../deploy/aws/README.md](../deploy/aws/README.md)** —
+> instance creation, DNS, Caddy, TLS, cost guardrails. This page covers the parts
+> that are the same wherever you host: Atlas, Bedrock, and seeding the vault.
 
 ## Prerequisites
 
 ```
-gcloud --version          # ≥ 470
-node --version            # 22.x
-docker --version          # optional; used for local image testing
-```
-
-```bash
-gcloud auth login
-gcloud config set project  YOUR_PROJECT_ID
-gcloud config set run/region us-central1
-gcloud auth application-default login
+docker --version          # + the compose plugin (docker compose version)
+python3 --version         # 3.12.x, for the local setup / seed scripts
 ```
 
 ## 1. Atlas
 
 1. Create an **M0** cluster in a region with **Atlas Vector Search**
-   (e.g. AWS `us-east-1`, GCP `us-central1`).
+   (e.g. AWS `ap-south-1` / `us-east-1`).
 2. Add a database user; whitelist `0.0.0.0/0` *only for the demo* (lock down
    for production).
-3. Capture the connection string into `.env.local`:
+3. Capture the connection string into `.env.local` (local) or `deploy/aws/.env`
+   (box):
 
 ```
 MONGODB_URI=mongodb+srv://USER:PASS@CLUSTER.mongodb.net/?retryWrites=true&w=majority
 MONGODB_DB=mnemos
 ```
 
-4. Create the vector search index:
+4. Create the vector + text search indexes (idempotent; Atlas needs ~1–3 min to
+   build):
 
 ```bash
 npm run setup:agent   # one-time: python venv + agent deps
 npm run setup:mongo
 ```
 
-Atlas needs ~1–3 min to build the index. The script is idempotent.
+The vector index dimension follows the active embedding provider (Titan v2 →
+1024). If you switch providers, re-run `setup:mongo` — it drops and recreates
+the index at the new dimension.
 
-## 2. Vertex AI
+## 2. Amazon Bedrock
 
-1. Enable the API:
-
-```bash
-gcloud services enable aiplatform.googleapis.com run.googleapis.com \
-  artifactregistry.googleapis.com cloudbuild.googleapis.com
-```
-
-2. (Optional but recommended) create a runtime service account for the agent:
-
-```bash
-gcloud iam service-accounts create mnemos-agent \
-  --display-name="Mnemos agent runtime"
-
-PROJECT_ID=$(gcloud config get-value project)
-SA="mnemos-agent@${PROJECT_ID}.iam.gserviceaccount.com"
-
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-  --member="serviceAccount:${SA}" --role="roles/aiplatform.user"
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-  --member="serviceAccount:${SA}" --role="roles/logging.logWriter"
-```
-
-3. Capture project + region in `.env.local`:
+1. Console → **Amazon Bedrock** → **Model access** (pick a region) → enable a
+   Claude model. Copy its exact **model ID / inference-profile ID**.
+2. Console → **IAM** → create a user with an inline policy allowing
+   `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream`. Copy its
+   access key id + secret.
+3. Put the values in your env file:
 
 ```
-GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_CLOUD_LOCATION=us-central1
-VERTEX_GEMINI_MODEL=gemini-3.1-pro-preview
-VERTEX_GEMINI_LOCATION=global
-VERTEX_EMBEDDING_MODEL=text-embedding-004
+LLM_PROVIDER=bedrock
+BEDROCK_MODEL_ID=global.anthropic.claude-sonnet-4-5-20250929-v1:0
+BEDROCK_REGION=ap-south-1
+EMBED_PROVIDER=bedrock
+BEDROCK_EMBED_MODEL=amazon.titan-embed-text-v2:0
+BEDROCK_EMBED_DIMS=1024
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
 ```
 
-## 3. Artifact Registry
+> Streaming (`converse_stream`) may require submitting Anthropic use-case
+> details for your account once — Bedrock returns a clear error with the link
+> if so; it propagates in ~15 min.
 
-Cloud Build pushes images to a regional Artifact Registry repo named `mnemos`.
-Create it once:
+## 3. Seed the vault
 
-```bash
-gcloud artifacts repositories create mnemos \
-  --repository-format=docker \
-  --location=us-central1 \
-  --description="Mnemos container images"
-```
-
-## 4. Seed the vault
-
-This populates Mongo with 247 synthetic Alex Chen documents — the demo corpus.
-The Python seed script generates, ingests, and builds the graph + commitments
-ledger directly (no running server needed):
+This populates Mongo with the synthetic Alex Chen demo corpus. The Python seed
+script generates, ingests, and builds the graph + commitments ledger directly
+(no running server needed):
 
 ```bash
 npm run seed -- --load
 ```
 
-It takes ~5–10 minutes (one Gemini call per narrative thread; one embedding
-batch per ingested document). This writes the fixture to
+It takes ~5–10 minutes (one LLM call per narrative thread; one embedding batch
+per ingested document). This writes the fixture to
 `scripts/fixtures/alex-data.json` as a side-effect.
 
-**Web UI alternative (after fixture is generated):** Navigate to `/ingest`
-in the running web app, or open ⌘K and type "ingest the demo corpus". The
-page reads `scripts/fixtures/alex-data.json` via the agent's `POST /ingest/demo`
-SSE endpoint and streams per-document progress live.
+**Web UI alternative (after the fixture is generated):** navigate to `/ingest`
+in the running web app, or open ⌘K and type "ingest the demo corpus". The page
+streams per-document progress via the agent's `POST /ingest/demo` SSE endpoint.
 
-Optional: extract Alex's writing voice so `draft_email` mimics his actual
-phrasings:
+Optional — extract Alex's writing voice so `draft_email` mimics his phrasings:
 
 ```bash
-npm run voice
+npm run voice   # writes scripts/fixtures/alex-voice.md; a version is already committed
 ```
 
-Writes `scripts/fixtures/alex-voice.md`; the agent loads it lazily at draft
-time. A hand-crafted version is already committed — run `npm run voice`
-to override it with voice sampled from the generated corpus.
+## 4. Deploy the box (AWS Lightsail)
 
-## 5. Deploy the agent
+Follow [../deploy/aws/README.md](../deploy/aws/README.md). In short:
 
 ```bash
-SERVICE_ACCOUNT="mnemos-agent@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com" \
-  bash scripts/deploy-agent.sh
+git clone https://github.com/aryangorde8/Mnemos.git
+cd Mnemos/deploy/aws
+cp .env.example .env && nano .env      # fill Atlas + Bedrock + OAuth
+docker compose up -d --build           # builds web + agent + Caddy
 ```
 
-The script:
-- builds the agent container via `gcloud builds submit`
-- pushes to `${REGION}-docker.pkg.dev/${PROJECT}/mnemos/mnemos-agent`
-- deploys to Cloud Run with the right env vars
-- prints the public URL
-
-Verify:
+If the corpus was embedded with a non-Titan model, re-embed once and rebuild the
+index at the new dimension (run inside the agent container):
 
 ```bash
-curl https://mnemos-agent-XXX.a.run.app/health
-curl https://mnemos-agent-XXX.a.run.app/ready
+docker compose exec -T agent python apps/agent-py/scripts/reembed_chunks.py
+docker compose exec -T agent python apps/agent-py/scripts/setup_mongo_index.py
 ```
 
-`/ready` should report `atlas: configured` and `vertex: configured`.
-
-## 6. Deploy the web frontend
-
-Copy the agent URL into `.env.local` as `NEXT_PUBLIC_AGENT_URL`, then:
+## 5. Verify
 
 ```bash
-bash scripts/deploy-web.sh
+curl https://mnemos-agent.<your-domain>/health   # {"status":"ok",...}
+curl https://mnemos-agent.<your-domain>/ready     # llm: bedrock, gmail: configured
 ```
 
-`NEXT_PUBLIC_*` vars are baked in at build time, so re-deploy the web service
-if the agent URL ever changes.
-
-## 7. (Optional) custom subdomain
-
-```bash
-gcloud beta run domain-mappings create \
-  --service=mnemos-web \
-  --domain=mnemos.YOURDOMAIN.com \
-  --region=us-central1
-```
-
-Then add the DNS records gcloud prints to your registrar.
-
-## 8. Cloud Build alternative
-
-`cloudbuild.yaml` works as a CI trigger. Wire it to a GitHub trigger so a push
-to `main` rebuilds + redeploys:
-
-```bash
-gcloud builds triggers create github \
-  --name="mnemos-agent" \
-  --repo-name=mnemos --repo-owner=YOUR_GH_USER \
-  --branch-pattern="^main$" \
-  --build-config=cloudbuild.yaml \
-  --substitutions=_TARGET=agent
-```
-
-Repeat with `_TARGET=web` plus `_NEXT_PUBLIC_AGENT_URL=...` for the web trigger.
+`/ready` should report `atlas: configured` and `llm: bedrock`. Open the web URL,
+go to **/approve**, and click **connect google** once — approving a draft then
+sends real email via `gmail.send` and books real events via `calendar.events`.
 
 ## Cost notes
 
-- Cloud Run scale-to-zero, M0 free Atlas, Vertex pay-per-call → demo costs
-  pennies a day. The 247-doc seed run is the biggest single expense (~$0.30
-  in Gemini calls). Embedding cost is negligible at this corpus size.
+- One always-on Lightsail box (2–4 GB) plus M0 free Atlas plus Bedrock
+  pay-per-call. Bedrock is billed per token (Claude Sonnet 4.5 ≈ $3 / $15 per
+  1M input/output tokens); Titan embeddings are negligible at this corpus size.
+- Set an AWS **Budgets** alert so real charges can't start silently after any
+  promotional credit runs out.
 
-## Tearing down
+## Cloud Run (legacy, still supported)
 
-```bash
-gcloud run services delete mnemos-web    --region=us-central1 --quiet
-gcloud run services delete mnemos-agent  --region=us-central1 --quiet
-gcloud artifacts repositories delete mnemos --location=us-central1 --quiet
-```
+The original hackathon deploy targeted Google Cloud Run + Vertex AI. That path
+still works: set `LLM_PROVIDER=vertex` (or `gemini` with a `GEMINI_API_KEY`) and
+use `cloudbuild.yaml` / `scripts/deploy-agent.sh` / `scripts/deploy-web.sh`. It
+is no longer the default — AWS Lightsail + Bedrock is.

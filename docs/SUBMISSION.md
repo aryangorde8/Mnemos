@@ -4,6 +4,13 @@
 > field. The screenshots in `docs/screenshots/` upload in numbered order
 > (01 is the cover).
 
+> **Post-hackathon update.** Mnemos was originally built and submitted on
+> Google Cloud (Gemini 3 Pro / Vertex AI / Cloud Run, Next.js + Node). It has
+> since migrated fully to **AWS** — **Claude Sonnet 4.5 on Amazon Bedrock**,
+> **Amazon Titan** embeddings, and a **Python** stack (FastAPI agent + FastHTML
+> web) on **AWS Lightsail**. The copy below reflects the current system; the
+> retrieval/critic/graph design is unchanged.
+
 ---
 
 ## Title
@@ -47,7 +54,7 @@ your professional corpus (emails, calendar, meeting notes, shared docs,
 slack, personal jots) once. From then on:
 
 1. **Ask.** *"what did I commit to Sarah last week?"* — the agent
-   retrieves from hybrid (vector + BM25 + RRF + Gemini rerank) memory
+   retrieves from hybrid (vector + BM25 + RRF + LLM rerank) memory
    and walks the entity graph if useful, streams its reasoning live,
    and returns an answer with `[N]` citation pills you can hover to
    verify against the source chunk.
@@ -77,20 +84,20 @@ slack, personal jots) once. From then on:
 
 | Layer | Tech |
 |---|---|
-| Frontend | Next.js 16 (Pages Router), TypeScript strict, Tailwind v4 CSS-first, Framer Motion 12 |
-| Agent | Node 22 + Express 5, hand-rolled ReAct loop, Server-Sent Events |
-| LLM | Gemini 3 Pro via Vertex AI (streaming + function calling + thinkingBudget control) |
+| Frontend | Python 3.12 + FastHTML (HTMX + SSE), server-rendered, no build step |
+| Agent | Python 3.12 + FastAPI, hand-rolled ReAct loop, Server-Sent Events |
+| LLM | Claude Sonnet 4.5 via Amazon Bedrock (Converse — streaming + function calling); pluggable to Gemini/Vertex via `LLM_PROVIDER` |
+| Embeddings | Amazon Titan Text v2 (Bedrock), 1024-dim |
 | Memory | MongoDB Atlas Vector Search + Atlas Search (BM25) + a graph collection |
-| MCP | MongoDB MCP Server (stdio, gated by `MNEMOS_USE_MCP=1`) |
-| Hosting | Cloud Run (web + agent, scale-to-zero, pre-warmed min-instances=1) |
-| Build | Cloud Build, GitHub Actions CI, multi-stage Docker |
+| MCP | MongoDB MCP Server (stdio, optional, gated by `MNEMOS_USE_MCP=1`) |
+| Hosting | AWS Lightsail (web + agent + Caddy via docker-compose) |
+| CI | GitHub Actions (import checks + docker build) |
 
 **The retrieval stack (the MongoDB partner-track depth):**
 - `search_memory` runs `$vectorSearch` + `$search` (BM25) **in parallel**,
   merges via Reciprocal Rank Fusion (k=60), and optionally reranks the
-  top candidates with a fast Gemini pass (thinkingBudget=0). Each phase
-  reports in the result summary so the reasoning stream shows the
-  pipeline visibly.
+  top candidates with a fast LLM pass. Each phase reports in the result
+  summary so the reasoning stream shows the pipeline visibly.
 - `expand_via_graph` is a true graph-RAG tool: BFS traversal over the
   `entities` + `relations` collections starting from a seed entity,
   pulling chunks shared by every visited entity. The reasoning stream
@@ -111,10 +118,10 @@ emit `[1]` `[2]` bracket markers after every factual claim. The UI
 parses these and renders interactive citation pills. Hover any `[N]`
 and the matching citation chip pulses; click to scroll it into view.
 
-**Cost/latency telemetry.** `usageMetadata` from every Vertex SSE chunk
+**Cost/latency telemetry.** Token usage from every Bedrock stream event
 is accumulated across all turns. The done event carries `totalTokens`
-+ `estimatedCostUsd` (Gemini 3 Pro pricing baked in). Shown live in
-the reasoning stream header.
++ `estimatedCostUsd` (provider-aware pricing — Claude Sonnet 4.5 by
+default). Shown live in the reasoning stream header.
 
 **Calendar conflict detection.** `schedule_meeting` checks the corpus
 calendar for each proposed time window, tags slots free/conflict, and
@@ -128,28 +135,30 @@ to simulated send when not configured.
 
 ## Challenges we ran into
 
-- **Gemini 3 thinking tokens consume the output budget.** Set
-  `maxOutputTokens: 1500` and the model returns truncated JSON because
-  thoughts ate 1400 tokens. Fixed by adding `thinkingBudget: 0` for
-  structured tasks (rerank, critique, voice extraction) and bumping
-  `maxOutputTokens` to 8192 for safety.
-- **SSE streaming + scroll behaviour.** Standard EventSource doesn't
-  support POST bodies, so we use `fetch` + `ReadableStream` with manual
-  line buffering for SSE parsing. Scroll handlers had to coalesce
-  mousemove events via RAF to avoid React reconciles per pixel.
-- **Cross-origin Cloud Run + Brave Shields.** `mnemos.aryangorde.com` →
-  `*.run.app` triggered Brave's private-network-access prompt. Fixed
-  by mapping the agent to `mnemos-agent.aryangorde.com` (same
-  registrable domain, Brave stops asking).
-- **Workspace `node_modules` hoisting in Docker.** npm sometimes nests
-  deps under `apps/agent/node_modules` instead of hoisting. The
-  multi-stage Dockerfile now mirrors both layouts so module resolution
-  works at runtime.
-- **Multi-toolCall handling in Gemini 3.** Gemini 3.x can emit multiple
-  function calls per turn, and the next user turn must contain a
-  `functionResponse` for *every* call in the same order. Plus
-  `thoughtSignature` parts must be preserved verbatim. The hand-rolled
-  ReAct loop handles this carefully.
+- **One ReAct loop, three providers.** Rather than fork the loop per
+  backend, we built a provider-neutral message/tool format (`app/llm/
+  neutral.py`) that each client converts at call time — Bedrock Converse
+  blocks or Gemini `Content`/`Part`. The loop holds a single neutral
+  history and never sees a vendor SDK type.
+- **Bedrock's strict tool protocol vs. the auto-critic.** Converse
+  rejects a tool *result* that has no matching tool *use* in the prior
+  turn. The Critic fires automatically (the model didn't call it), so we
+  feed its audit back as a text note in the next user turn instead of a
+  synthetic `toolResult` — same behaviour, protocol-legal.
+- **Streaming was gated behind a use-case review.** `converse_stream`
+  returned "Model use case details have not been submitted." Submitting
+  the Anthropic use-case form once (it propagates in ~15 min) unblocked
+  live token streaming.
+- **Picking a non-Legacy Claude profile.** Some inference-profile IDs are
+  flagged Legacy and refuse to serve. We pin the `global.anthropic.
+  claude-sonnet-4-5` profile, which streams tool-use reliably.
+- **Titan throttled on the bulk re-embed.** Re-embedding the whole corpus
+  fired too many parallel `InvokeModel` calls and hit `ThrottlingException`.
+  A concurrency semaphore (2) plus adaptive retries made it steady.
+- **Embedding dimension change.** Titan v2 is 1024-dim vs. Gemini
+  `text-embedding-004`'s 768, so moving embeddings to Bedrock meant
+  re-embedding every chunk and rebuilding the Atlas vector index at the
+  new dimension (`scripts/reembed_chunks.py` + `setup_mongo_index.py`).
 
 ## Accomplishments we're proud of
 
@@ -172,25 +181,26 @@ to simulated send when not configured.
 
 ## What we learned
 
-- The Vertex AI Function Calling API gives you streaming *and* tool
-  calls in the same turn — but the protocol is strict about
-  `thoughtSignature` ordering. One out-of-place text part and the next
-  turn goes off the rails.
-- Atlas `$vectorSearch` is cheap to query but **slow to seed at
-  hackathon scale**. Embedding 247 documents one at a time hit Vertex
-  quota fast; batches of 5 fixed it.
+- The Bedrock Converse API gives you streaming *and* tool calls in the
+  same turn, but tool-use input arrives as *partial JSON deltas* — you
+  accumulate the fragments and parse once the block closes. And every
+  tool result must map to a prior tool use, which shaped how the
+  auto-critic is threaded back in.
+- Atlas `$vectorSearch` is cheap to query but **slow to seed at scale**.
+  Embedding the corpus in parallel hit provider throttling fast; a small
+  concurrency cap plus batching fixed it.
 - The **right place for an approval gate is inline in the reasoning
   stream**, not a modal. Cognitive context stays intact; the user sees
   the draft *while* the Critic's findings stream in below.
-- Tailwind v4's CSS-first config (no `tailwind.config.js`) lets the
-  entire design system live in `globals.css`. Custom `@utility` rules
-  are a clean replacement for `@layer components`.
+- Server-rendered SSE (FastHTML + HTMX) makes the reasoning stream a
+  first-class citizen with no client framework — the agent yields events
+  and the page appends them, no build step and no hydration to fight.
 
 ## What's next for Mnemos
 
-- **Real production integrations.** Calendar tool currently writes to
-  Mongo; wire actual Google Calendar `events.insert`. Gmail send is
-  done (OAuth ready, dormant pending GCP credentials).
+- **Deeper production integrations.** Gmail send and Google Calendar
+  `events.insert` are both live via OAuth; next is inbound sync (watch
+  the inbox + calendar so memory stays fresh without manual ingest).
 - **Multi-user.** Per-user vault isolation behind Firebase Auth so
   Mnemos becomes a product, not a demo.
 - **Voice onboarding.** A 60-second flow that samples 100 outbound
@@ -206,21 +216,20 @@ to simulated send when not configured.
 ## Built With
 
 ```
-gemini-3-pro
-vertex-ai
+claude
+claude-sonnet-4-5
+amazon-bedrock
+amazon-titan
 mongodb-atlas-vector-search
 mongodb-atlas-search
 mongodb-mcp-server
 mongodb
-google-cloud-run
-google-cloud-build
-nextjs
-react
-typescript
-tailwindcss
-framer-motion
-node-js
-express
+aws-lightsail
+python
+fastapi
+fasthtml
+htmx
+caddy
 server-sent-events
 docker
 ```
@@ -257,7 +266,7 @@ docker
 | Repo URL | https://github.com/aryangorde8/Mnemos |
 | Track | MongoDB partner track |
 | License | Apache 2.0 |
-| Built With tags | gemini-3-pro · vertex-ai · mongodb-atlas-vector-search · mongodb-atlas-search · mongodb-mcp-server · google-cloud-run · nextjs · typescript · tailwindcss · framer-motion · express · server-sent-events |
+| Built With tags | claude-sonnet-4-5 · amazon-bedrock · amazon-titan · mongodb-atlas-vector-search · mongodb-atlas-search · mongodb-mcp-server · aws-lightsail · python · fastapi · fasthtml · htmx · server-sent-events |
 
 ## Gallery upload order
 

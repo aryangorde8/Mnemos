@@ -1,7 +1,7 @@
 """Typed runtime config — mirrors apps/agent/src/config.ts.
 
 Loads the same repo-root .env.local both apps share, so the Python backend runs
-against identical Atlas + Vertex + OAuth credentials.
+against identical Atlas + Bedrock/Gemini + OAuth credentials.
 """
 from pathlib import Path
 
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     gemini_api_key: str = Field("", alias="GEMINI_API_KEY")
 
     # LLM provider for generation/streaming: "bedrock" | "gemini" | "vertex" | ""
-    # (auto). Embeddings always run on Gemini/Vertex (keeps the Atlas index dim).
+    # (auto). Embeddings pick their own provider below (EMBED_PROVIDER).
     llm_provider: str = Field("", alias="LLM_PROVIDER")
     # Amazon Bedrock (Converse API). Credentials come from the standard AWS env
     # (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY) or an instance role.
@@ -142,6 +142,12 @@ def active_model_label() -> str:
     if p == "vertex":
         return "Gemini (Vertex)"
     return "not configured"
+
+
+def active_provider_short() -> str:
+    """One-word tag for the active generation provider, for compact UI chips:
+    'claude' on Bedrock, else 'gemini'."""
+    return "claude" if is_bedrock() else "gemini"
 
 
 def active_embedding_label() -> str:

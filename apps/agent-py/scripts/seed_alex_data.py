@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # apps/agent-py
 
 from app.agent.extract_commitments import run_commitment_extraction  # noqa: E402
 from app.agent.extract_graph import run_graph_extraction  # noqa: E402
-from app.config import is_vertex_configured  # noqa: E402
+from app.config import active_model_label, is_llm_configured  # noqa: E402
 from app.db.mongo import chunks, documents  # noqa: E402
 from app.ingest.chunker import chunk as chunk_text  # noqa: E402
 from app.ingest.embedder import embed_batch  # noqa: E402
@@ -89,8 +89,9 @@ THREADS = [
 
 
 async def generate_thread(spec: dict) -> list[dict]:
-    if not is_vertex_configured():
-        raise RuntimeError("GOOGLE_CLOUD_PROJECT is required for generation")
+    if not is_llm_configured():
+        raise RuntimeError("no LLM provider configured — set LLM_PROVIDER + credentials "
+                           "(Bedrock/Gemini/Vertex)")
     targets = ", ".join(f"{k}: {v}" for k, v in spec["mix"].items())
     total = sum(spec["mix"].values())
     prompt = f"""{WORLD}
@@ -190,7 +191,7 @@ async def main() -> None:
         print(f"loading existing fixture from {fixture}")
         docs = json.loads(fixture.read_text(encoding="utf-8"))
     else:
-        print("generating threads via Gemini ...")
+        print(f"generating threads via {active_model_label()} ...")
         docs = await generate_all()
         fixture.parent.mkdir(parents=True, exist_ok=True)
         fixture.write_text(json.dumps(docs, indent=2), encoding="utf-8")

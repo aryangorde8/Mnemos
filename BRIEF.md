@@ -1,5 +1,13 @@
 # Mnemos — Build Brief
 
+> **Historical document — original hackathon build brief.** Mnemos has since
+> migrated off Google Cloud to **AWS**: **Claude Sonnet 4.5 on Amazon Bedrock**,
+> **Amazon Titan** embeddings, a **Python** stack (FastAPI agent + FastHTML web),
+> and **AWS Lightsail** hosting. This brief captures the original hackathon plan
+> and constraints; for the current architecture see [README.md](README.md) and
+> [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The product wedge and feature
+> set below are unchanged.
+
 ## The one-line wedge
 
 **Mnemos is the first AI agent that takes multi-step actions on top of your
@@ -27,17 +35,19 @@ cut it.
   3. Potential impact (size of audience + size of pain)
   4. Idea originality (the wedge matters here)
 
-## Qualification rules — MUST haves
+## Qualification rules — MUST haves (as submitted to the hackathon)
 
-- ✅ Built with **Gemini 3 Pro** (via Vertex AI)
-- ✅ Orchestrated via **Google Cloud Agent Builder**
+- ✅ Built with **Gemini 3 Pro** (via Vertex AI) — *since migrated to Claude
+  Sonnet 4.5 on Amazon Bedrock; the LLM layer is provider-pluggable*
+- ✅ Orchestrated via a hand-rolled ReAct loop
 - ✅ Integrates **MongoDB MCP Server** (github.com/mongodb-js/mongodb-mcp-server)
 - ✅ Hosted on a public URL
 - ✅ Open-source GitHub repo with Apache 2.0 license file at root
 - ✅ ~3-minute demo video
 
-Any submission missing any of the above is disqualified. None of these are
-swappable.
+These were the hackathon requirements. The shipped product now runs on AWS/Bedrock
+(see the banner above) — the retrieval, critic, and graph design carried over
+unchanged.
 
 ## The aesthetic bar
 
@@ -64,23 +74,23 @@ Concrete rules:
   a serious terminal — monospaced, color-coded by step type, character-by-
   character streaming.
 
-## Tech stack — locked
+## Tech stack
+
+Current stack (post-migration); the hackathon original is noted where it differs.
 
 | Layer | Tech | Notes |
 |---|---|---|
-| Frontend | **Next.js 16 (Pages Router)** | Next.js 16 has breaking changes from older Next.js — always check `node_modules/next/dist/docs/` before writing Next-specific code |
-| Language | **TypeScript** strict mode | |
-| Styling | **Tailwind CSS v4** (CSS-first config — NO tailwind.config.js) | |
-| Components | **Built from scratch** | NO shadcn, NO Radix wrappers, NO Material. Hand-built to match aesthetic. |
-| LLM | **Gemini 3 Pro** via Vertex AI | |
-| Agent | **Google Cloud Agent Builder** | Required by hackathon rules |
+| Frontend | **Python 3.12 + FastHTML** (HTMX + SSE) | Server-rendered, no build step. *(originally Next.js 16 + TypeScript + Tailwind v4)* |
+| Components | **Built from scratch** | NO UI kit. Hand-built to match the aesthetic. |
+| LLM | **Claude Sonnet 4.5** via Amazon Bedrock (Converse) | Provider-pluggable via `LLM_PROVIDER`. *(originally Gemini 3 Pro via Vertex AI)* |
+| Agent | **Hand-rolled ReAct loop** (Python + FastAPI) | No agent framework — orchestration is the point. |
 | Database | **MongoDB Atlas M0** (free tier) | With Atlas Vector Search |
-| MCP integration | **MongoDB MCP Server** | Official, open-source |
-| Embeddings | Gemini text-embedding-004 (or newest available) | |
-| Auth | **Firebase Auth** — Google sign-in only | |
-| Hosting | **Cloud Run** (both frontend and agent backend) | |
-| Streaming | **Server-Sent Events** | For reasoning chain |
-| Domain | Subdomain of an existing aryangorde.com TBD | |
+| MCP integration | **MongoDB MCP Server** | Official, open-source (optional, `MNEMOS_USE_MCP`) |
+| Embeddings | **Amazon Titan Text v2** (1024-dim) | Provider-pluggable via `EMBED_PROVIDER`. *(originally Gemini text-embedding-004)* |
+| Auth | **Firebase Auth** — Google sign-in (optional, config-gated) | |
+| Hosting | **AWS Lightsail** (web + agent + Caddy via docker-compose) | *(originally Cloud Run)* |
+| Streaming | **Server-Sent Events** | For the reasoning stream |
+| Domain | `mnemos.aryangorde.com` + `mnemos-agent.aryangorde.com` | |
 
 ## The 3-minute demo — the north star
 
