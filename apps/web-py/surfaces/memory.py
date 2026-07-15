@@ -1,4 +1,4 @@
-"""04 · Memory — canon variant: constellation.
+"""04 · Memory — constellation.
 
 A printed star map (SVG) of the people the agent has extracted from the corpus. X ≈ first-seen
 (right ascension), Y ≈ relationship density (declination), star size ≈ magnitude (mentions). Projects
@@ -6,13 +6,10 @@ are constellations joining their member stars. Hover a star → the right rail u
 """
 import hashlib
 
-from fasthtml.common import Div, NotStr, P, Span, Table, Tbody, Td, Th, Thead, Tr  # type: ignore
+from fasthtml.common import Div, NotStr, P, Span  # type: ignore
 
 from assets import MEMORY_JS
-from chrome import page, spark, surface_head, variant_strip
-
-VARIANTS = [("ledger", "ledger"), ("constellation", "constellation"), ("catalog", "card catalog")]
-DEFAULT = "constellation"
+from chrome import page, surface_head
 
 W, H = 1000, 560
 PADL, PADR, PADT, PADB = 60, 40, 34, 44
@@ -87,19 +84,6 @@ def _members_of(proj, relations, valid):
         elif b in (pname, pkey) and a in valid:
             members.append(a)
     return list(dict.fromkeys(members))
-
-
-def _membership(projects, relations, valid):
-    """{person name/key → [project names]} from the relation edges."""
-    out: dict = {}
-    for proj in projects:
-        for m in _members_of(proj, relations, valid):
-            out.setdefault(m, []).append(proj.get("name", ""))
-    return out
-
-
-def _series_nums(p):
-    return [_num(v) for v in (p.get("series") or [])[-14:]]
 
 
 def _constellations(projects, relations, nodes):
@@ -203,55 +187,7 @@ def _constellation_body(people, projects, relations):
     return grid, MEMORY_JS
 
 
-def _ledger_body(people, projects, relations):
-    ranked = sorted(people, key=lambda p: p.get("mentions", 0), reverse=True)
-    rows = []
-    for p in ranked:
-        nums = _series_nums(p)
-        rows.append(Tr(
-            Td(Span(p.get("name", ""), cls="i", style="font-size:17px"),
-               Div(p.get("role") or "", cls="label", style="margin-top:2px") if p.get("role") else ""),
-            Td(f"{p.get('mentions',0)}", cls="mono", style="text-align:right"),
-            Td(spark(nums, "v", width=90, height=14) if nums else Span("—", cls="faint")),
-            Td((p.get("lastSeen") or "")[:10], cls="mono faint")))
-    table = Table(Thead(Tr(Th("person"), Th("mentions"), Th("activity"), Th("last seen"))),
-                  Tbody(*rows), cls="ledger")
-    valid = {p.get("name") for p in people} | {p.get("key") for p in people}
-    cards = []
-    for pi, proj in enumerate(projects):
-        members = _members_of(proj, relations, valid)
-        cards.append(Div(Div(proj.get("name", ""), cls="i", style="font-size:20px"),
-                         Div(f"{len(members)} members", cls="label", style="margin:6px 0 8px"),
-                         P(", ".join(m for m in members)[:160] or "—", cls="muted",
-                           style="font-size:13px"), cls="card"))
-    proj_block = (Div(P("projects", cls="label", style="margin:30px 0 0"),
-                      Div(*cards, cls="proj-cards")) if cards else "")
-    return Div(table, proj_block), ""
-
-
-def _catalog_body(people, projects, relations):
-    valid = {p.get("name") for p in people} | {p.get("key") for p in people}
-    membership = _membership(projects, relations, valid)
-    ranked = sorted(people, key=lambda p: p.get("mentions", 0), reverse=True)
-    cards = []
-    for i, p in enumerate(ranked, 1):
-        nums = _series_nums(p)
-        tags = membership.get(p.get("name"), []) + membership.get(p.get("key"), [])
-        cards.append(Div(
-            Div(cls="hole"),
-            Div(f"no. {i:02d} · person", cls="spine"),
-            Div(p.get("name", ""), cls="nm"),
-            Div(p.get("role") or "—", cls="label", style="margin-bottom:12px"),
-            Div(Span(f"{p.get('mentions',0)}", cls="mono", style="font-size:22px;color:var(--paper)"),
-                Span(" mentions", cls="chrome")),
-            Div(spark(nums, "v", width=120, height=16) if nums else "", style="margin:12px 0"),
-            Div(*[Span(t, cls="tag", style="margin:0 4px 4px 0") for t in tags]) if tags else "",
-            cls="catalog-card"))
-    return Div(Div(*cards, cls="catalog")), ""
-
-
-def render(variant: str = DEFAULT, graph: dict | None = None,
-           ready: dict | None = None, vault: dict | None = None):
+def render(graph: dict | None = None, ready: dict | None = None, vault: dict | None = None):
     graph = graph or {}
     ents = graph.get("entities", {}) if isinstance(graph, dict) else {}
     people = ents.get("person", []) or []
@@ -259,9 +195,6 @@ def render(variant: str = DEFAULT, graph: dict | None = None,
     relations = graph.get("relations", []) or []
     stats = graph.get("stats", {}) if isinstance(graph, dict) else {}
     e = stats.get("entities", {}) if isinstance(stats, dict) else {}
-    if variant not in dict(VARIANTS):
-        variant = DEFAULT
-    strip = variant_strip("/memory", variant, VARIANTS, meta="04 · memory · extracted entities")
     head = surface_head("04", "memory · the constellation",
                         Span("The people & projects "), Span("in orbit.", cls="i accent"))
     meta = P(f"{e.get('person','—')} people · {e.get('project','—')} projects · "
@@ -270,12 +203,7 @@ def render(variant: str = DEFAULT, graph: dict | None = None,
     if not people:
         return page("memory", head,
                     Div("no entities extracted yet — run the graph extraction over the corpus.",
-                        cls="empty"), ready=ready, vault=vault, strip=strip)
+                        cls="empty"), ready=ready, vault=vault)
 
-    if variant == "ledger":
-        body, scripts = _ledger_body(people, projects, relations)
-    elif variant == "catalog":
-        body, scripts = _catalog_body(people, projects, relations)
-    else:
-        body, scripts = _constellation_body(people, projects, relations)
-    return page("memory", head, meta, body, ready=ready, vault=vault, scripts=scripts, strip=strip)
+    body, scripts = _constellation_body(people, projects, relations)
+    return page("memory", head, meta, body, ready=ready, vault=vault, scripts=scripts)

@@ -20,7 +20,7 @@ SURFACES = [
     ("memory", "/memory", "memory", "04", "⌥5"),
     ("search", "/search", "search", "05", "⌥6"),
 ]
-EXTRA = [("debate", "/debate"), ("commitments", "/commitments"), ("briefings", "/briefings")]
+EXTRA = [("commitments", "/commitments"), ("briefings", "/briefings")]
 
 _SURF_BY_ID = {s[0]: s for s in SURFACES}
 
@@ -32,8 +32,7 @@ CMDK_ITEMS = [
     ("ask", "?", "what did I commit to Sarah last week?", "reason · 3 sources · ~4s", "/ask"),
     ("search", "⌗", '"inference SLO slip"', "vault · vector + bm25 + rrf", "/search"),
     ("search", "⌗", "meetings with K. Reyes", "vault · calendar + notes", "/search"),
-    ("nav", "→", "ingest · connect a source", "/ingest", "/ingest"),
-    ("nav", "→", "ingest · add / delete memory", "/ingest?v=manage", "/ingest?v=manage"),
+    ("nav", "→", "ingest · add / delete memory", "/ingest", "/ingest"),
     ("nav", "→", "approve · the action queue", "/approve", "/approve"),
     ("nav", "→", "memory · constellations", "/memory", "/memory"),
     ("nav", "→", "search · pipeline", "/search", "/search"),
@@ -150,18 +149,6 @@ def command_palette():
         Div(Span("↑↓ navigate · ↵ select · esc dismiss"), Span("mnemos · v0.0.1"),
             cls="cmdk-bar chrome"),
         cls="cmdk"), id="cmdk", cls="cmdk-back")
-
-
-def variant_strip(base_path: str, active: str, options: list[tuple[str, str]],
-                  meta: str = "", extra: str = ""):
-    """The three-variants selector at the top of a surface. Links switch `?v=` (server-side)."""
-    btns = []
-    for i, (val, label) in enumerate(options, 1):
-        href = f"{base_path}?v={val}" + (("&" + extra) if extra else "")
-        btns.append(A(Span(f"v.{i:02d}", cls="v-num"), Span(label), href=href,
-                      cls="vbtn" + (" active" if val == active else "")))
-    return Div(Div("variant", cls="label-cell"), *btns,
-              (Span(meta, cls="meta") if meta else ""), cls="variant-strip")
 
 
 def page(active: str, *content, ready: dict | None = None, vault: dict | None = None,

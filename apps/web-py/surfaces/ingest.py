@@ -1,22 +1,15 @@
-"""01 · Ingest — three variants.
+"""01 · Ingest — manage memory.
 
-- sources (conservative): an editorial wedge + a per-source connection table.
-- run     (canon):        three counters + a vermilion progress bar + the 5-phase pipeline.
-- manage:                 add a single item to memory by hand, or delete anything already indexed.
-
-All seeded from the real /ingest/stats (and /ingest/documents for manage).
+A per-source overview of what's indexed, an add-a-single-item form, and a filterable list of every
+document with a per-row delete. Seeded from the real /ingest/stats and /ingest/documents.
 """
 from fasthtml.common import (  # type: ignore
-    A, Button, Div, Form, Input, P, Span, Table, Tbody, Td, Textarea, Tr,
+    Button, Div, Form, Input, P, Span, Table, Tbody, Td, Textarea, Tr,
 )
 
-from assets import DROPDOWN_JS, INGEST_JS
-from chrome import page, surface_head, variant_strip
+from assets import DROPDOWN_JS
+from chrome import page, surface_head
 
-VARIANTS = [("sources", "sources"), ("run", "ingest run"), ("manage", "add · delete")]
-DEFAULT = "run"
-
-_PHASES = [("01", "fetch"), ("02", "parse"), ("03", "chunk"), ("04", "embed"), ("05", "index")]
 _SOURCES = [("✉", "Gmail", "email"), ("◷", "Google Calendar", "calendar"),
             ("※", "Slack", "slack"), ("⌗", "Google Drive", "shared_doc"),
             ("❡", "Notion", "notes"), ("§", "Linear", "issues")]
@@ -68,55 +61,6 @@ def _source_table(stats):
     return Table(Tbody(*rows), cls="src-table")
 
 
-def _counter(cid, goal, cap, atlas=False):
-    return Div(Div(Span("0"), Span(f" / {goal:,}", cls="goal") if goal else "", cls="big", id=cid),
-               Div(cap, cls="label cap"), cls="counter" + (" atlas" if atlas else ""))
-
-
-def _run_body(stats):
-    documents = stats.get("documents") or 0
-    chunks = stats.get("chunks") or (documents * 2)
-    goal = documents or 5939
-    chunks_goal = chunks or goal * 2
-    counters = Div(_counter("c-items", goal, "items → done"),
-                   _counter("c-chunks", chunks_goal, "chunks"),
-                   _counter("c-vectors", chunks_goal, "vectors → atlas", atlas=True), cls="counters")
-    progress = Div(Div(id="ing-fill", cls="fill"), cls="progress")
-    phases = Div(*[Div(Div(n, cls="pn"), Div(label, cls="pl"), cls="phase-cell")
-                   for n, label in _PHASES], cls="phases")
-    banner = Div(Div("The vault is ", Span("ready.", cls="i accent"), cls="surface-h1",
-                     style="font-size:34px"),
-                 Div(A("ask it something →", href="/ask", cls="btn-d primary"),
-                     A("search the corpus", href="/search", cls="btn-d"),
-                     style="margin-top:16px;display:flex;gap:10px"),
-                 id="ing-banner", style="display:none;margin-top:30px")
-    return Div(
-        surface_head("01", "ingest · vectorize into atlas",
-                     Span("Watch the corpus "), Span("vectorize.", cls="i accent")),
-        P("Each item becomes ~2 chunks; each chunk becomes one 768-d vector indexed into MongoDB "
-          "Atlas vector search.", cls="muted", style="max-width:62ch;margin:0 0 26px"),
-        Div(counters, progress,
-            Div(Span("skip to end", id="ing-skip", cls="btn-d ghost", style="cursor:pointer"),
-                style="margin-top:10px"),
-            phases, banner,
-            id="ingest-run", data_goal=str(goal), data_chunks=str(chunks_goal)),
-        Div(P("by source", cls="label", style="margin:40px 0 10px"), _source_table(stats)),
-    )
-
-
-def _sources_body(stats):
-    return Div(
-        surface_head("01", "ingest · connect your sources",
-                     Span("Mnemos reads "), Span("everything,", cls="i accent"), Span(" once.")),
-        P("Connect a source; Mnemos fetches, chunks, embeds, and indexes it into Atlas. Heterogeneous "
-          "items — messages, events, docs — counted in one unit.", cls="muted",
-          style="max-width:62ch;margin:0 0 26px"),
-        _source_table(stats),
-        P("read-only demo · to (re)load the corpus run  npm run seed -- --load", cls="faint mono",
-          style="font-size:12px;margin-top:18px"),
-    )
-
-
 def doc_list(docs: list[dict] | None, source: str = "all"):
     """Recent-documents list with a per-row delete — re-rendered after every add / delete / filter.
 
@@ -144,7 +88,7 @@ def doc_list(docs: list[dict] | None, source: str = "all"):
     return Div(*rows)
 
 
-def _manage_body(stats, docs):
+def _ingest_body(stats, docs):
     documents = stats.get("documents") or 0
     chunks = stats.get("chunks") or 0
     form = Form(
@@ -173,21 +117,14 @@ def _manage_body(stats, docs):
           "the list. Deleting removes the document and every vector it produced from Atlas.",
           cls="muted", style="max-width:62ch;margin:0 0 22px"),
         form,
+        Div(P("by source", cls="label", style="margin:36px 0 10px"), _source_table(stats)),
         Div(filter_row, style="margin-top:30px"),
         Div(doc_list(docs), id="doc-list"),
     )
 
 
-def render(variant: str = DEFAULT, stats: dict | None = None, ready: dict | None = None,
+def render(stats: dict | None = None, ready: dict | None = None,
            vault: dict | None = None, documents: list[dict] | None = None):
     stats = stats or {}
-    if variant not in dict(VARIANTS):
-        variant = DEFAULT
-    strip = variant_strip("/ingest", variant, VARIANTS, meta="01 · ingest · MongoDB Atlas")
-    if variant == "sources":
-        body, scripts = _sources_body(stats), ""
-    elif variant == "manage":
-        body, scripts = _manage_body(stats, documents), DROPDOWN_JS
-    else:
-        body, scripts = _run_body(stats), INGEST_JS
-    return page("ingest", body, ready=ready, vault=vault, scripts=scripts, strip=strip)
+    return page("ingest", _ingest_body(stats, documents), ready=ready, vault=vault,
+                scripts=DROPDOWN_JS)
