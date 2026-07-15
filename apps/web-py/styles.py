@@ -367,14 +367,6 @@ body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
 .stat-row .k{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--paper-faint)}
 .stat-row .v{font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--paper);font-variant-numeric:tabular-nums}
 
-/* ── ingest · the vault fills (cell grid) ── */
-.vault-legend{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0 10px}
-.vault-legend .lg{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--paper-muted)}
-.vault-legend .sw{width:9px;height:9px}
-.vault-grid{display:grid;grid-template-columns:repeat(48,1fr);gap:2px;margin-top:10px}
-.vcell{aspect-ratio:1;background:var(--ink-3)}
-@media(max-width:900px){.vault-grid{grid-template-columns:repeat(24,1fr)}}
-
 /* ── ask · calm + split-critic ── */
 .ask-calm{display:grid;grid-template-columns:1fr 380px;margin-top:26px;border:1px solid var(--rule)}
 .ask-3col{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;margin-top:26px;border:1px solid var(--rule)}

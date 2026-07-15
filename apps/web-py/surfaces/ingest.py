@@ -1,8 +1,7 @@
-"""01 · Ingest — four variants.
+"""01 · Ingest — three variants.
 
 - sources (conservative): an editorial wedge + a per-source connection table.
 - run     (canon):        three counters + a vermilion progress bar + the 5-phase pipeline.
-- vault   (divergent):    an 864-cell grid that lights up, coloured by source, as documents index.
 - manage:                 add a single item to memory by hand, or delete anything already indexed.
 
 All seeded from the real /ingest/stats (and /ingest/documents for manage).
@@ -11,11 +10,10 @@ from fasthtml.common import (  # type: ignore
     A, Button, Div, Form, Input, Option, P, Select, Span, Table, Tbody, Td, Textarea, Tr,
 )
 
-from assets import INGEST_JS, VAULT_JS
+from assets import INGEST_JS
 from chrome import page, surface_head, variant_strip
 
-VARIANTS = [("sources", "sources"), ("run", "ingest run"), ("vault", "the vault fills"),
-            ("manage", "add · delete")]
+VARIANTS = [("sources", "sources"), ("run", "ingest run"), ("manage", "add · delete")]
 DEFAULT = "run"
 
 _PHASES = [("01", "fetch"), ("02", "parse"), ("03", "chunk"), ("04", "embed"), ("05", "index")]
@@ -97,23 +95,6 @@ def _sources_body(stats):
     )
 
 
-def _vault_body(stats):
-    documents = stats.get("documents") or 0
-    legend = [("email", "#f25738"), ("calendar", "#e8c547"), ("docs", "#f3ecdf"), ("slack", "#9c9486")]
-    cells = [Div(cls="vcell") for _ in range(48 * 18)]
-    return Div(
-        surface_head("01", "ingest · the vault fills",
-                     Span("Eight hundred sixty-four "), Span("cells.", cls="i accent")),
-        P("Each cell is a document landing in the index, coloured by source as it vectorizes.",
-          cls="muted", style="max-width:62ch;margin:0 0 8px"),
-        Div(*[Span(Span(cls="sw", style=f"background:{c}"), name, cls="lg") for name, c in legend],
-            Span(Span("0", id="vault-count", cls="num"), f" / {documents or 864} indexed",
-                 cls="lg", style="margin-left:auto"),
-            cls="vault-legend"),
-        Div(*cells, id="vault-grid", cls="vault-grid"),
-    )
-
-
 def doc_list(docs: list[dict] | None):
     """Recent-documents list with a per-row delete — re-rendered after every add / delete."""
     docs = docs or []
@@ -173,8 +154,6 @@ def render(variant: str = DEFAULT, stats: dict | None = None, ready: dict | None
     strip = variant_strip("/ingest", variant, VARIANTS, meta="01 · ingest · MongoDB Atlas")
     if variant == "sources":
         body, scripts = _sources_body(stats), ""
-    elif variant == "vault":
-        body, scripts = _vault_body(stats), VAULT_JS
     elif variant == "manage":
         body, scripts = _manage_body(stats, documents), ""
     else:

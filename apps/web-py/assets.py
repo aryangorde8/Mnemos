@@ -80,17 +80,6 @@ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){el.textContent
 el.textContent='';var i=0;(function tick(){if(i<=t.length){el.textContent=t.slice(0,i);i++;setTimeout(tick,42);}else{el.classList.add('caret');}})();})();
 """
 
-# ── ingest · the vault fills: light cells in a stable shuffled order ──
-VAULT_JS = """
-(function(){var grid=document.getElementById('vault-grid');if(!grid)return;
-var cells=[].slice.call(grid.children),order=[],n=cells.length;for(var i=0;i<n;i++)order.push(i);
-var s=20261;function rnd(){s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;}
-for(var i=n-1;i>0;i--){var j=Math.floor(rnd()*(i+1));var t=order[i];order[i]=order[j];order[j]=t;}
-var cols=['#f25738','#e8c547','#f3ecdf','#9c9486'];var k=0,cnt=document.getElementById('vault-count');
-var iv=setInterval(function(){if(k>=n){clearInterval(iv);return;}var c=cells[order[k]];c.style.background=cols[order[k]%cols.length];k++;if(cnt)cnt.textContent=k.toLocaleString('en-US');},6);
-})();
-"""
-
 # ── ingest run: animate counters + cycle the hot pipeline phase ──
 INGEST_JS = """
 (function(){var root=document.getElementById('ingest-run');if(!root)return;
