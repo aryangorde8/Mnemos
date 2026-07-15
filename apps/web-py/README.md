@@ -27,9 +27,9 @@ styles.py    # the editorial-dark palette/typography (carried from the React app
 
 ## Pages
 
-`/` home · `/overview` status · `/ask` (SSE reasoning stream) · `/search`
-(hybrid retrieval) · `/debate` (multi-agent, SSE) · `/memory` (entities) ·
-`/commitments` (ledger) · `/actions` (proposals).
+`/` home · `/ingest` (add/delete memory) · `/ask` (SSE reasoning stream) ·
+`/search` (hybrid retrieval) · `/memory` (entities) · `/approve` (proposals) ·
+`/commitments` (ledger) · `/briefings`.
 
 How the stream works: `/ask` posts via HTMX to `/ask/run`, which returns an
 `hx-ext="sse"` container connected to `/ask/stream?q=…`. That route proxies the

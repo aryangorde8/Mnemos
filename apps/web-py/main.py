@@ -1,7 +1,7 @@
 """Mnemos frontend — FastHTML (pure Python, HTMX + SSE).
 
 Six canon surfaces (home / ingest / ask / approve / memory / search) rebuilt to the design handoff,
-plus restyled extras (debate / commitments / briefings). Talks to the agent backend (apps/agent-py)
+plus restyled extras (commitments / briefings). Talks to the agent backend (apps/agent-py)
 over HTTP/SSE via `backend.py`. No React/Next/TypeScript; the only JS is FastHTML's bundled HTMX and
 the small inline snippets in `assets.py`.
 """
@@ -52,20 +52,18 @@ async def _chrome():
 # ─────────────────────────── canon surfaces ───────────────────────────
 
 @rt("/")
-async def home(v: str = ""):
+async def home():
     ready, vault, _ = await _chrome()
-    return (Title("Mnemos — the memory agent"), *hero_s.render(variant=v, ready=ready, vault=vault))
+    return (Title("Mnemos — the memory agent"), *hero_s.render(ready=ready, vault=vault))
 
 
 @rt("/ingest")
-async def ingest(v: str = ""):
+async def ingest():
     ready, vault, stats = await _chrome()
-    docs = None
-    if v == "manage":
-        data = await backend.get_json("/ingest/documents", {"limit": 50}) or {}
-        docs = data.get("documents", []) if isinstance(data, dict) else []
+    data = await backend.get_json("/ingest/documents", {"limit": 50}) or {}
+    docs = data.get("documents", []) if isinstance(data, dict) else []
     return (Title("Mnemos — ingest"),
-            *ingest_s.render(variant=v, stats=stats, ready=ready, vault=vault, documents=docs))
+            *ingest_s.render(stats=stats, ready=ready, vault=vault, documents=docs))
 
 
 async def _doc_list_fragment(source: str = "all"):
@@ -98,20 +96,20 @@ async def ingest_delete(doc_id: str = "", source: str = "all"):
 
 
 @rt("/ask")
-async def ask(v: str = ""):
+async def ask():
     ready, vault, _ = await _chrome()
-    return (Title("Mnemos — ask"), *ask_s.render_page(variant=v, ready=ready, vault=vault))
+    return (Title("Mnemos — ask"), *ask_s.render_page(ready=ready, vault=vault))
 
 
 @rt("/ask/run")
-async def ask_run(q: str = "", v: str = ""):
+async def ask_run(q: str = ""):
     ready = await backend.get_json("/ready") or {}
     model = ready.get("modelLabel") or "Amazon Nova"
-    return ask_s.render_run(q, v, model=model)
+    return ask_s.render_run(q, model=model)
 
 
 @rt("/ask/stream")
-async def ask_stream(q: str = "", v: str = ""):
+async def ask_stream(q: str = ""):
     async def gen():
         # collect proposed actions (email and/or meeting) + the email critique; last of each kind wins
         by_kind: dict[str, dict] = {}
@@ -139,7 +137,7 @@ async def ask_stream(q: str = "", v: str = ""):
             if frag is not None:
                 yield sse_message(frag)
             if ev.get("kind") in ("done", "error"):
-                block = ask_s.approval_block(list(by_kind.values()), critique, v)
+                block = ask_s.approval_block(list(by_kind.values()), critique)
                 for part in (block if isinstance(block, tuple) else (block,)):
                     yield sse_message(part)
                 yield sse_message(Div(), event="done")
@@ -148,7 +146,7 @@ async def ask_stream(q: str = "", v: str = ""):
 
 
 @rt("/approve")
-async def approve(v: str = "", i: int = 0):
+async def approve(i: int = 0):
     ready, vault, _ = await _chrome()
     data = await backend.get_json("/actions", {"status": "proposed", "limit": 25}) or {}
     actions = data.get("actions", []) if isinstance(data, dict) else []
@@ -160,7 +158,7 @@ async def approve(v: str = "", i: int = 0):
             if isinstance(c, dict) and "verdict" in c:
                 critiques[a["id"]] = c
     return (Title("Mnemos — approve"),
-            *approve_s.render(variant=v, actions=actions, index=i, critiques=critiques,
+            *approve_s.render(actions=actions, index=i, critiques=critiques,
                               ready=ready, vault=vault))
 
 
@@ -206,27 +204,27 @@ async def approve_decide(aid: str = "", verdict: str = "approve",
 
 
 @rt("/memory")
-async def memory(v: str = ""):
+async def memory():
     ready, vault, _ = await _chrome()
     graph = await backend.get_json("/graph") or {}
-    return (Title("Mnemos — memory"), *memory_s.render(variant=v, graph=graph, ready=ready, vault=vault))
+    return (Title("Mnemos — memory"), *memory_s.render(graph=graph, ready=ready, vault=vault))
 
 
 @rt("/search")
-async def search(v: str = ""):
+async def search():
     ready, vault, _ = await _chrome()
-    return (Title("Mnemos — search"), *search_s.render_page(variant=v, ready=ready, vault=vault))
+    return (Title("Mnemos — search"), *search_s.render_page(ready=ready, vault=vault))
 
 
 @rt("/search/run")
-async def search_run(q: str = "", v: str = ""):
+async def search_run(q: str = ""):
     q = (q or "").strip()
     if not q:
         return Div("type a query.", cls="empty")
     data = await backend.post_json("/search", {"query": q, "limit": 10}) or {}
     if data.get("error"):
         return Div("search failed — is the agent running with Atlas configured?", cls="empty")
-    return search_s.render_results(data, q, v)
+    return search_s.render_results(data, q)
 
 
 # ─────────────────────────── extras (restyled) ───────────────────────────
@@ -236,30 +234,6 @@ async def commitments():
     ready, vault, _ = await _chrome()
     data = await backend.get_json("/commitments", {"limit": 50}) or {}
     return (Title("Mnemos — commitments"), *extra_s.commitments(data, ready=ready, vault=vault))
-
-
-@rt("/debate")
-async def debate():
-    ready, vault, _ = await _chrome()
-    return (Title("Mnemos — debate"), *extra_s.debate_page(ready=ready, vault=vault))
-
-
-@rt("/debate/run")
-def debate_run(q: str = ""):
-    return extra_s.debate_run(q)
-
-
-@rt("/debate/stream")
-async def debate_stream(q: str = ""):
-    async def gen():
-        async for ev in backend.stream_events("/debate", {"query": q}):
-            frag = extra_s.render_debate_event(ev)
-            if frag is not None:
-                yield sse_message(frag)
-            if ev.get("kind") in ("debate_done", "synthesis_error"):
-                yield sse_message(Div(), event="done")
-                break
-    return EventStream(gen())
 
 
 @rt("/briefings")

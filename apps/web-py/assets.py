@@ -73,28 +73,6 @@ var idx=0;function render(){var s=sets[idx%sets.length];el.innerHTML='';s.forEac
 render();setInterval(render,2100);})();
 """
 
-# ── type a headline character-by-character (hero · live-trace divergent) ──
-TYPE_JS = """
-(function(){var el=document.getElementById('typed');if(!el)return;var t=el.getAttribute('data-text')||'';
-if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){el.textContent=t;return;}
-el.textContent='';var i=0;(function tick(){if(i<=t.length){el.textContent=t.slice(0,i);i++;setTimeout(tick,42);}else{el.classList.add('caret');}})();})();
-"""
-
-# ── ingest run: animate counters + cycle the hot pipeline phase ──
-INGEST_JS = """
-(function(){var root=document.getElementById('ingest-run');if(!root)return;
-var goal=+root.getAttribute('data-goal')||0,chunksGoal=+root.getAttribute('data-chunks')||0;
-var cDone=document.getElementById('c-items'),cChunks=document.getElementById('c-chunks'),cVec=document.getElementById('c-vectors'),fill=document.getElementById('ing-fill');
-var phases=[].slice.call(root.querySelectorAll('.phase-cell')),hot=0,done=false,t=0;
-function fmt(n){return Math.round(n).toLocaleString('en-US');}
-function paint(p){if(cDone)cDone.firstChild.textContent=fmt(goal*p);if(cChunks)cChunks.firstChild.textContent=fmt(chunksGoal*p);if(cVec)cVec.firstChild.textContent=fmt(chunksGoal*p);if(fill)fill.style.width=(p*100)+'%';}
-function complete(){done=true;paint(1);phases.forEach(function(c,i){c.classList.remove('hot');c.classList.add('done');});var b=document.getElementById('ing-banner');if(b)b.style.display='';}
-var iv=setInterval(function(){if(done)return;t+=0.018;if(t>=1){complete();clearInterval(iv);return;}paint(t);},90);
-var hv=setInterval(function(){if(done){clearInterval(hv);return;}phases.forEach(function(c){c.classList.remove('hot');});if(phases[hot])phases[hot].classList.add('hot');hot=(hot+1)%phases.length;},700);
-var skip=document.getElementById('ing-skip');if(skip)skip.addEventListener('click',function(){complete();clearInterval(iv);clearInterval(hv);});
-})();
-"""
-
 # ── search: animate score bars + phase scrubbing (pure client toggle) ──
 SEARCH_JS = """
 (function(){
@@ -143,25 +121,6 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAll();});
 })();
-"""
-
-# ── approve · queue: accordion (one row open at a time) ──
-ACCORDION_JS = """
-(function(){var rows=[].slice.call(document.querySelectorAll('.acc-row'));
-rows.forEach(function(r){var h=r.querySelector('.acc-head');if(!h)return;
-h.style.cursor='pointer';h.addEventListener('click',function(e){if(e.target.closest('button,a'))return;
-var open=r.classList.contains('open');rows.forEach(function(x){x.classList.remove('open');});if(!open)r.classList.add('open');});});
-if(rows[0])rows[0].classList.add('open');})();
-"""
-
-# ── search · animated: auto-advance the phases + animate bars ──
-SEARCH_ANIMATE_JS = """
-[].slice.call(document.querySelectorAll('.scorebar .bar')).forEach(function(b){requestAnimationFrame(function(){b.style.width=(b.getAttribute('data-w')||0)+'%';});});
-(function(){var cells=[].slice.call(document.querySelectorAll('.pipe-cell'));if(!cells.length)return;
-var panes={};[].slice.call(document.querySelectorAll('.ph-pane')).forEach(function(p){panes[p.getAttribute('data-phase')]=p;});
-var i=0;function step(){cells.forEach(function(c,j){c.classList.toggle('active',j===i);c.classList.toggle('past',j<i);});
-var ph=cells[i].getAttribute('data-phase');Object.keys(panes).forEach(function(k){panes[k].style.display=k===ph?'':'none';});i=(i+1)%cells.length;}
-step();var iv=setInterval(step,900);var rr=document.getElementById('rerun');if(rr)rr.addEventListener('click',function(){i=0;step();});})();
 """
 
 # ── memory: hover a star → update the right rail ──

@@ -1,4 +1,4 @@
-"""05 · Search — canon variant: pipeline.
+"""05 · Search — pipeline.
 
 Hybrid retrieval with the pipeline phases made legible: a 6-phase header (embed → vector → bm25 → rrf
 → rerank → result), a phase scrubber that swaps a right-rail inspector, and ranked hit rows with a
@@ -9,11 +9,9 @@ from urllib.parse import quote
 
 from fasthtml.common import Div, Input, NotStr, P, Script, Span  # type: ignore
 
-from assets import SEARCH_ANIMATE_JS, SEARCH_JS, SEARCH_SWAP_JS
-from chrome import page, surface_head, variant_strip
+from assets import SEARCH_JS, SEARCH_SWAP_JS
+from chrome import page, surface_head
 
-VARIANTS = [("results", "results"), ("pipeline", "pipeline"), ("animated", "animated")]
-DEFAULT = "pipeline"
 _SAMPLE_Q = "inference SLO slip"
 
 # canonical 6-phase pipeline (labels are stable; the live `phases` array confirms which ran)
@@ -28,31 +26,26 @@ _PHASES = [
 _BUDGET = [("embed", 22), ("vector", 84), ("bm25", 31), ("rrf", 4), ("rerank", 96)]
 
 
-def render_page(variant: str = DEFAULT, ready: dict | None = None, vault: dict | None = None):
-    if variant not in dict(VARIANTS):
-        variant = DEFAULT
-    strip = variant_strip("/search", variant, VARIANTS, meta="05 · search · vector + bm25 + rrf")
-    label = dict(VARIANTS)[variant]
+def render_page(ready: dict | None = None, vault: dict | None = None):
     body = Div(
-        surface_head("05", f"search · {label}",
+        surface_head("05", "search · pipeline",
                      Span("Search the "), Span("memory.", cls="i accent")),
         P("Vector kNN over MongoDB Atlas, fused with BM25 lexical search via reciprocal rank fusion, "
           "then reranked. Watch the pipeline produce the ordering.", cls="muted",
           style="max-width:60ch;margin:0 0 18px"),
         # active search: the input itself drives the request — updates as you type (debounced)
-        # and on Enter. `v` (the variant) rides along via hx-vals. No submit button by design.
+        # and on Enter. No submit button by design.
         Input(name="q", cls="field", autocomplete="off", autofocus=True, type="search",
               value=_SAMPLE_Q, placeholder="inference SLO slip",
               hx_get="/search/run", hx_target="#sresult", hx_swap="innerHTML",
-              hx_trigger="keyup changed delay:350ms, search",
-              hx_vals=f'{{"v":"{variant}"}}'),
+              hx_trigger="keyup changed delay:350ms, search"),
         Div(P("type to search · vector + bm25 + rrf + rerank", cls="label", style="margin-top:10px")),
-        # pre-load the sample query so the chosen variant's layout is visible immediately
+        # pre-load the sample query so the layout is visible immediately
         Div(Div("retrieving…", cls="empty"), id="sresult", style="margin-top:18px",
-            hx_get=f"/search/run?q={quote(_SAMPLE_Q)}&v={variant}", hx_trigger="load",
+            hx_get=f"/search/run?q={quote(_SAMPLE_Q)}", hx_trigger="load",
             hx_swap="innerHTML"),
     )
-    return page("search", body, ready=ready, vault=vault, scripts=SEARCH_JS, strip=strip)
+    return page("search", body, ready=ready, vault=vault, scripts=SEARCH_JS)
 
 
 def _pipe_header(active_phases: list[str]):
@@ -147,28 +140,15 @@ def _phase_title(pid):
     return pid
 
 
-def render_results(data: dict, q: str, variant: str = DEFAULT):
+def render_results(data: dict, q: str):
     results = data.get("results", []) or []
     if not results:
         return Div(f"no matches for “{q}”.", cls="empty")
-    if variant not in dict(VARIANTS):
-        variant = DEFAULT
     phases = data.get("phases", []) or []
     took = data.get("tookMs", "?")
     summary = Div(Span(" → ".join(phases) if phases else "vector → bm25 → rrf → rerank", cls="label"),
                   Span(f" · {took} ms · {len(results)} hits", cls="chrome"), style="margin-bottom:6px")
     hits = Div(*[_hit(i, r) for i, r in enumerate(results, 1)], cls="hits")
-
-    if variant == "results":  # conservative — ranked list, no pipeline
-        return Div(summary, Div(hits, style="border:1px solid var(--rule)"),
-                   Script(NotStr(SEARCH_SWAP_JS)))
-
     grid = Div(hits, _inspector(phases, results, took), cls="search-grid")
-    if variant == "animated":  # divergent — auto-running pipeline
-        header = Div(_pipe_header(phases),
-                     Span("↻ rerun", id="rerun", cls="btn-d ghost",
-                          style="margin-top:10px;cursor:pointer;display:inline-flex"))
-        return Div(summary, header, grid, Script(NotStr(SEARCH_ANIMATE_JS)))
-
-    # pipeline (canon) — scrubbable
+    # pipeline — scrubbable
     return Div(summary, _pipe_header(phases), grid, Script(NotStr(SEARCH_SWAP_JS)))
