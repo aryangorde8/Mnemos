@@ -73,12 +73,12 @@ slack, personal jots) once. From then on:
    land inline; one click each, both go.
 4. **Track.** A commitment ledger surfaces who owes whom by when. A
    memory graph plots people as stars and projects as constellations.
-5. **Debate.** A separate `/debate` route runs two agents in parallel —
-   Primary + Devil's Advocate — on the same query, with a third
-   Synthesizer producing the consensus answer below.
-6. **Time-travel.** Every past run is replayable. The reasoning stream
-   itself is the centerpiece: terminal-grade typography, character-by-
-   character SSE, color-coded by step kind, with an inline graph
+5. **Debate.** The agent exposes `POST /debate`, which runs two agents in
+   parallel — Primary + Devil's Advocate — on the same query, with a third
+   Synthesizer producing the consensus answer. It's an API capability; the
+   current build ships no web surface for it.
+6. **The reasoning stream is the centerpiece:** terminal-grade typography,
+   character-by-character SSE, color-coded by step kind, with an inline graph
    traversal animation when the agent walks the entity graph.
 
 ## How we built it
@@ -176,8 +176,9 @@ to simulated send when not configured.
 - **The Critic agent works as a real wedge.** Every draft is audited
   before the user sees it. The system prompt mandates the auto-call,
   and the agent revises once if the Critic returns high-severity.
-- **Multi-agent debate as a separate surface.** Two parallel reasoning
-  streams + a synthesizer. Almost no hackathon submission does this.
+- **Multi-agent debate in the backend.** Two parallel reasoning streams +
+  a synthesizer, exposed as `POST /debate`. Almost no hackathon submission
+  does this.
 - **The constellation memory chart** wired to live entity data —
   RA/Dec axes, project constellations, hover sidenote with mention
   sparklines per entity.
@@ -281,7 +282,8 @@ Upload these in this order — Devpost uses the first image as the cover thumbna
 2. `docs/screenshots/03-ask-reasoning.png` — full Q&A run with `[N]` markers + telemetry chip
 3. `docs/screenshots/05-search-pipeline.png` — hybrid retrieval pipeline scrubber
 4. `docs/screenshots/04-memory-constellation.png` — SVG star map of extracted entities
-5. `docs/screenshots/06-debate.png` — multi-agent debate landing
-6. `docs/screenshots/02-cmd-k.png` — ⌘K palette overlay
+5. `docs/screenshots/02-cmd-k.png` — ⌘K palette overlay
 
-(Devpost gallery caps at 6 — the remaining shots `07-runs.png` + `08-overview.png` live in the repo for the README.)
+(Devpost gallery caps at 6. The remaining shots — `06-debate.png`, `07-runs.png`,
+`08-overview.png` — are from the original submission; those surfaces were since
+removed from the web UI, so they're kept only as historical record.)

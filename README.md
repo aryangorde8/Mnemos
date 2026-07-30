@@ -19,7 +19,7 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 - **Hybrid retrieval** — every memory query runs `$vectorSearch` *and* `$search` (BM25) in parallel, merges via Reciprocal Rank Fusion, then optionally reranks with a fast LLM pass. The reasoning stream renders the pipeline live; `/search` lets you scrub through each phase to see what it produced.
 - **Critic sub-agent** — after every drafted email, a second adversarial agent audits the draft against the cited context. Flags unsupported claims, hallucinated specifics, voice mismatches, safety issues. Renders inline below the ApprovalCard.
 - **Graph-augmented retrieval** — when the agent identifies a key entity, it walks the memory graph (people, projects, relations) and pulls in chunks no keyword search would find. The traversal animates inline in the reasoning stream.
-- **Multi-agent debate** — `/debate` runs Primary + Devil's Advocate in parallel on the same query, then a Synthesizer produces the consensus answer.
+- **Multi-agent debate (agent API)** — `POST /debate` runs Primary + Devil's Advocate in parallel on the same query, then a Synthesizer produces the consensus answer. Backend-only: it has no web surface in the current build.
 - **Memory as a constellation** — `/memory` plots extracted entities as stars on RA/Dec axes, with project constellations connecting their members.
 - **`[N]` claim verification** — every factual claim in the agent's answer ends with a vermilion citation pill. Hover to see the source chunk excerpt.
 - **Cost/latency telemetry** — every run shows token counts + estimated USD + latency in the stream header.
@@ -31,17 +31,18 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 | Surface | Path |
 |---|---|
 | Constellation hero · cold open | `/` |
-| The four wedges · overview | `/overview` |
+| Ingest · manage memory (add an item, filter + delete by source) | `/ingest` |
 | Ask · SSE reasoning stream with `[N]` citations | `/ask` |
+| Approve · action queue with the Critic's audit (Gmail connect) | `/approve` |
 | Memory · SVG constellation chart | `/memory` |
 | Search · hybrid retrieval pipeline scrubber | `/search` |
-| Debate · two agents in parallel | `/debate` |
-| Runs · time-travel agent history | `/runs` |
-| Briefings · 1-pager generator | `/briefings`, `/briefings/[id]` |
 | Commitments ledger | `/commitments` |
-| Actions ledger (with Gmail connect) | `/actions` |
-| Ingest · SSE-streamed corpus loader | `/ingest` |
+| Briefings · 1-pager generator | `/briefings` |
 | ⌘K command palette | global |
+
+One design per surface — the old `?v=` variant switcher was removed, so each
+page renders a single canonical layout. `/overview` and `/actions` redirect to
+`/` and `/approve`.
 
 ## Screenshots
 
@@ -49,10 +50,8 @@ Built for the **Google Cloud Rapid Agent Hackathon — MongoDB partner track**.
 |---|---|
 | ![Reasoning stream](docs/screenshots/03-ask-reasoning.png) | ![Search pipeline](docs/screenshots/05-search-pipeline.png) |
 | *Reasoning stream — `[N]` citation pills, hybrid pipeline phases, telemetry chip* | *Hybrid retrieval pipeline scrubber* |
-| ![Memory constellation](docs/screenshots/04-memory-constellation.png) | ![Debate](docs/screenshots/06-debate.png) |
-| *Memory constellation chart* | *Multi-agent debate* |
-| ![Runs](docs/screenshots/07-runs.png) | ![⌘K](docs/screenshots/02-cmd-k.png) |
-| *Time-travel runs · click to replay* | *⌘K command palette* |
+| ![Memory constellation](docs/screenshots/04-memory-constellation.png) | ![⌘K](docs/screenshots/02-cmd-k.png) |
+| *Memory constellation chart* | *⌘K command palette* |
 
 ## Stack
 
