@@ -7,7 +7,6 @@ from datetime import datetime, timedelta, timezone
 from app.agent.types import ToolDef
 from app.db.mongo import documents
 from app.lib.calendar import get_busy_intervals, is_calendar_connected
-from app.lib.session import ANON_USER_ID
 from app.lib.timezones import format_in_zone, parse_in_zone, resolve_zone
 
 _DECL = {
@@ -66,7 +65,7 @@ def _event_ms(iso: str) -> float | None:
 
 
 async def _evaluate_slot(start_iso: str, duration: int, connected: bool, zone, zone_name: str,
-                         user_id: str = ANON_USER_ID) -> dict:
+                         user_id: str | None = None) -> dict:
     try:
         start = parse_in_zone(start_iso, zone)
     except ValueError:
@@ -80,7 +79,7 @@ async def _evaluate_slot(start_iso: str, duration: int, connected: bool, zone, z
 
     if connected:
         try:
-            busy = await get_busy_intervals(start.isoformat(), end.isoformat(), user_id)
+            busy = await get_busy_intervals(start.isoformat(), end.isoformat(), user_id or "")
             conflicts = []
             for b in busy:
                 bs, be = _event_ms(b.get("start")), _event_ms(b.get("end"))
@@ -138,7 +137,7 @@ async def _handler(args: dict, ctx: dict | None = None) -> dict:
 
         # Conflicts are checked against the calendar of whoever is running this, so a
         # second connected visitor never sees the first one's busy times.
-        acting_user = (ctx or {}).get("userId") or ANON_USER_ID
+        acting_user = (ctx or {}).get("userId")
         connected = await is_calendar_connected(acting_user)
         slot_checks = await asyncio.gather(
             *[_evaluate_slot(t, duration, connected, zone, zone_name, acting_user)

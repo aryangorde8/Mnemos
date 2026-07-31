@@ -54,10 +54,13 @@ async def list_actions(*, status: str | None = None, kind: str | None = None,
 
 async def approve_action(aid: str, edits: dict | None = None,
                          acting_user: str | None = None) -> dict | None:
-    """Approve and execute. `acting_user` selects whose Google connection sends/books;
-    None means the shared anonymous connection, i.e. the pre-sessions behaviour."""
-    from app.lib.session import ANON_USER_ID
-    acting_user = acting_user or ANON_USER_ID
+    """Approve and execute on `acting_user`'s own Google connection.
+
+    None means this request has no connected account. It must NOT fall back to some
+    other identity: doing so would send mail from, and book events on, whichever
+    account happened to be stored. With no identity the action is recorded as
+    simulated, so the user can see it did not really go out.
+    """
     if not ObjectId.is_valid(aid):
         return None
     col = actions_col()
@@ -83,8 +86,10 @@ async def approve_action(aid: str, edits: dict | None = None,
     if existing["kind"] == "draft_email":
         try:
             from app.lib.gmail import get_access_token, is_gmail_configured, send_gmail
-            # Sends from the approver's own Google account, not a shared one.
-            if is_gmail_configured() and await get_access_token(acting_user):
+            # Only ever the approver's own account. No session -> no send.
+            if not acting_user:
+                gmail_error = "no connected Google account for this session"
+            elif is_gmail_configured() and await get_access_token(acting_user):
                 gmail_info = await send_gmail(
                     acting_user, to=final["to"], cc=final.get("cc") or [],
                     subject=final["subject"], body=final["body"],
@@ -97,7 +102,9 @@ async def approve_action(aid: str, edits: dict | None = None,
     if existing["kind"] == "schedule_meeting":
         try:
             from app.lib.calendar import insert_calendar_event, is_calendar_connected
-            if await is_calendar_connected(acting_user):
+            if not acting_user:
+                calendar_error = "no connected Google account for this session"
+            elif await is_calendar_connected(acting_user):
                 idx = final.get("preferredIdx", 0)
                 if idx is None or idx < 0:
                     idx = 0

@@ -15,9 +15,8 @@ import httpx
 
 from app.db.mongo import collection
 
-# Single definition of the anonymous identity lives in session.py; re-exported under the
-# old name so existing callers and any stored records keyed "alex" keep working.
-from app.lib.session import ANON_USER_ID as DEMO_USER_ID  # noqa: E402
+# No module-level default user. A Google account is always an explicit argument, so no
+# code path can accidentally act as somebody else's connection.
 
 GMAIL_SCOPES = [
     "https://www.googleapis.com/auth/gmail.send",

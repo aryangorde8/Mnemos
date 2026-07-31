@@ -128,6 +128,9 @@ def _google_pill(google: dict | None):
         return _pill("google", f"{email}{suffix}", "on")
     if google.get("stale"):
         return _pill("google", f"reconnect{suffix}", "pending")
+    # Sessions off: the connect link would 503, so don't invite a click that can't work.
+    if google.get("reason") == "sessions_not_configured":
+        return _pill("google", "simulated", "off")
     if google.get("configured"):
         return _pill("google", f"connect{suffix}", "pending")
     return _pill("google", "simulated", "off")

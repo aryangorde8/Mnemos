@@ -2,8 +2,9 @@
 
 Token records are keyed by the consenting account's Google `sub`, not by a single
 shared literal, so two people connecting no longer overwrite each other. The session
-cookie minted here is what ties a browser to its own connection; without one a request
-falls back to `session.ANON_USER_ID` and behaves exactly as the app did before.
+cookie minted here is what ties a browser to its own connection. There is no fallback
+identity: a visitor without a session has no Google account, so sends and bookings run
+simulated rather than quietly using somebody else's.
 """
 from __future__ import annotations
 
@@ -54,6 +55,13 @@ async def start():
             "error": "gmail_not_configured",
             "detail": "Set GMAIL_OAUTH_CLIENT_ID/SECRET/REDIRECT_URI on the agent to enable Google auth.",
         })
+    # Without a signing secret we cannot tell one visitor's connection from another's,
+    # and storing one anyway would let the next visitor act as this account.
+    if not sess.is_sessions_enabled():
+        return JSONResponse(status_code=503, content={
+            "error": "sessions_not_configured",
+            "detail": "Set SESSION_SECRET on the agent so each visitor's Google connection stays their own.",
+        })
     return RedirectResponse(auth_url(state=_issue_state()))
 
 
@@ -75,9 +83,13 @@ async def callback(request: Request):
             return HTMLResponse("Token exchange failed — no access_token or refresh_token.",
                                 status_code=400)
         info = await fetch_userinfo(tokens["access_token"])
-        # `sub` is the tenant key. Without it we cannot tell connections apart, so fall
-        # back to the shared identity rather than keying on something unstable.
-        user_id = info["sub"] if (info["sub"] and sess.is_sessions_enabled()) else sess.ANON_USER_ID
+        # `sub` is the tenant key. Without one the connection cannot be attributed, and
+        # storing it under any shared key would hand this account to the next visitor.
+        if not info["sub"] or not sess.is_sessions_enabled():
+            return HTMLResponse(
+                "Could not identify the Google account for this session — nothing was stored.",
+                status_code=400)
+        user_id = info["sub"]
         await save_tokens({
             "userId": user_id, "accessToken": tokens["access_token"],
             "refreshToken": tokens["refresh_token"],
@@ -109,8 +121,12 @@ async def status(request: Request):
         return JSONResponse({"configured": False, "connected": False,
                              "multiUser": sess.is_sessions_enabled()})
     user_id = sess.current_user_id(request)
-    base = {"configured": True, "multiUser": sess.is_sessions_enabled(),
-            "shared": user_id == sess.ANON_USER_ID}
+    base = {"configured": True, "multiUser": sess.is_sessions_enabled()}
+    if not user_id:
+        # No session: this visitor has no Google account, and will not borrow one.
+        return JSONResponse({**base, "connected": False, "calendar": False,
+                             "reason": ("sessions_not_configured" if not sess.is_sessions_enabled()
+                                        else "no_session")})
     try:
         tokens = await get_tokens(user_id)
         if not tokens:
@@ -135,6 +151,8 @@ async def disconnect(request: Request):
     if not is_gmail_configured():
         return JSONResponse(status_code=503, content={"error": "gmail_not_configured"})
     user_id = sess.current_user_id(request)
+    if not user_id:
+        return JSONResponse({"ok": True, "detail": "no session — nothing to disconnect"})
     await tokens_col().delete_one({"userId": user_id})
     response = JSONResponse({"ok": True})
     sess.clear_cookie(response)

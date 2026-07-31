@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import httpx
 
-from app.lib.gmail import DEMO_USER_ID, get_access_token, get_tokens, is_gmail_configured
+from app.lib.gmail import get_access_token, get_tokens, is_gmail_configured
 
 CAL_BASE = "https://www.googleapis.com/calendar/v3"
 
@@ -12,8 +12,9 @@ def is_calendar_configured() -> bool:
     return is_gmail_configured()
 
 
-async def is_calendar_connected(user_id: str = DEMO_USER_ID) -> bool:
-    if not is_gmail_configured():
+async def is_calendar_connected(user_id: str | None) -> bool:
+    """None (no session) is never connected — it must not resolve to anyone's calendar."""
+    if not user_id or not is_gmail_configured():
         return False
     rec = await get_tokens(user_id)
     if not rec or "calendar" not in (rec.get("scope") or ""):
@@ -22,6 +23,8 @@ async def is_calendar_connected(user_id: str = DEMO_USER_ID) -> bool:
 
 
 async def _authed(method: str, path: str, user_id: str, **kwargs) -> httpx.Response:
+    if not user_id:
+        raise RuntimeError("calendar: no connected Google account for this session")
     token = await get_access_token(user_id)
     if not token:
         raise RuntimeError("calendar not connected — open /auth/google/start to authorize")
@@ -46,7 +49,7 @@ def _normalize(e: dict) -> dict:
 
 
 async def list_calendar_events(*, time_min: str, time_max: str, q: str | None = None,
-                               max_results: int = 50, user_id: str = DEMO_USER_ID) -> list[dict]:
+                               max_results: int = 50, user_id: str = "") -> list[dict]:
     params = {"timeMin": time_min, "timeMax": time_max, "singleEvents": "true",
               "orderBy": "startTime", "maxResults": str(max_results)}
     if q:
@@ -60,7 +63,7 @@ async def list_calendar_events(*, time_min: str, time_max: str, q: str | None = 
 async def insert_calendar_event(*, summary: str, start_iso: str, end_iso: str,
                                 attendees: list[str] | None = None, location: str | None = None,
                                 description: str | None = None, time_zone: str | None = None,
-                                user_id: str = DEMO_USER_ID) -> dict:
+                                user_id: str = "") -> dict:
     # Google reads a dateTime without an offset in the calendar's own default zone, so
     # the meeting's zone is sent explicitly rather than left to the account setting.
     start: dict = {"dateTime": start_iso}
@@ -82,7 +85,7 @@ async def insert_calendar_event(*, summary: str, start_iso: str, end_iso: str,
     return {"id": data.get("id", ""), "htmlLink": data.get("htmlLink")}
 
 
-async def get_busy_intervals(time_min: str, time_max: str, user_id: str = DEMO_USER_ID) -> list[dict]:
+async def get_busy_intervals(time_min: str, time_max: str, user_id: str = "") -> list[dict]:
     r = await _authed("POST", "/freeBusy", user_id,
                       json={"timeMin": time_min, "timeMax": time_max, "items": [{"id": "primary"}]})
     if r.status_code >= 400:
