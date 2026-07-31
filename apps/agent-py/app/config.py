@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     firebase_project_id: str = Field("", alias="FIREBASE_PROJECT_ID")
     mnemos_web_url: str = Field("", alias="MNEMOS_WEB_URL")
 
+    # Fallback zone for meeting times that carry neither an offset nor a location
+    # hint. IANA name ("Asia/Kolkata") or a raw offset ("UTC+05:30").
+    default_timezone: str = Field("UTC", alias="MNEMOS_DEFAULT_TZ")
+
 
 settings = Settings()
 

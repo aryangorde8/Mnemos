@@ -9,3 +9,6 @@ python-dotenv>=1.0
 httpx>=0.27
 PyJWT>=2.9
 cryptography>=43
+# zoneinfo falls back to this when the base image ships no system tz database
+# (python:*-slim does not) — meeting timezone resolution needs it.
+tzdata>=2024.2

@@ -89,13 +89,17 @@ async def approve_action(aid: str, edits: dict | None = None) -> dict | None:
                 times = final.get("proposedTimes") or []
                 start_iso = times[idx] if idx < len(times) else (times[0] if times else None)
                 if start_iso:
-                    start = datetime.fromisoformat(start_iso.replace("Z", "+00:00"))
+                    # Same zone the proposal was evaluated in, so what the user approved
+                    # is what gets booked — a bare wall-clock time must not drift here.
+                    from app.lib.timezones import iana_or_none, parse_in_zone, resolve_zone
+                    zone, zone_name, _ = resolve_zone(final.get("timezone"), final.get("location"))
+                    start = parse_in_zone(start_iso, zone)
                     dur = final.get("durationMinutes", 30)
                     end = start + timedelta(minutes=dur)
                     inserted = await insert_calendar_event(
                         summary=final["title"], start_iso=start.isoformat(), end_iso=end.isoformat(),
                         attendees=final.get("attendees"), location=final.get("location"),
-                        description=final.get("agenda"),
+                        description=final.get("agenda"), time_zone=iana_or_none(zone_name),
                     )
                     calendar_info = {"eventId": inserted["id"], "htmlLink": inserted.get("htmlLink")}
         except Exception as err:  # noqa: BLE001
