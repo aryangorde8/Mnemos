@@ -237,9 +237,23 @@ def _proposal_bits(action: dict):
         return p.get("subject") or "(no subject)", p.get("body") or "", meta
     if kind == "schedule_meeting":
         times = p.get("proposedTimes") or []
+        slots = p.get("slots") or []
         idx = p.get("preferredIdx") or 0
-        when = times[idx] if 0 <= idx < len(times) else (times[0] if times else "")
-        meta = [("with", ", ".join(p.get("attendees", [])) or "—"), ("when", _fmt_dt(when))]
+        if not 0 <= idx < len(times):
+            idx = 0
+        when = times[idx] if idx < len(times) else ""
+        # The agent renders each slot in the meeting's zone; prefer that over
+        # reformatting here, which would drop the offset and read as local time.
+        slot = slots[idx] if idx < len(slots) else {}
+        when_str = slot.get("display") or _fmt_dt(when)
+        meta = [("with", ", ".join(p.get("attendees", [])) or "—"), ("when", when_str)]
+        tz, tz_source = p.get("timezone"), p.get("timezoneSource")
+        if tz and not slot.get("display"):
+            meta.append(("timezone", tz))
+        if tz_source == "default":
+            meta.append(("⚠ timezone", f"{tz} assumed — confirm before booking"))
+        elif tz_source == "location":
+            meta.append(("timezone", f"{tz} (inferred from location)"))
         if p.get("durationMinutes"):
             meta.append(("duration", f"{p['durationMinutes']} min"))
         if p.get("location"):
@@ -312,7 +326,10 @@ def draft_card(action: dict, critique: dict | None = None, show_marks: bool = Tr
             Input(name="title", value=p.get("title", ""), cls="field-edit-line"),
             Div("attendees (comma-separated)", cls="label", style="margin:12px 0 4px"),
             Input(name="attendees", value=", ".join(attendees), cls="field-edit-line"),
-            Div("when", cls="label", style="margin:12px 0 4px"),
+            # datetime-local submits a bare wall-clock string, so name the zone it is
+            # read in — otherwise an edited time silently means something else.
+            Div(f"when ({p.get('timezone')})" if p.get("timezone") else "when",
+                cls="label", style="margin:12px 0 4px"),
             Input(name="when", type="datetime-local", value=_to_dt_local(cur), cls="field-edit-line"),
             Div("duration (minutes)", cls="label", style="margin:12px 0 4px"),
             Input(name="duration", type="number", min="5", step="5",

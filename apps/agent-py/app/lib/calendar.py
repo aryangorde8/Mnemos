@@ -59,8 +59,16 @@ async def list_calendar_events(*, time_min: str, time_max: str, q: str | None = 
 
 async def insert_calendar_event(*, summary: str, start_iso: str, end_iso: str,
                                 attendees: list[str] | None = None, location: str | None = None,
-                                description: str | None = None, user_id: str = DEMO_USER_ID) -> dict:
-    body: dict = {"summary": summary, "start": {"dateTime": start_iso}, "end": {"dateTime": end_iso}}
+                                description: str | None = None, time_zone: str | None = None,
+                                user_id: str = DEMO_USER_ID) -> dict:
+    # Google reads a dateTime without an offset in the calendar's own default zone, so
+    # the meeting's zone is sent explicitly rather than left to the account setting.
+    start: dict = {"dateTime": start_iso}
+    end: dict = {"dateTime": end_iso}
+    if time_zone:
+        start["timeZone"] = time_zone
+        end["timeZone"] = time_zone
+    body: dict = {"summary": summary, "start": start, "end": end}
     if location:
         body["location"] = location
     if description:
