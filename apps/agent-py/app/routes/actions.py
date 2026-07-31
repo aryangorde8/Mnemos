@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.lib.actions import approve_action, get_action, list_actions, public_action, reject_action
+from app.lib.session import current_user_id
 from app.lib.critique import get_critique, get_critique_by_action, public_critique
 
 router = APIRouter()
@@ -34,8 +35,11 @@ class ApproveBody(BaseModel):
 
 
 @router.post("/actions/{aid}/approve")
-async def approve_route(aid: str, body: ApproveBody | None = None) -> JSONResponse:
-    a = await approve_action(aid, (body.edits if body else None))
+async def approve_route(aid: str, request: Request,
+                        body: ApproveBody | None = None) -> JSONResponse:
+    # The send/booking runs on the approver's own Google connection.
+    a = await approve_action(aid, (body.edits if body else None),
+                             acting_user=current_user_id(request))
     if not a:
         return JSONResponse(status_code=404, content={"error": "not_found"})
     return JSONResponse(public_action(a))

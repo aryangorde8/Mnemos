@@ -35,14 +35,20 @@ _SSE_EXT = NotStr('<script src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/
 app, rt = fast_app(pico=False, hdrs=(_FONTS, Style(NotStr(CSS)), _SSE_EXT), htmlkw={"lang": "en"})
 
 
-async def _chrome():
-    """Fetch the bits the global chrome needs (status pills + vault foot), tolerant of a down agent."""
-    ready, stats, google = await asyncio.gather(
-        backend.get_json("/ready"), backend.get_json("/ingest/stats"), backend.google_status())
+async def _chrome(session: str = ""):
+    """Fetch the bits the global chrome needs (status pills + vault foot), tolerant of a down agent.
+
+    `session` is this visitor's token — Google state is per-connection, so it must not be
+    fetched once and shared, or everyone sees whoever connected most recently.
+    """
+    ready, stats, google, conns = await asyncio.gather(
+        backend.get_json("/ready"), backend.get_json("/ingest/stats"),
+        backend.google_status(session), backend.google_connections())
     ready = ready if isinstance(ready, dict) else {}
     stats = stats if isinstance(stats, dict) else {}
     if google is not None:
-        ready["google"] = {**google, "connectUrl": backend.google_connect_url()}
+        ready["google"] = {**google, "connectUrl": backend.google_connect_url(),
+                           "totalConnections": (conns or {}).get("count", 0)}
     docs, chunks = stats.get("documents"), stats.get("chunks")
     vault = {"items": docs if isinstance(docs, int) else None,
              "chunks": chunks if isinstance(chunks, int) else None}
@@ -52,14 +58,14 @@ async def _chrome():
 # ─────────────────────────── canon surfaces ───────────────────────────
 
 @rt("/")
-async def home():
-    ready, vault, _ = await _chrome()
+async def home(request):
+    ready, vault, _ = await _chrome(backend.session_of(request))
     return (Title("Mnemos — the memory agent"), *hero_s.render(ready=ready, vault=vault))
 
 
 @rt("/ingest")
-async def ingest():
-    ready, vault, stats = await _chrome()
+async def ingest(request):
+    ready, vault, stats = await _chrome(backend.session_of(request))
     data = await backend.get_json("/ingest/documents", {"limit": 50}) or {}
     docs = data.get("documents", []) if isinstance(data, dict) else []
     return (Title("Mnemos — ingest"),
@@ -96,8 +102,8 @@ async def ingest_delete(doc_id: str = "", source: str = "all"):
 
 
 @rt("/ask")
-async def ask():
-    ready, vault, _ = await _chrome()
+async def ask(request):
+    ready, vault, _ = await _chrome(backend.session_of(request))
     return (Title("Mnemos — ask"), *ask_s.render_page(ready=ready, vault=vault))
 
 
@@ -109,12 +115,14 @@ async def ask_run(q: str = ""):
 
 
 @rt("/ask/stream")
-async def ask_stream(q: str = ""):
+async def ask_stream(request, q: str = ""):
+    session = backend.session_of(request)
+
     async def gen():
         # collect proposed actions (email and/or meeting) + the email critique; last of each kind wins
         by_kind: dict[str, dict] = {}
         critique: dict | None = None
-        async for ev in backend.stream_events("/agent/ask", {"query": q}):
+        async for ev in backend.stream_events("/agent/ask", {"query": q}, session=session):
             if ev.get("kind") == "observation":
                 data = (ev.get("result") or {}).get("data") or {}
                 name = ev.get("name")
@@ -149,8 +157,8 @@ async def ask_stream(q: str = ""):
 
 
 @rt("/approve")
-async def approve(i: int = 0):
-    ready, vault, _ = await _chrome()
+async def approve(request, i: int = 0):
+    ready, vault, _ = await _chrome(backend.session_of(request))
     data = await backend.get_json("/actions", {"status": "proposed", "limit": 25}) or {}
     actions = data.get("actions", []) if isinstance(data, dict) else []
     critiques: dict = {}
@@ -166,7 +174,7 @@ async def approve(i: int = 0):
 
 
 @rt("/approve/decide")
-async def approve_decide(aid: str = "", verdict: str = "approve",
+async def approve_decide(request, aid: str = "", verdict: str = "approve",
                          body: str = "", to: str = "", subject: str = "",
                          title: str = "", attendees: str = "", when: str = "",
                          duration: str = "", agenda: str = "", location: str = "",
@@ -206,23 +214,25 @@ async def approve_decide(aid: str = "", verdict: str = "approve",
         if (location or "").strip():
             edits["location"] = location
         payload = {"edits": edits} if edits else {}
-        res = await backend.post_json(f"/actions/{aid}/approve", payload)
+        res = await backend.post_json(f"/actions/{aid}/approve", payload,
+                                      session=backend.session_of(request))
     else:
-        res = await backend.post_json(f"/actions/{aid}/reject", {})
+        res = await backend.post_json(f"/actions/{aid}/reject", {},
+                                      session=backend.session_of(request))
     ok = isinstance(res, dict) and not res.get("error")
     return approve_s.decide_result(verdict, ok, res if isinstance(res, dict) else {})
 
 
 @rt("/memory")
-async def memory():
-    ready, vault, _ = await _chrome()
+async def memory(request):
+    ready, vault, _ = await _chrome(backend.session_of(request))
     graph = await backend.get_json("/graph") or {}
     return (Title("Mnemos — memory"), *memory_s.render(graph=graph, ready=ready, vault=vault))
 
 
 @rt("/search")
-async def search():
-    ready, vault, _ = await _chrome()
+async def search(request):
+    ready, vault, _ = await _chrome(backend.session_of(request))
     return (Title("Mnemos — search"), *search_s.render_page(ready=ready, vault=vault))
 
 

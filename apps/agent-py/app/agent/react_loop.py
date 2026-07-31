@@ -72,7 +72,10 @@ async def run_agent(
     max_turns: int = MAX_TURNS,
     system_prompt: str | None = None,
     history: list[dict] | None = None,
+    user_id: str | None = None,
 ) -> AsyncIterator[dict]:
+    """`user_id` selects whose Google connection the calendar tools read, so a run
+    started by one connected visitor never inspects another's calendar."""
     started = time.time()
     run_id = str(uuid.uuid4())
     # Provider-neutral conversation (app.llm.neutral): each backend converts at
@@ -158,7 +161,7 @@ async def run_agent(
                 result = {"ok": False, "error": f"unknown tool: {call['name']}"}
             else:
                 try:
-                    result = await tool.handler(call["args"], {"query": query, "runId": run_id})
+                    result = await tool.handler(call["args"], {"query": query, "runId": run_id, "userId": user_id})
                 except Exception as err:  # noqa: BLE001
                     result = {"ok": False, "error": str(err)}
             duration_ms = int((time.time() - t0) * 1000)
@@ -193,7 +196,7 @@ async def run_agent(
                    "args": {"action_id": action_id, "auto": True}, "at": _now()}
             t0 = time.time()
             try:
-                result = await critic.handler({"action_id": action_id}, {"query": query, "runId": run_id})
+                result = await critic.handler({"action_id": action_id}, {"query": query, "runId": run_id, "userId": user_id})
             except Exception as err:  # noqa: BLE001
                 result = {"ok": False, "error": str(err)}
             duration_ms = int((time.time() - t0) * 1000)

@@ -76,6 +76,14 @@ class Settings(BaseSettings):
     # hint. IANA name ("Asia/Kolkata") or a raw offset ("UTC+05:30").
     default_timezone: str = Field("UTC", alias="MNEMOS_DEFAULT_TZ")
 
+    # Signing key for the per-browser session cookie. Unset = single shared Google
+    # connection (the pre-sessions behaviour); set = each visitor connects their own.
+    session_secret: str = Field("", alias="SESSION_SECRET")
+    # Web and agent are separate subdomains, so the cookie must be scoped to the shared
+    # parent (".aryangorde.com"). Empty = host-only, which is right for local dev.
+    session_cookie_domain: str = Field("", alias="SESSION_COOKIE_DOMAIN")
+    session_cookie_secure: bool = Field(True, alias="SESSION_COOKIE_SECURE")
+
 
 settings = Settings()
 

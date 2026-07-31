@@ -109,14 +109,30 @@ def _pill(label, value, state):
 
 
 def _google_pill(google: dict | None):
-    """Google OAuth pill: live (sends real email/events) · connect (configured, awaiting
-    consent) · simulated (no GMAIL_OAUTH_* on the agent). Nothing when the agent is down."""
+    """Google OAuth pill for *this visitor's* connection.
+
+    live (their own account sends real email/events) · reconnect (a token record exists
+    but no longer refreshes — its OAuth client is gone) · connect (configured, awaiting
+    consent) · simulated (no GMAIL_OAUTH_* on the agent). Nothing when the agent is down.
+
+    When several accounts are connected the count rides along, so it is visible that this
+    deployment is multi-user and whose connection is about to act.
+    """
     if not isinstance(google, dict):
         return ""
+    total = google.get("totalConnections") or 0
+    others = max(0, total - (1 if google.get("connected") else 0))
+    suffix = f" +{others}" if others > 0 else ""
     if google.get("connected"):
-        return _pill("google", "live", "on")
+        email = google.get("email") or "live"
+        return _pill("google", f"{email}{suffix}", "on")
+    if google.get("stale"):
+        return _pill("google", f"reconnect{suffix}", "pending")
+    # Sessions off: the connect link would 503, so don't invite a click that can't work.
+    if google.get("reason") == "sessions_not_configured":
+        return _pill("google", "simulated", "off")
     if google.get("configured"):
-        return _pill("google", "connect", "pending")
+        return _pill("google", f"connect{suffix}", "pending")
     return _pill("google", "simulated", "off")
 
 

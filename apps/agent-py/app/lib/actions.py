@@ -52,7 +52,15 @@ async def list_actions(*, status: str | None = None, kind: str | None = None,
     return await cur.to_list(length=None)
 
 
-async def approve_action(aid: str, edits: dict | None = None) -> dict | None:
+async def approve_action(aid: str, edits: dict | None = None,
+                         acting_user: str | None = None) -> dict | None:
+    """Approve and execute on `acting_user`'s own Google connection.
+
+    None means this request has no connected account. It must NOT fall back to some
+    other identity: doing so would send mail from, and book events on, whichever
+    account happened to be stored. With no identity the action is recorded as
+    simulated, so the user can see it did not really go out.
+    """
     if not ObjectId.is_valid(aid):
         return None
     col = actions_col()
@@ -77,10 +85,13 @@ async def approve_action(aid: str, edits: dict | None = None) -> dict | None:
     gmail_error = None
     if existing["kind"] == "draft_email":
         try:
-            from app.lib.gmail import DEMO_USER_ID, get_access_token, is_gmail_configured, send_gmail
-            if is_gmail_configured() and await get_access_token(DEMO_USER_ID):
+            from app.lib.gmail import get_access_token, is_gmail_configured, send_gmail
+            # Only ever the approver's own account. No session -> no send.
+            if not acting_user:
+                gmail_error = "no connected Google account for this session"
+            elif is_gmail_configured() and await get_access_token(acting_user):
                 gmail_info = await send_gmail(
-                    DEMO_USER_ID, to=final["to"], cc=final.get("cc") or [],
+                    acting_user, to=final["to"], cc=final.get("cc") or [],
                     subject=final["subject"], body=final["body"],
                 )
         except Exception as err:  # noqa: BLE001
@@ -91,7 +102,9 @@ async def approve_action(aid: str, edits: dict | None = None) -> dict | None:
     if existing["kind"] == "schedule_meeting":
         try:
             from app.lib.calendar import insert_calendar_event, is_calendar_connected
-            if await is_calendar_connected():
+            if not acting_user:
+                calendar_error = "no connected Google account for this session"
+            elif await is_calendar_connected(acting_user):
                 idx = final.get("preferredIdx", 0)
                 if idx is None or idx < 0:
                     idx = 0
@@ -109,12 +122,16 @@ async def approve_action(aid: str, edits: dict | None = None) -> dict | None:
                         summary=final["title"], start_iso=start.isoformat(), end_iso=end.isoformat(),
                         attendees=final.get("attendees"), location=final.get("location"),
                         description=final.get("agenda"), time_zone=iana_or_none(zone_name),
+                        user_id=acting_user,
                     )
                     calendar_info = {"eventId": inserted["id"], "htmlLink": inserted.get("htmlLink")}
         except Exception as err:  # noqa: BLE001
             calendar_error = str(err)
 
-    update: dict = {"status": "sent", "final": final, "decidedAt": datetime.now(timezone.utc)}
+    update: dict = {"status": "sent", "final": final, "decidedAt": datetime.now(timezone.utc),
+                    # Which connection actually sent/booked — with several people
+                    # connected, "who did this" is no longer implicit.
+                    "approvedBy": acting_user}
     if gmail_info:
         update["gmailMessageId"] = gmail_info["messageId"]
         if gmail_info.get("threadId"):

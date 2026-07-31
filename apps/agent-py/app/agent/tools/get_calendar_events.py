@@ -34,10 +34,12 @@ async def _handler(args: dict, ctx: dict | None = None) -> dict:
             to_iso = (base + timedelta(days=7)).isoformat()
         title = args["title_contains"] if isinstance(args.get("title_contains"), str) else ""
 
-        # Primary: live Google Calendar
-        if await is_calendar_connected():
+        # Primary: live Google Calendar — the caller's own, not a shared connection.
+        acting_user = (ctx or {}).get("userId")
+        if await is_calendar_connected(acting_user):
             try:
-                live = await list_calendar_events(time_min=from_iso, time_max=to_iso, q=title or None)
+                live = await list_calendar_events(time_min=from_iso, time_max=to_iso,
+                                                  q=title or None, user_id=acting_user or "")
                 return {"ok": True, "data": {
                     "from": from_iso, "to": to_iso, "source": "google_calendar", "count": len(live),
                     "events": [{

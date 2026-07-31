@@ -64,7 +64,8 @@ def _event_ms(iso: str) -> float | None:
     return dt.timestamp() * 1000
 
 
-async def _evaluate_slot(start_iso: str, duration: int, connected: bool, zone, zone_name: str) -> dict:
+async def _evaluate_slot(start_iso: str, duration: int, connected: bool, zone, zone_name: str,
+                         user_id: str | None = None) -> dict:
     try:
         start = parse_in_zone(start_iso, zone)
     except ValueError:
@@ -78,7 +79,7 @@ async def _evaluate_slot(start_iso: str, duration: int, connected: bool, zone, z
 
     if connected:
         try:
-            busy = await get_busy_intervals(start.isoformat(), end.isoformat())
+            busy = await get_busy_intervals(start.isoformat(), end.isoformat(), user_id or "")
             conflicts = []
             for b in busy:
                 bs, be = _event_ms(b.get("start")), _event_ms(b.get("end"))
@@ -134,9 +135,13 @@ async def _handler(args: dict, ctx: dict | None = None) -> dict:
         zone, zone_name, zone_source = resolve_zone(
             args["timezone"] if isinstance(args.get("timezone"), str) else None, location)
 
-        connected = await is_calendar_connected()
+        # Conflicts are checked against the calendar of whoever is running this, so a
+        # second connected visitor never sees the first one's busy times.
+        acting_user = (ctx or {}).get("userId")
+        connected = await is_calendar_connected(acting_user)
         slot_checks = await asyncio.gather(
-            *[_evaluate_slot(t, duration, connected, zone, zone_name) for t in proposed_times])
+            *[_evaluate_slot(t, duration, connected, zone, zone_name, acting_user)
+              for t in proposed_times])
         conflict_count = sum(1 for s in slot_checks if s["conflicts"])
         free_count = len(slot_checks) - conflict_count
         preferred_idx = next((i for i, s in enumerate(slot_checks) if not s["conflicts"]), -1)
