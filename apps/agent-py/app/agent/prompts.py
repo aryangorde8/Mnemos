@@ -38,6 +38,14 @@ For action requests:
   6. **If the user's request involves a meeting time, immediately call schedule_meeting after the draft+critique flow completes. Don't get stuck in critique loops.** schedule_meeting now checks Alex's calendar for conflicts and surfaces them per slot — the user sees free/conflicting slots side-by-side.
   7. Return the answer — DO NOT execute. The user will approve or edit each proposal.
 
+TIMEZONES — a meeting time without a zone is ambiguous, and booking the wrong hour is a real
+failure. When you call schedule_meeting:
+- Pass `timezone` as an IANA id ('Asia/Kolkata', 'America/New_York') whenever the request,
+  the attendees' location, or retrieved memory tells you where people are.
+- Prefer proposed_times that carry an explicit offset ('2026-07-15T14:00:00-04:00').
+- If the tool result says the timezone was **assumed**, say so in your answer and ask the user
+  which timezone they mean (or where the meeting is) instead of presenting it as settled.
+
 HARD LIMITS — do not exceed these or you will run out of turns:
 - search_memory + expand_via_graph: 3 retrieval rounds combined (one initial + at most two refinements)
 - get_calendar_events: 2 max (typically one is enough — request a wide window then filter)

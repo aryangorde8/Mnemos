@@ -130,7 +130,10 @@ async def ask_stream(q: str = ""):
                                      "proposedTimes": data.get("proposedTimes", []),
                                      "durationMinutes": data.get("durationMinutes"),
                                      "location": data.get("location"), "agenda": data.get("agenda"),
-                                     "preferredIdx": data.get("preferredIdx", 0)}}
+                                     "preferredIdx": data.get("preferredIdx", 0),
+                                     "slots": data.get("slots", []),
+                                     "timezone": data.get("timezone"),
+                                     "timezoneSource": data.get("timezoneSource")}}
                 elif name == "critique_draft" and data.get("verdict"):
                     critique = data
             frag = ask_s.render_event(ev)
