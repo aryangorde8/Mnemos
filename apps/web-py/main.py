@@ -169,7 +169,8 @@ async def approve(i: int = 0):
 async def approve_decide(aid: str = "", verdict: str = "approve",
                          body: str = "", to: str = "", subject: str = "",
                          title: str = "", attendees: str = "", when: str = "",
-                         duration: str = "", agenda: str = "", location: str = ""):
+                         duration: str = "", agenda: str = "", location: str = "",
+                         timezone: str = ""):
     if verdict == "approve":
         # apply any inline edits so an edited draft is what gets sent / booked. Email fields
         # (to/subject/body) and meeting fields (title/attendees/when/…) are disjoint, so we just
@@ -185,8 +186,14 @@ async def approve_decide(aid: str = "", verdict: str = "approve",
             edits["title"] = title
         if (attendees or "").strip():
             edits["attendees"] = [a.strip() for a in attendees.split(",") if a.strip()]
+        if (timezone or "").strip():
+            # Picked from a closed list, so it is a valid IANA id. Marking it explicit
+            # clears the "assumed" warning — the user has now confirmed the zone.
+            edits["timezone"] = timezone.strip()
+            edits["timezoneSource"] = "explicit"
         if (when or "").strip():
-            # the edited start time becomes the single chosen slot
+            # The edited start time becomes the single chosen slot. datetime-local sends
+            # a bare wall-clock string, which approve_action reads in the zone above.
             edits["proposedTimes"] = [when.strip()]
             edits["preferredIdx"] = 0
         if (duration or "").strip():

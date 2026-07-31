@@ -6,10 +6,26 @@ left nav rail (200px) + top status bar + ⌘K palette, content in `.page > .surf
 from __future__ import annotations
 
 from fasthtml.common import (  # type: ignore
-    A, Aside, Button, Div, Input, Main, Nav, NotStr, Script, Span, Textarea,
+    A, Aside, Button, Div, Input, Main, Nav, NotStr, Option, Script, Select, Span, Textarea,
 )
 
 from assets import CLOCK_JS, CMDK_JS
+
+# Offered in the meeting editor's timezone picker. A closed list keeps the submitted
+# value a valid IANA id — free text that the agent's resolver cannot parse would fall
+# back to the default silently, which is the failure this picker exists to fix.
+TIMEZONE_CHOICES = [
+    "UTC",
+    "Asia/Kolkata", "Asia/Dubai", "Asia/Singapore", "Asia/Hong_Kong",
+    "Asia/Shanghai", "Asia/Tokyo", "Asia/Seoul", "Asia/Jerusalem",
+    "Europe/London", "Europe/Dublin", "Europe/Lisbon", "Europe/Paris",
+    "Europe/Berlin", "Europe/Madrid", "Europe/Rome", "Europe/Zurich",
+    "Europe/Amsterdam", "Europe/Stockholm", "Europe/Warsaw", "Europe/Vienna",
+    "America/New_York", "America/Toronto", "America/Chicago", "America/Denver",
+    "America/Phoenix", "America/Los_Angeles", "America/Vancouver",
+    "America/Sao_Paulo", "America/Mexico_City",
+    "Australia/Sydney", "Australia/Melbourne", "Pacific/Auckland",
+]
 
 # section number · path · label · keybind — the six canon surfaces
 SURFACES = [
@@ -212,6 +228,19 @@ def _fmt_dt(iso: str) -> str:
         return str(iso)
 
 
+def _timezone_select(current: str | None):
+    """Zone picker for the meeting editor, current value preselected.
+
+    A zone already on the proposal that isn't in the list — a raw offset like
+    'UTC+05:30', or one inferred from a city we don't offer — is prepended so
+    editing another field can never silently change the zone.
+    """
+    choices = TIMEZONE_CHOICES if not current or current in TIMEZONE_CHOICES \
+        else [current, *TIMEZONE_CHOICES]
+    return Select(*[Option(z, value=z, selected=(z == current)) for z in choices],
+                  name="timezone", cls="field-edit-line")
+
+
 def _to_dt_local(iso: str) -> str:
     """ISO datetime → the 'YYYY-MM-DDTHH:MM' a <input type=datetime-local> expects (else '')."""
     if not iso:
@@ -326,11 +355,14 @@ def draft_card(action: dict, critique: dict | None = None, show_marks: bool = Tr
             Input(name="title", value=p.get("title", ""), cls="field-edit-line"),
             Div("attendees (comma-separated)", cls="label", style="margin:12px 0 4px"),
             Input(name="attendees", value=", ".join(attendees), cls="field-edit-line"),
-            # datetime-local submits a bare wall-clock string, so name the zone it is
-            # read in — otherwise an edited time silently means something else.
-            Div(f"when ({p.get('timezone')})" if p.get("timezone") else "when",
-                cls="label", style="margin:12px 0 4px"),
+            # datetime-local submits a bare wall-clock string, so the zone below is what
+            # gives it meaning — an assumed zone is corrected here, not via `location`,
+            # which never re-resolves once a zone is on the proposal.
+            Div("when (wall-clock, in the timezone below)", cls="label",
+                style="margin:12px 0 4px"),
             Input(name="when", type="datetime-local", value=_to_dt_local(cur), cls="field-edit-line"),
+            Div("timezone", cls="label", style="margin:12px 0 4px"),
+            _timezone_select(p.get("timezone")),
             Div("duration (minutes)", cls="label", style="margin:12px 0 4px"),
             Input(name="duration", type="number", min="5", step="5",
                   value=str(p.get("durationMinutes") or 30), cls="field-edit-line"),

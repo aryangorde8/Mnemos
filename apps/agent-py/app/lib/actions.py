@@ -64,6 +64,15 @@ async def approve_action(aid: str, edits: dict | None = None) -> dict | None:
 
     final = {**existing["proposal"], **(edits or {})}
 
+    if existing["kind"] == "schedule_meeting":
+        # Each slot's rendered time and conflict list were computed for the proposed
+        # times in the proposed zone. If the user edited either, they describe a
+        # different instant — drop them rather than record a stale reading.
+        prop = existing["proposal"]
+        if (final.get("proposedTimes") != prop.get("proposedTimes")
+                or final.get("timezone") != prop.get("timezone")):
+            final["slots"] = []
+
     gmail_info = None
     gmail_error = None
     if existing["kind"] == "draft_email":
