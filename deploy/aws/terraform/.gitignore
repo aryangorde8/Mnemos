@@ -1,0 +1,12 @@
+# Terraform working files — none of this belongs in git.
+# State holds generated secrets in plaintext (private_key_pem / private_key_openssh),
+# .terraform/ holds provider binaries in the hundreds of MB, and the generated EC2
+# key pair is the SSH private key to the box.
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+tfplan
+*.pem
