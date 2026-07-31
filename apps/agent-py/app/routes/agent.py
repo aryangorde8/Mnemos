@@ -5,11 +5,12 @@ import json
 import time
 from typing import Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.agent.react_loop import run_agent
+from app.lib.session import current_user_id
 
 router = APIRouter()
 
@@ -36,8 +37,10 @@ def _sse(event: str, payload: dict) -> str:
 
 
 @router.post("/agent/ask")
-async def ask(body: AskBody) -> StreamingResponse:
+async def ask(body: AskBody, request: Request) -> StreamingResponse:
     history = [h.model_dump() for h in body.history] if body.history else None
+    # Calendar tools read this run's own Google connection.
+    user_id = current_user_id(request)
 
     async def gen():
         yield ": connected\n\n"
@@ -46,6 +49,7 @@ async def ask(body: AskBody) -> StreamingResponse:
                 body.query,
                 max_turns=body.maxTurns or 14,
                 history=history,
+                user_id=user_id,
             ):
                 yield _sse(ev["kind"], ev)
                 if ev["kind"] in ("done", "error"):

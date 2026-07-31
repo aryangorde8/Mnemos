@@ -15,7 +15,9 @@ import httpx
 
 from app.db.mongo import collection
 
-DEMO_USER_ID = "alex"
+# Single definition of the anonymous identity lives in session.py; re-exported under the
+# old name so existing callers and any stored records keyed "alex" keep working.
+from app.lib.session import ANON_USER_ID as DEMO_USER_ID  # noqa: E402
 
 GMAIL_SCOPES = [
     "https://www.googleapis.com/auth/gmail.send",
@@ -49,10 +51,10 @@ def tokens_col():
     return collection("gmail_tokens")
 
 
-def auth_url() -> str:
+def auth_url(state: str = "") -> str:
     p = _oauth_params()
     from urllib.parse import urlencode
-    q = urlencode({
+    params = {
         "client_id": p["client_id"],
         "redirect_uri": p["redirect_uri"],
         "response_type": "code",
@@ -60,8 +62,10 @@ def auth_url() -> str:
         "access_type": "offline",
         "prompt": "consent",
         "include_granted_scopes": "true",
-    })
-    return f"{_AUTH_URL}?{q}"
+    }
+    if state:
+        params["state"] = state
+    return f"{_AUTH_URL}?{urlencode(params)}"
 
 
 async def exchange_code(code: str) -> dict:
@@ -76,11 +80,21 @@ async def exchange_code(code: str) -> dict:
 
 
 async def fetch_email(access_token: str) -> str:
+    return (await fetch_userinfo(access_token))["email"]
+
+
+async def fetch_userinfo(access_token: str) -> dict:
+    """`sub` + `email` for the consenting account.
+
+    `sub` is Google's stable per-account id and is what token records are keyed by —
+    email is display only, since a user can change it.
+    """
     async with httpx.AsyncClient(timeout=15) as c:
         r = await c.get(_USERINFO_URL, headers={"Authorization": f"Bearer {access_token}"})
         if r.status_code == 200:
-            return r.json().get("email", "unknown@unknown")
-    return "unknown@unknown"
+            data = r.json()
+            return {"sub": data.get("sub") or "", "email": data.get("email", "unknown@unknown")}
+    return {"sub": "", "email": "unknown@unknown"}
 
 
 async def save_tokens(rec: dict) -> None:
