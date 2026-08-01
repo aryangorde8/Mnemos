@@ -124,23 +124,216 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAll();}
 """
 
 # ── memory: hover a star → update the right rail ──
-MEMORY_JS = """
-(function(){var rail=document.getElementById('mem-rail');if(!rail)return;
-var stars=[].slice.call(document.querySelectorAll('.star-hit'));
-function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-function sparkHtml(series){if(!series)return '';var v=series.split(',').map(Number);var mx=Math.max.apply(null,v.concat([1]));
-var bars=v.map(function(n){return '<span style=\\"height:'+Math.max(1,n/mx*16)+'px\\"></span>';}).join('');
-return '<div class=\\"label\\" style=\\"margin-bottom:6px\\">mentions over time</div><span class=\\"spark v\\" style=\\"height:16px;gap:2px\\">'+bars+'</span>';}
-function projHtml(p){if(!p)return '';return '<div class=\\"label\\" style=\\"margin-bottom:8px\\">projects</div>'+p.split(',').map(function(t){return '<span class=\\"tag\\" style=\\"margin:0 4px 4px 0\\">'+esc(t)+'</span>';}).join('');}
-function show(el){var d=el.dataset;var rows=[['magnitude',d.mag],['mentions',d.mentions],['last seen',d.last||'—'],['ra · dec',d.radec]];
-rail.innerHTML='<div class=\\"nm\\">'+esc(d.name)+'</div>'+(d.role?'<div class=\\"label\\" style=\\"margin-top:4px\\">'+esc(d.role)+'</div>':'')+
-rows.map(function(kv){return '<div class=\\"kv\\"><span class=\\"k\\">'+kv[0]+'</span><span class=\\"v\\">'+esc(kv[1])+'</span></div>';}).join('')+
-'<div style=\\"margin-top:18px\\">'+sparkHtml(d.series)+'</div>'+'<div style=\\"margin-top:18px\\">'+projHtml(d.projects)+'</div>';}
-stars.forEach(function(el){el.addEventListener('mouseenter',function(){show(el);
-var halo=document.getElementById('halo');if(halo){halo.setAttribute('cx',el.getAttribute('data-cx'));halo.setAttribute('cy',el.getAttribute('data-cy'));halo.setAttribute('r',(+el.getAttribute('data-r')+6));halo.style.opacity=1;}});});
-var chart=document.getElementById('mem-svg');if(chart)chart.addEventListener('mouseleave',function(){var halo=document.getElementById('halo');if(halo)halo.style.opacity=0;});
-[].slice.call(document.querySelectorAll('.mem-legend .row')).forEach(function(row){var pid=row.getAttribute('data-proj');
-row.addEventListener('mouseenter',function(){[].slice.call(document.querySelectorAll('[data-projlines]')).forEach(function(g){g.style.opacity=g.getAttribute('data-projlines')===pid?1:0.12;});});
-row.addEventListener('mouseleave',function(){[].slice.call(document.querySelectorAll('[data-projlines]')).forEach(function(g){g.style.opacity=1;});});});
+MEMORY_JS = r"""
+/* 04 · memory — focus + neighbourhood.
+   Mirrors expand_via_graph: resolve a seed entity, BFS 1-2 hops, draw the result.
+   A hub entity touches nearly everything, so each ring keeps the strongest ties and
+   reports how many it held back rather than truncating silently. */
+(function(){
+  var D = window.__MEM__; if (!D) return;
+  var svg = document.getElementById("mem-svg"); if (!svg) return;
+  var NS = "http://www.w3.org/2000/svg";
+  var EDGE = {owes:{c:"#e8c547",w:2.1,o:.85}, manages:{c:"#f25738",w:1.8,o:.8},
+              works_with:{c:"#d8d2c5",w:1.4,o:.5}, discusses:{c:"#6c645a",w:1,o:.42}};
+  var RANK = {owes:0, manages:1, works_with:2, discusses:3};
+  var CAP = {1:14, 2:20}, CX = 490, CY = 296, R1 = 150, R2 = 246;
+
+  var byKey = {};
+  D.ents.forEach(function(e){ if (!byKey[e.k]) byKey[e.k] = e; });
+  /* Relations can point at entities /graph did not return (it caps each kind), so
+     synthesise faint placeholders instead of dropping those edges. */
+  D.rels.forEach(function(r){ [r.f, r.t].forEach(function(k){
+    if (!byKey[k]) byKey[k] = {n:k.replace(/-/g," ").replace(/\b\w/g,function(c){return c.toUpperCase();}),
+                               k:k, t:"unindexed", m:0, r:"", f:"", l:""};
+  }); });
+
+  var adj = {};
+  D.rels.forEach(function(r){
+    if (r.f === r.t) return;
+    (adj[r.f] = adj[r.f] || []).push({o:r.t, k:r.k, e:r.e, dir:"out"});
+    (adj[r.t] = adj[r.t] || []).push({o:r.f, k:r.k, e:r.e, dir:"in"});
+  });
+
+  /* entity_key slugifies the name, so "priya" and "priya-iyer" are separate entities
+     that are probably one person. Name it rather than hide it. */
+  var dupes = {}, keys = Object.keys(byKey);
+  keys.forEach(function(a){ keys.forEach(function(b){
+    if (a !== b && b.indexOf(a + "-") === 0 && byKey[a].t === byKey[b].t) {
+      (dupes[a] = dupes[a] || []).push(b); (dupes[b] = dupes[b] || []).push(a);
+    }
+  }); });
+
+  var focus = (D.ents[0] || {}).k, depth = 1;
+  D.ents.forEach(function(e){ if (e.m > (byKey[focus] || {m:-1}).m) focus = e.k; });
+
+  function el(t, a){ var n = document.createElementNS(NS, t);
+    for (var k in a) n.setAttribute(k, a[k]); return n; }
+  function esc(s){ var d = document.createElement("div"); d.textContent = s == null ? "" : s;
+    return d.innerHTML; }
+  function strongest(a, b){ var best = 9;
+    (adj[a] || []).forEach(function(e){ if (e.o === b) best = Math.min(best, RANK[e.k]); });
+    return best; }
+
+  function neighbourhood(seed, d){
+    var lvl = {}; lvl[seed] = 0; var frontier = [seed], dropped = {};
+    for (var i = 1; i <= d; i++) {
+      var cand = {};
+      frontier.forEach(function(f){ (adj[f] || []).forEach(function(e){
+        if (!(e.o in lvl)) cand[e.o] = 1; }); });
+      var fr = frontier;
+      var ranked = Object.keys(cand).sort(function(x, y){
+        var sx = 9, sy = 9;
+        fr.forEach(function(f){ sx = Math.min(sx, strongest(f, x));
+                                sy = Math.min(sy, strongest(f, y)); });
+        return sx - sy || (byKey[y].m || 0) - (byKey[x].m || 0);
+      });
+      dropped[i] = Math.max(0, ranked.length - CAP[i]);
+      var keep = ranked.slice(0, CAP[i]);
+      keep.forEach(function(k){ lvl[k] = i; });
+      frontier = keep;
+    }
+    return {lvl:lvl, dropped:dropped};
+  }
+
+  function draw(){
+    var nb = neighbourhood(focus, depth), lvl = nb.lvl;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    [[R1, "1 hop"], [R2, depth > 1 ? "2 hops" : ""]].forEach(function(rc){
+      if (!rc[1]) return;
+      svg.appendChild(el("circle", {cx:CX, cy:CY, r:rc[0], fill:"none",
+        stroke:"#241d15", "stroke-dasharray":"2 6"}));
+      var t = el("text", {x:CX, y:CY - rc[0] - 7, "text-anchor":"middle", "class":"mem-ring"});
+      t.textContent = rc[1]; svg.appendChild(t);
+    });
+
+    var pos = {}; pos[focus] = [CX, CY];
+    [1, 2].forEach(function(ring){
+      var members = Object.keys(lvl).filter(function(k){ return lvl[k] === ring; })
+        .sort(function(a, b){ return (byKey[b].m || 0) - (byKey[a].m || 0); });
+      var R = ring === 1 ? R1 : R2;
+      members.forEach(function(k, i){
+        var a = (i / members.length) * Math.PI * 2 - Math.PI / 2;
+        pos[k] = [CX + Math.cos(a) * R, CY + Math.sin(a) * R];
+      });
+    });
+
+    var seen = {};
+    D.rels.forEach(function(r){
+      if (!pos[r.f] || !pos[r.t] || r.f === r.t) return;
+      var id = [r.f, r.t, r.k].sort().join("|"); if (seen[id]) return; seen[id] = 1;
+      var st = EDGE[r.k] || EDGE.discusses, touches = r.f === focus || r.t === focus;
+      var ln = el("line", {x1:pos[r.f][0], y1:pos[r.f][1], x2:pos[r.t][0], y2:pos[r.t][1],
+        stroke:st.c, "stroke-width":st.w, "stroke-linecap":"round",
+        "stroke-opacity":touches ? st.o : st.o * 0.4});
+      var ttl = el("title");
+      ttl.textContent = byKey[r.f].n + " " + r.k + " " + byKey[r.t].n + (r.e ? " — " + r.e : "");
+      ln.appendChild(ttl); svg.appendChild(ln);
+    });
+
+    Object.keys(lvl).sort(function(a, b){ return lvl[b] - lvl[a]; }).forEach(function(k){
+      var xy = pos[k], x = xy[0], y = xy[1], e = byKey[k], isF = lvl[k] === 0;
+      var rad = isF ? 15 : Math.max(4.5, Math.min(11, 4.5 + Math.sqrt(e.m || 1) * 1.5));
+      var fill = e.t === "person" ? "#f25738" : e.t === "project" ? "#e8c547"
+               : e.t === "unindexed" ? "#4a443c" : "#9c9486";
+      var g = el("g", {"class":"mem-node", tabindex:"0", role:"button",
+                       "aria-label":e.n + ", " + (e.m || 0) + " mentions"});
+      if (isF) g.appendChild(el("circle", {cx:x, cy:y, r:rad + 9, fill:"none",
+        stroke:"#f25738", "stroke-opacity":".33"}));
+      g.appendChild(el("circle", {cx:x, cy:y, r:rad, fill:fill,
+        "fill-opacity":isF ? 1 : lvl[k] === 1 ? .92 : .5,
+        stroke:"#0e0a05", "stroke-width":isF ? 0 : 1.5}));
+      if (dupes[k]) g.appendChild(el("circle", {cx:x + rad * .82, cy:y - rad * .82,
+        r:2.6, fill:"#e8c547"}));
+      /* Fan labels outward so ring neighbours never collide. */
+      var dx = x - CX, dy = y - CY, horiz = Math.abs(dx) > 34, off = rad + 7;
+      var t = el("text", {
+        x: isF ? x : x + (!horiz ? 0 : dx < 0 ? -off : off),
+        y: isF ? y + rad + 27 : y + (!horiz ? (dy < 0 ? -off - 2 : off + 9) : 4),
+        "text-anchor": isF ? "middle" : (!horiz ? "middle" : dx < 0 ? "end" : "start"),
+        "class": "mem-nlabel" + (isF ? " focus" : "")});
+      t.textContent = e.n.length > 20 ? e.n.slice(0, 19) + "…" : e.n;
+      if (!isF) t.setAttribute("fill-opacity", lvl[k] === 1 ? .95 : .55);
+      g.appendChild(t);
+      g.addEventListener("click", function(){ focus = k; draw(); });
+      g.addEventListener("keydown", function(ev){
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); focus = k; draw(); } });
+      svg.appendChild(g);
+    });
+
+    var shown = Object.keys(lvl).length - 1;
+    var held = (nb.dropped[1] || 0) + (depth > 1 ? (nb.dropped[2] || 0) : 0);
+    var cap = el("text", {x:14, y:588, "class":"mem-ring", "text-anchor":"start"});
+    cap.textContent = held ? "showing strongest " + shown + " of " + (shown + held) + " neighbours"
+                           : "all " + shown + " neighbours shown";
+    svg.appendChild(cap);
+    detail();
+  }
+
+  function detail(){
+    var e = byKey[focus];
+    function set(id, v){ var n = document.getElementById(id); if (n) n.textContent = v; }
+    set("mem-name", e.n);
+    set("mem-role", e.r || "No role recorded by the extractor.");
+    set("mem-m", e.m || "—"); set("mem-f", e.f || "—"); set("mem-l", e.l || "—");
+    set("mem-n", (adj[focus] || []).length);
+
+    var dup = document.getElementById("mem-dup");
+    if (dupes[focus]) {
+      dup.hidden = false;
+      set("mem-dupmsg", "“" + e.n + "” and " +
+        dupes[focus].map(function(k){ return "“" + byKey[k].n + "”"; }).join(", ") +
+        " are separate entities because entity_key slugifies the name. They are probably the " +
+        "same person — their chunks and relations are split across both.");
+    } else { dup.hidden = true; }
+
+    var box = document.getElementById("mem-edges");
+    box.innerHTML = ""; var seen = {};
+    (adj[focus] || []).sort(function(a, b){ return RANK[a.k] - RANK[b.k]; }).forEach(function(r){
+      var id = r.o + r.k + r.e; if (seen[id]) return; seen[id] = 1;
+      var d = document.createElement("div"); d.className = "mem-edge";
+      d.innerHTML = '<span class="kind k-' + r.k + '">' + r.k.replace("_", " ") + '</span>' +
+        '<span>' + (r.dir === "out" ? "→ " : "← ") + '<b>' + esc(byKey[r.o].n) + '</b>' +
+        (r.e ? '<br><span class="ev">' + esc(r.e) + '</span>' : '') + '</span>';
+      box.appendChild(d);
+    });
+    if (!box.children.length) box.innerHTML = '<span class="ev">No relations recorded.</span>';
+
+    var btns = document.querySelectorAll(".mem-ent");
+    for (var i = 0; i < btns.length; i++)
+      btns[i].setAttribute("aria-current",
+        btns[i].getAttribute("data-k") === focus ? "true" : "false");
+  }
+
+  function renderList(filter){
+    var list = document.getElementById("mem-list"); list.innerHTML = "";
+    var f = (filter || "").trim().toLowerCase();
+    var items = D.ents.filter(function(e){ return !f || e.n.toLowerCase().indexOf(f) >= 0; })
+      .sort(function(a, b){ return b.m - a.m; }).slice(0, 60);
+    items.forEach(function(e){
+      var b = document.createElement("button");
+      b.className = "mem-ent"; b.type = "button"; b.setAttribute("data-k", e.k);
+      b.setAttribute("aria-current", e.k === focus ? "true" : "false");
+      b.innerHTML = '<span class="dot k-' + e.t + '"></span><span>' + esc(e.n) +
+                    '</span><span class="m">' + e.m + '</span>';
+      b.addEventListener("click", function(){ focus = e.k; draw(); });
+      list.appendChild(b);
+    });
+    if (!items.length) list.innerHTML = '<span class="ev">Nothing matches.</span>';
+  }
+
+  var q = document.getElementById("mem-q");
+  if (q) { q.placeholder = "search " + Object.keys(byKey).length + " entities…";
+           q.addEventListener("input", function(ev){ renderList(ev.target.value); }); }
+  [["mem-d1", 1], ["mem-d2", 2]].forEach(function(pair){
+    var b = document.getElementById(pair[0]); if (!b) return;
+    b.addEventListener("click", function(){
+      depth = pair[1];
+      document.getElementById("mem-d1").setAttribute("aria-pressed", String(depth === 1));
+      document.getElementById("mem-d2").setAttribute("aria-pressed", String(depth === 2));
+      draw();
+    });
+  });
+  renderList(""); draw();
 })();
 """
