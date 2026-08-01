@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Mnemos app icon for the Google OAuth consent screen.
+       Palette matches the deployed app: umber base (#0e0a05), vermilion accent
+       (#f25738), paper (#f3ecdf). Square with no rounded corners — Google applies
+       its own crop, so rounding here would be clipped twice. -->
+  <defs>
+    <radialGradient id="haze" cx="50%" cy="0%" r="78%">
+      <stop offset="0%"  stop-color="#f25738" stop-opacity="0.30"/>
+      <stop offset="45%" stop-color="#f25738" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#0e0a05" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#14100a"/>
+      <stop offset="100%" stop-color="#050402"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="120" height="120" fill="url(#base)"/>
+  <rect width="120" height="120" fill="url(#haze)"/>
+
+  <!-- Constellation: memory as linked points. Kept sparse so it still reads at 32px. -->
+  <g stroke="#f3ecdf" stroke-opacity="0.28" stroke-width="0.9">
+    <line x1="30" y1="42" x2="52" y2="30"/>
+    <line x1="52" y1="30" x2="78" y2="44"/>
+    <line x1="30" y1="42" x2="44" y2="66"/>
+    <line x1="78" y1="44" x2="88" y2="70"/>
+    <line x1="44" y1="66" x2="88" y2="70"/>
+  </g>
+  <g fill="#f3ecdf">
+    <circle cx="30" cy="42" r="2.1" opacity="0.75"/>
+    <circle cx="52" cy="30" r="1.6" opacity="0.6"/>
+    <circle cx="78" cy="44" r="2.4" opacity="0.8"/>
+    <circle cx="44" cy="66" r="1.7" opacity="0.6"/>
+  </g>
+  <!-- The one vermilion node: the retrieved chunk. -->
+  <circle cx="88" cy="70" r="3.4" fill="#f25738"/>
+
+  <!-- Wordmark initial. Instrument Serif is the app's display face but is not installed
+       on most machines, so Georgia/serif is the practical fallback and looks near
+       identical at this size. Check the rasterised PNG before uploading — whatever font
+       the converter picked is what Google will show. -->
+  <text x="60" y="103" text-anchor="middle"
+        font-family="Instrument Serif, Georgia, serif" font-style="italic"
+        font-size="54" fill="#f3ecdf">M</text>
+</svg>
