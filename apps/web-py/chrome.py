@@ -98,6 +98,11 @@ def nav_rail(active: str, vault: dict | None = None):
             Div(Div(f"{items_n:,} items" if isinstance(items_n, int) else "vault offline"),
                 Div(f"{chunks_n:,} chunks" if isinstance(chunks_n, int) else "run the seed"),
                 Div("indexed · live", cls="num", style="color:var(--paper-faint)"), cls="v"),
+            # Google's OAuth review requires these to be reachable from the app, not just
+            # pasted into the console.
+            Div(A("privacy", href="/privacy"), Span(" · ", style="opacity:.4"),
+                A("terms", href="/terms"),
+                cls="chrome", style="margin-top:12px;font-size:11px"),
             cls="foot"),
         cls="nav-rail")
 
