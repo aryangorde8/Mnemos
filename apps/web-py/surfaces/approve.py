@@ -3,7 +3,7 @@
 One focused action — draft | critic — with a queue navigator to page through the pending queue.
 Wired to the real /actions queue + per-action /actions/{id}/critique; approve/reject POST live.
 """
-from fasthtml.common import A, Div, P, Span  # type: ignore
+from fasthtml.common import A, Button, Div, P, Span  # type: ignore
 
 from assets import EDIT_JS
 from chrome import draft_card, critic_panel, page, surface_head
@@ -21,8 +21,14 @@ def _google_strip(google: dict | None):
     if google.get("connected"):
         email = google.get("email") or "google account"
         scope = ("real gmail + calendar" if google.get("calendar") else "real gmail")
+        # The privacy policy states the account can be disconnected from the app, so the
+        # control has to exist here — not only as an API route.
         return Div(Span(cls="pulse-dot"), Span("google · live", cls="chrome"),
                    Span(f"connected as {email} — approvals send {scope}", cls="label"),
+                   Button("disconnect", cls="btn-d ghost", style="margin-left:auto",
+                          hx_post="/google/disconnect", hx_target="body",
+                          hx_confirm=("Disconnect this Google account? Mnemos will no longer "
+                                      "be able to send email or create events on it.")),
                    cls="gconnect", style=_GSTRIP_STYLE)
     if google.get("configured"):
         return Div(Span(cls="pulse-dot saffron"), Span("google · simulated", cls="chrome"),
