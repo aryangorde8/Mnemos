@@ -20,6 +20,7 @@ from surfaces import ask as ask_s
 from surfaces import extra as extra_s
 from surfaces import hero as hero_s
 from surfaces import ingest as ingest_s
+from surfaces import legal as legal_s
 from surfaces import memory as memory_s
 from surfaces import search as search_s
 
@@ -221,6 +222,20 @@ async def approve_decide(request, aid: str = "", verdict: str = "approve",
                                       session=backend.session_of(request))
     ok = isinstance(res, dict) and not res.get("error")
     return approve_s.decide_result(verdict, ok, res if isinstance(res, dict) else {})
+
+
+# Google's OAuth reviewers fetch these directly; they must stay publicly reachable
+# and must not require a session.
+@rt("/privacy")
+async def privacy(request):
+    ready, vault, _ = await _chrome(backend.session_of(request))
+    return (Title("Mnemos — privacy policy"), *legal_s.render_privacy(ready=ready, vault=vault))
+
+
+@rt("/terms")
+async def terms(request):
+    ready, vault, _ = await _chrome(backend.session_of(request))
+    return (Title("Mnemos — terms of service"), *legal_s.render_terms(ready=ready, vault=vault))
 
 
 @rt("/memory")
