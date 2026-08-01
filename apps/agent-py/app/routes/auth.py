@@ -163,13 +163,14 @@ async def disconnect(request: Request):
 async def connections():
     """How many distinct Google accounts are connected, for the UI's status line.
 
-    Emails only — no tokens ever leave the agent.
+    Count only. This route is unauthenticated, so returning the addresses would hand
+    every visitor the list of everyone who has connected — which is precisely what the
+    privacy policy says the app does not do. The UI never needed more than the number.
     """
     if not is_gmail_configured():
-        return JSONResponse({"count": 0, "emails": []})
+        return JSONResponse({"count": 0})
     try:
         rows = await tokens_col().find({}, projection={"_id": 0, "email": 1}).to_list(length=100)
-        emails = sorted({r.get("email") for r in rows if r.get("email")})
-        return JSONResponse({"count": len(emails), "emails": emails})
+        return JSONResponse({"count": len({r.get("email") for r in rows if r.get("email")})})
     except Exception:  # noqa: BLE001
-        return JSONResponse({"count": 0, "emails": []})
+        return JSONResponse({"count": 0})
