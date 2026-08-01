@@ -224,6 +224,15 @@ async def approve_decide(request, aid: str = "", verdict: str = "approve",
     return approve_s.decide_result(verdict, ok, res if isinstance(res, dict) else {})
 
 
+@rt("/google/disconnect")
+async def google_disconnect(request):
+    """Revoke this browser's Google connection. The privacy policy promises this is
+    possible from inside the app, so it must be a real control, not just an API route."""
+    await backend.post_json("/auth/google/disconnect", {},
+                            session=backend.session_of(request))
+    return RedirectResponse("/approve?disconnected=1", status_code=303)
+
+
 # Google's OAuth reviewers fetch these directly; they must stay publicly reachable
 # and must not require a session.
 @rt("/privacy")
