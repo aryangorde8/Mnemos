@@ -448,4 +448,9 @@ body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
 .catalog-card .hole{width:10px;height:10px;border:1px solid var(--rule-strong);border-radius:50%;position:absolute;top:12px;right:14px}
 .catalog-card .spine{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-faint)}
 .catalog-card .nm{font-family:'Instrument Serif',serif;font-style:italic;font-size:20px;color:var(--paper);margin:8px 0 4px}
+.hero-purpose{max-width:1240px;margin:0 auto;padding:34px 40px 8px;border-top:1px solid var(--rule)}
+@media(max-width:760px){.hero-purpose{padding:26px 20px 4px}}
+.hero-purpose .paper{color:var(--paper)}
+.hero-h1 .i{display:block;margin-top:6px;line-height:1.25}
 """
+
