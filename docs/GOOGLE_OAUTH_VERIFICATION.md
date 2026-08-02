@@ -115,8 +115,17 @@ says what the scope does **not** allow.
 
 ## 5. Demo video
 
-Unlisted YouTube is fine. Reviewers need to see the **OAuth consent screen itself**
-and **each scope being used**. No narration required, but keep it unhurried.
+**Recorded 2026-08-01** — <https://youtu.be/ekoeUG7W8zE> (4:03), titled
+`Mnemos — OAuth Verification Demo (gmail.send, calendar.events)`.
+
+Confirmed playable by an unauthenticated fetch (`playabilityStatus: OK`, oEmbed 200),
+which is the check that matters: "inaccessible video link" is a listed rejection
+reason, and a *Private* video looks fine to its owner and unplayable to everyone else.
+Keep it **Unlisted** — reviewers can watch it, search cannot index the consent screen,
+the connected address, or the corpus contents shown on screen.
+
+Reviewers need to see the **OAuth consent screen itself** and **each scope being
+used**. No narration required, but keep it unhurried.
 
 Shot list:
 
@@ -140,6 +149,29 @@ Record at 1280×720 or better, and make sure on-screen text is legible.
 ---
 
 ## 6. Submit
+
+Two reviews, in order. **Branding must be published before data access can be
+requested** — they are not parallel, and the second gate stays shut until the first
+clears.
+
+### Where this stands (2026-08-02)
+
+| Gate | State |
+|---|---|
+| Branding | Appeal submitted — "the finding is incorrect", both findings |
+| Data access | Not started — scope table is empty |
+| Demo video | Recorded, on YouTube, not yet attached |
+
+The branding checker twice returned `home page does not explain the purpose` and
+`app name ... does not match` against a page that demonstrably says both. Verified
+against the live site with a Googlebot user-agent: HTTP 200, no redirect, no
+`robots.txt` restriction, name in `<title>`/`<h1>`/`application-name`/`og:site_name`,
+purpose in `<meta name="description">` and in the body. Other developers report the
+same loop, so the appeal argues the finding is wrong rather than re-fixing a correct
+page. If it stalls: removing the app logo drops the branding-verification requirement
+altogether, at the cost of a plain consent screen.
+
+### Then
 
 Google Auth Platform → **Verification Center** → **Prepare for verification**.
 Fill in the branding, attach the video URL, paste the justifications, submit.
