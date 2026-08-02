@@ -33,7 +33,26 @@ _FONTS = NotStr(
 )
 _SSE_EXT = NotStr('<script src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.3/dist/sse.js"></script>')
 
-app, rt = fast_app(pico=False, hdrs=(_FONTS, Style(NotStr(CSS)), _SSE_EXT), htmlkw={"lang": "en"})
+# Google's OAuth brand check reads the home page for the app name and a statement of what
+# the app does. The hero says both, but only in styled body copy; a machine reader looking
+# at head metadata found nothing. State it plainly here too, naming the Google data used.
+_DESCRIPTION = (
+    "Mnemos is a personal memory agent. It reads your professional corpus — email, calendar "
+    "entries, meeting notes, shared docs and chat — answers questions with citations, and "
+    "drafts Gmail messages and Google Calendar events for you to approve before anything is sent."
+)
+_META = NotStr(
+    f'<meta name="description" content="{_DESCRIPTION}">'
+    '<meta name="application-name" content="Mnemos">'
+    '<meta property="og:site_name" content="Mnemos">'
+    '<meta property="og:title" content="Mnemos — the memory agent">'
+    f'<meta property="og:description" content="{_DESCRIPTION}">'
+    '<meta property="og:type" content="website">'
+    '<meta property="og:url" content="https://mnemos.aryangorde.com/">'
+)
+
+app, rt = fast_app(pico=False, hdrs=(_META, _FONTS, Style(NotStr(CSS)), _SSE_EXT),
+                   htmlkw={"lang": "en"})
 
 
 async def _chrome(session: str = ""):
