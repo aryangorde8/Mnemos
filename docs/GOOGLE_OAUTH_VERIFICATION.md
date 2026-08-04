@@ -154,13 +154,21 @@ Two reviews, in order. **Branding must be published before data access can be
 requested** — they are not parallel, and the second gate stays shut until the first
 clears.
 
-### Where this stands (2026-08-02)
+### Where this stands (2026-08-04)
 
 | Gate | State |
 |---|---|
-| Branding | Appeal submitted — "the finding is incorrect", both findings |
+| Branding | **Approved 2026-08-04** — project `mnemos-504109` |
 | Data access | Not started — scope table is empty |
 | Demo video | Recorded, on YouTube, not yet attached |
+
+The appeal succeeded: arguing the finding was factually wrong worked where two
+rounds of re-verification had not.
+
+**Do not edit branding again while data access is under review.** Google's
+acknowledgement is explicit that any change to consent screen configuration requires
+a new verification request — an idle tweak to the app name or logo would throw away
+the approval above and restart this.
 
 The branding checker twice returned `home page does not explain the purpose` and
 `app name ... does not match` against a page that demonstrably says both. Verified
