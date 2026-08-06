@@ -45,6 +45,14 @@ def _src_counts(stats):
 
 
 def _source_table(stats):
+    """Where the indexed documents came from — a count per source kind, not a connection state.
+
+    This column reports whether the corpus holds documents of each kind. It said
+    "connected"/"available" before, which claimed something entirely different: that the
+    app held a live account link to Slack, Drive, Notion and Linear. It holds none — those
+    documents were ingested as text. The only account integration is Google, and its real
+    state is the connect control in the chrome, which is per-visitor and asks the agent.
+    """
     counts = _src_counts(stats)
     rows = []
     for glyph, name, key in _SOURCES:
@@ -55,7 +63,7 @@ def _source_table(stats):
             Td(Span(name, cls="nm"), Div(key, cls="label")),
             Td(f"{c:,}" if isinstance(c, int) else "—", cls="ct"),
             Td(Span(Span(cls="pulse-dot" if on else "pulse-dot muted"), " ",
-                    "connected" if on else "available", cls="chrome",
+                    "indexed" if on else "none", cls="chrome",
                     style="display:inline-flex;align-items:center;gap:7px"),
                style="text-align:right;width:130px")))
     return Table(Tbody(*rows), cls="src-table")
@@ -117,7 +125,12 @@ def _ingest_body(stats, docs):
           "the list. Deleting removes the document and every vector it produced from Atlas.",
           cls="muted", style="max-width:62ch;margin:0 0 22px"),
         form,
-        Div(P("by source", cls="label", style="margin:36px 0 10px"), _source_table(stats)),
+        Div(P("by source", cls="label", style="margin:36px 0 10px"),
+            P("How many indexed documents came from each kind of source. Google is the only "
+              "account Mnemos connects to, for sending mail and creating calendar events; "
+              "everything else here was ingested as text.",
+              cls="muted", style="max-width:62ch;margin:0 0 12px;font-size:13px"),
+            _source_table(stats)),
         Div(filter_row, style="margin-top:30px"),
         Div(doc_list(docs), id="doc-list"),
     )
