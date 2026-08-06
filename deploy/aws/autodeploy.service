@@ -1,0 +1,12 @@
+# Install to /etc/systemd/system/mnemos-autodeploy.service
+[Unit]
+Description=Mnemos auto-deploy — rebuild when origin/main moves and CI is green
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/Mnemos
+# flock so a slow image build can never overlap the next timer tick
+ExecStart=/usr/bin/flock -n /tmp/mnemos-autodeploy.lock /home/ubuntu/Mnemos/deploy/aws/autodeploy.sh

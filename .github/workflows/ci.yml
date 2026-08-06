@@ -1,8 +1,11 @@
 name: ci
 
+# Runs on every branch, not just main: the point of pushing a branch is to find out
+# whether it builds before opening a PR. `deploy` keys off a green run of this
+# workflow on main, so widening the trigger here does not widen what gets deployed.
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
     branches: [main]
   workflow_dispatch:
