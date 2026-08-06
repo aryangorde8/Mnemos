@@ -1,6 +1,7 @@
 """Memory graph store — port of apps/agent/src/lib/graph.ts."""
 from __future__ import annotations
 
+import asyncio
 import re
 from datetime import datetime, timezone
 
@@ -55,14 +56,21 @@ async def list_relations(limit: int = 200) -> list[dict]:
 
 
 async def graph_stats() -> dict:
+    """Four independent counts — issued together, not one Atlas round trip after another.
+
+    Awaited in sequence these cost four times the network latency for no reason: no count
+    depends on any other. On a remote Atlas cluster that was most of the /graph budget.
+    """
     ents, rels = entities_col(), relations_col()
+    person, project, topic, relations = await asyncio.gather(
+        ents.count_documents({"kind": "person"}),
+        ents.count_documents({"kind": "project"}),
+        ents.count_documents({"kind": "topic"}),
+        rels.count_documents({}),
+    )
     return {
-        "entities": {
-            "person": await ents.count_documents({"kind": "person"}),
-            "project": await ents.count_documents({"kind": "project"}),
-            "topic": await ents.count_documents({"kind": "topic"}),
-        },
-        "relations": await rels.count_documents({}),
+        "entities": {"person": person, "project": project, "topic": topic},
+        "relations": relations,
     }
 
 

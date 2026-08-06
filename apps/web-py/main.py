@@ -178,16 +178,22 @@ async def ask_stream(request, q: str = ""):
 
 @rt("/approve")
 async def approve(request, i: int = 0):
-    ready, vault, _ = await _chrome(backend.session_of(request))
-    data = await backend.get_json("/actions", {"status": "proposed", "limit": 25}) or {}
+    # The chrome does not depend on the queue, so both go out together.
+    (ready, vault, _), data = await asyncio.gather(
+        _chrome(backend.session_of(request)),
+        backend.get_json("/actions", {"status": "proposed", "limit": 25}),
+    )
+    data = data or {}
     actions = data.get("actions", []) if isinstance(data, dict) else []
     critiques: dict = {}
     if actions:
-        results = await asyncio.gather(*[backend.get_json(f"/actions/{a['id']}/critique")
-                                         for a in actions])
-        for a, c in zip(actions, results):
-            if isinstance(c, dict) and "verdict" in c:
-                critiques[a["id"]] = c
+        # This surface paginates — one card is on screen at a time. It used to fetch a
+        # critique for all 25 queued actions and render exactly one of them, paying 24
+        # round trips per page load for drafts nobody was looking at.
+        current = actions[max(0, min(i, len(actions) - 1))]
+        c = await backend.get_json(f"/actions/{current['id']}/critique")
+        if isinstance(c, dict) and "verdict" in c:
+            critiques[current["id"]] = c
     return (Title("Mnemos — approve"),
             *approve_s.render(actions=actions, index=i, critiques=critiques,
                               ready=ready, vault=vault))
@@ -268,9 +274,12 @@ async def terms(request):
 
 @rt("/memory")
 async def memory(request):
-    ready, vault, _ = await _chrome(backend.session_of(request))
-    graph = await backend.get_json("/graph") or {}
-    return (Title("Mnemos — memory"), *memory_s.render(graph=graph, ready=ready, vault=vault))
+    # /graph is the slowest call on the site; waiting for the chrome first added its
+    # latency on top for no reason — neither needs the other.
+    (ready, vault, _), graph = await asyncio.gather(
+        _chrome(backend.session_of(request)), backend.get_json("/graph"))
+    return (Title("Mnemos — memory"),
+            *memory_s.render(graph=graph or {}, ready=ready, vault=vault))
 
 
 @rt("/search")
