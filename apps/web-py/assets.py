@@ -95,10 +95,15 @@ var q=document.querySelector('input[type=search][name=q]');
 if(q){var armed=true;
 q.addEventListener('focus',function(){if(armed){armed=false;q.select();}});
 q.addEventListener('blur',function(){armed=true;});
-/* autofocus fires while the document is still parsing, before this script exists, so
-   the listener above never sees it. Landing on the page and typing straight away — the
-   case this is here to fix — would still have appended. Catch it up by hand. */
-if(document.activeElement===q){armed=false;q.select();}}
+/* The one focus that matters is the one nothing here observes: autofocus. It is applied
+   during the browser's render step, which is after this end-of-body script runs, so both
+   the listener above and a plain activeElement check at init miss it — the field ends up
+   focused with the caret at 0 and the first keystroke appends, which is the whole bug.
+   rAF lands after autofocus has been flushed. `armed` keeps this from double-selecting
+   if a real focus event did arrive first. */
+function catchAutofocus(){if(armed&&document.activeElement===q){armed=false;q.select();}}
+catchAutofocus();
+requestAnimationFrame(catchAutofocus);}
 })();
 """
 
