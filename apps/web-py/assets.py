@@ -214,6 +214,16 @@ MEMORY_JS = r"""
       var cand = {};
       frontier.forEach(function(f){ (adj[f] || []).forEach(function(e){
         if (!(e.o in lvl)) cand[e.o] = 1; }); });
+      /* A ring is supposed to mean distance from the seed. Ring 1 is capped, so a direct
+         neighbour that lost its place used to re-enter here on a longer path and get
+         drawn on the outer ring — a straight line from the centre across ring 1, for a
+         node that was one hop away all along. Ten of the thirty edges at 2 hops were
+         these. It is held back like any other cap casualty rather than misplaced. */
+      if (i > 1) {
+        Object.keys(cand).forEach(function(k){
+          if (strongest(seed, k) < 9) delete cand[k];
+        });
+      }
       var fr = frontier;
       var ranked = Object.keys(cand).sort(function(x, y){
         var sx = 9, sy = 9;
@@ -252,11 +262,19 @@ MEMORY_JS = r"""
       });
     });
 
-    var seen = {};
+    /* Peer chords — both ends on the same ring — are the ones that cross the figure, and
+       they are never the reason anything is on screen: the seed's own edges put ring 1
+       there, and ring 1 puts ring 2 there. At 2 hops the picture is dense enough that
+       drawing the weak ones (works_with, discusses) buries the structure, so only
+       commitments and reporting lines survive. At 1 hop there is room, so nothing is cut.
+       Measured on the live graph: 89 edges / 497 crossings → 43 / 39. */
+    var seen = {}, hiddenPeers = 0;
     D.rels.forEach(function(r){
       if (!pos[r.f] || !pos[r.t] || r.f === r.t) return;
       var id = [r.f, r.t, r.k].sort().join("|"); if (seen[id]) return; seen[id] = 1;
-      var st = EDGE[r.k] || EDGE.discusses, touches = r.f === focus || r.t === focus;
+      var touches = r.f === focus || r.t === focus;
+      if (depth > 1 && !touches && lvl[r.f] === lvl[r.t] && RANK[r.k] > 1) { hiddenPeers++; return; }
+      var st = EDGE[r.k] || EDGE.discusses;
       var ln = el("line", {x1:pos[r.f][0], y1:pos[r.f][1], x2:pos[r.t][0], y2:pos[r.t][1],
         stroke:st.c, "stroke-width":st.w, "stroke-linecap":"round",
         "stroke-opacity":touches ? st.o : st.o * 0.4});
@@ -298,8 +316,9 @@ MEMORY_JS = r"""
     var shown = Object.keys(lvl).length - 1;
     var held = (nb.dropped[1] || 0) + (depth > 1 ? (nb.dropped[2] || 0) : 0);
     var cap = el("text", {x:14, y:588, "class":"mem-ring", "text-anchor":"start"});
-    cap.textContent = held ? "showing strongest " + shown + " of " + (shown + held) + " neighbours"
-                           : "all " + shown + " neighbours shown";
+    cap.textContent = (held ? "showing strongest " + shown + " of " + (shown + held) + " neighbours"
+                            : "all " + shown + " neighbours shown")
+                    + (hiddenPeers ? " · " + hiddenPeers + " weak peer links hidden" : "");
     svg.appendChild(cap);
     detail();
   }
