@@ -12,7 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import (
     active_embedding_label, active_model, active_model_label, active_provider_short,
-    embed_provider, is_bedrock, is_mongo_configured, is_vertex_configured, llm_mode, settings,
+    embed_provider, embedding_dims, is_bedrock, is_mongo_configured, is_vertex_configured,
+    llm_mode, settings,
 )
 from app.lib.firebase_auth import firebase_middleware, is_firebase_configured
 
@@ -58,6 +59,9 @@ async def ready() -> dict:
         "modelLabel": active_model_label(),
         "providerShort": active_provider_short(),
         "embeddingModel": active_embedding_label(),
+        # The search surface draws the retrieval pipeline and used to hardcode the
+        # dimension, which silently became wrong when embeddings moved to Titan.
+        "embeddingDims": embedding_dims(),
         "region": settings.bedrock_region if is_bedrock() else settings.google_cloud_location,
         "runtime": "python",
     }
