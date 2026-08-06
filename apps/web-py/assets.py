@@ -82,6 +82,19 @@ var cells=[].slice.call(document.querySelectorAll('.pipe-cell'));var panes={};
 [].slice.call(document.querySelectorAll('.ph-pane')).forEach(function(p){panes[p.getAttribute('data-phase')]=p;});
 function select(ph,idx){cells.forEach(function(c,i){c.classList.toggle('active',c.getAttribute('data-phase')===ph);c.classList.toggle('past',i<idx);});Object.keys(panes).forEach(function(k){panes[k].style.display=k===ph?'':'none';});}
 cells.forEach(function(c,i){c.addEventListener('click',function(){select(c.getAttribute('data-phase'),i);});});
+
+/* The query box ships with a real value, not just a placeholder, so the page arrives
+   with results instead of an empty frame. The cost was that clicking in and typing
+   appended to it — "inference SLO slip" + "roadmap" — and the field is autofocused, so
+   that was the default outcome for anyone who just started typing.
+   Selecting the text on focus makes the first keystroke replace it, while leaving the
+   field and the results below it consistent. Re-arming only on blur means a second
+   click inside an already-focused box still places the caret, so the seeded query stays
+   editable rather than being all-or-nothing. */
+var q=document.querySelector('input[type=search][name=q]');
+if(q){var armed=true;
+q.addEventListener('focus',function(){if(armed){armed=false;q.select();}});
+q.addEventListener('blur',function(){armed=true;});}
 })();
 """
 
