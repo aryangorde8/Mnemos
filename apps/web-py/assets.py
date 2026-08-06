@@ -264,16 +264,19 @@ MEMORY_JS = r"""
 
     /* Peer chords — both ends on the same ring — are the ones that cross the figure, and
        they are never the reason anything is on screen: the seed's own edges put ring 1
-       there, and ring 1 puts ring 2 there. At 2 hops the picture is dense enough that
-       drawing the weak ones (works_with, discusses) buries the structure, so only
-       commitments and reporting lines survive. At 1 hop there is room, so nothing is cut.
-       Measured on the live graph: 89 edges / 497 crossings → 43 / 39. */
+       there, and ring 1 puts ring 2 there. Drawing the weak kinds (works_with, discusses)
+       buries the structure they cross, so only commitments and reporting lines survive
+       between peers; anything touching the focus is always drawn.
+       This was applied at 2 hops first, on the assumption that 1 hop was sparse enough to
+       leave alone. Measuring said otherwise — 1 hop carried 75 crossings against 2 hops'
+       39 once the rings were honest, so the "sparse" view had become the tangled one.
+       Live graph: 2 hops 89 edges / 497 crossings → 43 / 39; 1 hop 47 / 75 → 37 / 3. */
     var seen = {}, hiddenPeers = 0;
     D.rels.forEach(function(r){
       if (!pos[r.f] || !pos[r.t] || r.f === r.t) return;
       var id = [r.f, r.t, r.k].sort().join("|"); if (seen[id]) return; seen[id] = 1;
       var touches = r.f === focus || r.t === focus;
-      if (depth > 1 && !touches && lvl[r.f] === lvl[r.t] && RANK[r.k] > 1) { hiddenPeers++; return; }
+      if (!touches && lvl[r.f] === lvl[r.t] && RANK[r.k] > 1) { hiddenPeers++; return; }
       var st = EDGE[r.k] || EDGE.discusses;
       var ln = el("line", {x1:pos[r.f][0], y1:pos[r.f][1], x2:pos[r.t][0], y2:pos[r.t][1],
         stroke:st.c, "stroke-width":st.w, "stroke-linecap":"round",
