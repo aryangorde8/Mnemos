@@ -1,6 +1,7 @@
 """/graph — port of apps/agent/src/routes/graph.ts (read endpoints)."""
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Literal
 
@@ -35,11 +36,15 @@ async def graph_extract(request: Request) -> StreamingResponse:
 
 @router.get("/graph")
 async def graph_route() -> JSONResponse:
-    stats = await graph_stats()
-    people = await list_entities("person", 60)
-    projects = await list_entities("project", 30)
-    topics = await list_entities("topic", 30)
-    relations = await list_relations(200)
+    # Five independent reads. Serialised they cost the sum of five Atlas round trips;
+    # the memory surface cannot render until the slowest of them lands either way.
+    stats, people, projects, topics, relations = await asyncio.gather(
+        graph_stats(),
+        list_entities("person", 60),
+        list_entities("project", 30),
+        list_entities("topic", 30),
+        list_relations(200),
+    )
     return JSONResponse({
         "stats": stats,
         "entities": {

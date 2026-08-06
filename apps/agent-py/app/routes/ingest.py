@@ -1,6 +1,7 @@
 """/ingest — port of apps/agent/src/routes/ingest.ts."""
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -96,10 +97,14 @@ async def delete_document(doc_id: str) -> JSONResponse:
 
 @router.get("/ingest/stats")
 async def ingest_stats() -> JSONResponse:
-    doc_count = await documents().count_documents({})
-    chunk_count = await chunks().count_documents({})
-    by_source = await documents().aggregate(
-        [{"$group": {"_id": "$source", "count": {"$sum": 1}}}]).to_list(length=None)
+    # Three independent reads. This runs on every page — it is part of the global chrome —
+    # so serialising it charged every surface three Atlas round trips before first paint.
+    doc_count, chunk_count, by_source = await asyncio.gather(
+        documents().count_documents({}),
+        chunks().count_documents({}),
+        documents().aggregate(
+            [{"$group": {"_id": "$source", "count": {"$sum": 1}}}]).to_list(length=None),
+    )
     return JSONResponse({"documents": doc_count, "chunks": chunk_count,
                          "sources": [{"source": s["_id"], "count": s["count"]} for s in by_source]})
 
