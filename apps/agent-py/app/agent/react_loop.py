@@ -18,6 +18,44 @@ from app.llm.genai_client import stream_generate
 
 MAX_TURNS = 14
 
+# Nova Pro wraps its reasoning in <thinking>…</thinking>; Gemini never did, so nothing
+# stripped them and the literal tags rendered in the reasoning panel and could land in
+# the answer. The delimiters are scaffolding — the text between them is the thought we
+# want to show — so only the markers are removed.
+_REASONING_TAGS = ("<thinking>", "</thinking>", "<thought>", "</thought>")
+_LONGEST_TAG = max(len(t) for t in _REASONING_TAGS)
+
+
+class _TagStripper:
+    """Removes reasoning delimiters from a token stream without leaking partial tags.
+
+    A tag can straddle two chunks, so a per-chunk replace would emit "<think" and then
+    "ing>". Anything that could still grow into a tag is held back until the next chunk
+    decides it; `flush` releases whatever the stream ended on.
+    """
+
+    def __init__(self) -> None:
+        self._buf = ""
+
+    def feed(self, chunk: str) -> str:
+        self._buf += chunk
+        for tag in _REASONING_TAGS:
+            self._buf = self._buf.replace(tag, "")
+        hold = 0
+        for n in range(min(len(self._buf), _LONGEST_TAG - 1), 0, -1):
+            if any(t.startswith(self._buf[-n:]) for t in _REASONING_TAGS):
+                hold = n
+                break
+        if not hold:
+            out, self._buf = self._buf, ""
+            return out
+        out, self._buf = self._buf[:-hold], self._buf[-hold:]
+        return out
+
+    def flush(self) -> str:
+        out, self._buf = self._buf, ""
+        return out
+
 
 def _now() -> int:
     return int(time.time() * 1000)
@@ -98,6 +136,7 @@ async def run_agent(
         turn += 1
         collected_text: list[str] = []
         tool_calls: list[dict] = []  # each {"id", "name", "args"}
+        stripper = _TagStripper()
 
         try:
             async for chunk in stream_generate(
@@ -108,8 +147,10 @@ async def run_agent(
                 max_tokens=2048,
             ):
                 if chunk.text:
-                    yield {"kind": "thought", "chunk": chunk.text, "at": _now()}
-                    collected_text.append(chunk.text)
+                    visible = stripper.feed(chunk.text)
+                    if visible:
+                        yield {"kind": "thought", "chunk": visible, "at": _now()}
+                        collected_text.append(visible)
                 if chunk.function_call:
                     tool_calls.append(chunk.function_call)
                 if chunk.usage:
@@ -117,6 +158,12 @@ async def run_agent(
                         "prompt": chunk.usage["prompt"], "candidates": chunk.usage["candidates"],
                         "thoughts": chunk.usage["thoughts"], "total": chunk.usage["total"],
                     })
+            # Release whatever the stream ended mid-tag on, or a final partial token is
+            # silently dropped from both the thought stream and the answer.
+            tail = stripper.flush()
+            if tail:
+                yield {"kind": "thought", "chunk": tail, "at": _now()}
+                collected_text.append(tail)
         except Exception as err:  # noqa: BLE001
             yield {"kind": "error", "message": str(err), "at": _now()}
             return

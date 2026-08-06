@@ -14,19 +14,43 @@ from chrome import page, surface_head
 
 _SAMPLE_Q = "inference SLO slip"
 
+# The dimension is the one number on this page that can go stale without anything
+# failing: it belongs to whichever embedding model is deployed, not to the diagram. It
+# read 768 — the Gemini value — long after embeddings moved to Titan at 1024. /ready
+# reports the live figure, so take it from there.
+#
+# Held at module scope because /search/run re-renders the pipeline on every keystroke and
+# has no `ready` of its own; refetching it per keystroke would add a round trip to the
+# agent for a number that changes only on redeploy. render_page always runs first, so the
+# value is set before any result render can read it.
+_DIMS_FALLBACK = 1024
+_live_dims = _DIMS_FALLBACK
+
+
+def _remember_dims(ready: dict | None) -> None:
+    global _live_dims
+    d = (ready or {}).get("embeddingDims")
+    if isinstance(d, int) and d > 0:
+        _live_dims = d
+
+
 # canonical 6-phase pipeline (labels are stable; the live `phases` array confirms which ran)
-_PHASES = [
-    ("embed", "01", "embed", "query → 768-d", "tokenized · normalized"),
-    ("vector", "02", "vector", "atlas knn", "cosine over the index"),
-    ("bm25", "03", "bm25", "lexical", "term frequency · idf"),
-    ("rrf", "04", "rrf", "fuse", "reciprocal rank fusion"),
-    ("rerank", "05", "rerank", "cross-encoder", "rescore top-k"),
-    ("result", "06", "result", "ranked", "the final ordering"),
-]
+def _phases():
+    return [
+        ("embed", "01", "embed", f"query → {_live_dims}-d", "tokenized · normalized"),
+        ("vector", "02", "vector", "atlas knn", "cosine over the index"),
+        ("bm25", "03", "bm25", "lexical", "term frequency · idf"),
+        ("rrf", "04", "rrf", "fuse", "reciprocal rank fusion"),
+        ("rerank", "05", "rerank", "cross-encoder", "rescore top-k"),
+        ("result", "06", "result", "ranked", "the final ordering"),
+    ]
+
+
 _BUDGET = [("embed", 22), ("vector", 84), ("bm25", 31), ("rrf", 4), ("rerank", 96)]
 
 
 def render_page(ready: dict | None = None, vault: dict | None = None):
+    _remember_dims(ready)
     body = Div(
         surface_head("05", "search · pipeline",
                      Span("Search the "), Span("memory.", cls="i accent")),
@@ -51,7 +75,7 @@ def render_page(ready: dict | None = None, vault: dict | None = None):
 def _pipe_header(active_phases: list[str]):
     cells = []
     ran = set(active_phases or [])
-    for i, (pid, num, label, sub, out) in enumerate(_PHASES):
+    for i, (pid, num, label, sub, out) in enumerate(_phases()):
         cls = "pipe-cell"
         if pid == "result":
             cls += " active"
@@ -102,7 +126,7 @@ def _inspector(phases, results, took_ms):
                    cls="ph-pane", data_phase=pid, style=("" if show else "display:none"))
 
     panes.append(pane("embed",
-        P("the query, tokenized and embedded to a 768-dimension vector.", cls="muted",
+        P(f"the query, tokenized and embedded to a {_live_dims}-dimension vector.", cls="muted",
           style="font-size:13px"),
         Div("[0.0142, −0.0391, 0.1187, 0.0034, … ] · ‖v‖=1.0", cls="blk",
             style="margin-top:10px")))
@@ -134,7 +158,7 @@ def _inspector(phases, results, took_ms):
 
 
 def _phase_title(pid):
-    for p in _PHASES:
+    for p in _phases():
         if p[0] == pid:
             return f"{p[1]} · {p[2]}"
     return pid

@@ -3,6 +3,7 @@
 These wire to real backend endpoints (commitments / briefings) that aren't part of the
 six-surface design but are working product — reskinned to the new tokens for visual consistency.
 """
+import re
 from urllib.parse import quote
 
 from fasthtml.common import (  # type: ignore
@@ -10,6 +11,24 @@ from fasthtml.common import (  # type: ignore
 )
 
 from chrome import page, surface_head
+
+# Line-leading markdown syntax: ATX headings, bullets, ordered items.
+_MD_LINE = re.compile(r"^\s{0,3}(?:#{1,6}\s+|[-*+]\s+|\d+\.\s+|>\s?)", re.M)
+
+
+def _plain(md: str, limit: int = 220) -> str:
+    """A markdown body reduced to one line of preview text.
+
+    The briefing card used to slice the raw markdown, so a card that happened to cut
+    across a heading rendered "## Attendees * Sarah Okafor" verbatim. Strip the syntax
+    instead of displaying it — a 220-character teaser has no use for structure.
+    """
+    t = re.sub(r"```.*?```", " ", md or "", flags=re.S)      # fenced code blocks
+    t = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", t)         # links/images → their label
+    t = _MD_LINE.sub("", t)
+    t = re.sub(r"\*\*|__|[*_`]", "", t)                      # emphasis and code ticks
+    t = " ".join(t.split())
+    return t[:limit].rstrip() + ("…" if len(t) > limit else "")
 
 
 # ── commitments ──
@@ -40,7 +59,7 @@ def briefings_page(data: dict | None, ready=None, vault=None):
     data = data or {}
     items = data.get("briefings", []) if isinstance(data, dict) else []
     cards = [Div(P(b.get("eventTitle", ""), cls="t"),
-                 P((b.get("markdown", "") or "")[:220], cls="x"), cls="result") for b in items]
+                 P(_plain(b.get("markdown", "")), cls="x"), cls="result") for b in items]
     return page("briefings",
                 surface_head("", "the 1-pager", Span("Walk in "), Span("prepared.", cls="i accent")),
                 P("Name a calendar event; the agent assembles attendees, open threads, and commitments.",

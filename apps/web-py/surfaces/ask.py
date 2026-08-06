@@ -9,7 +9,7 @@ from urllib.parse import quote
 
 from fasthtml.common import Button, Div, Form, Input, P, Span  # type: ignore
 
-from assets import EDIT_JS
+from assets import EDIT_JS, STREAM_STATE_JS
 from chrome import cite, draft_card, critic_panel, page, surface_head
 
 _MODEL_FALLBACK = "Amazon Nova"  # used only if /ready is unreachable
@@ -32,15 +32,18 @@ def render_page(ready: dict | None = None, vault: dict | None = None):
              hx_get="/ask/run", hx_target="#run", hx_swap="innerHTML"),
         Div(id="run", style="margin-top:8px"),
     )
-    return page("ask", body, ready=ready, vault=vault, scripts=EDIT_JS)
+    return page("ask", body, ready=ready, vault=vault, scripts=EDIT_JS + STREAM_STATE_JS)
 
 
 def _prompt_head(q, model=_MODEL_FALLBACK):
     return Div(
         Div("your prompt", cls="label"),
         P(q, cls="prompt-q"),
-        Div(Span(Span(cls="pulse-dot"), " streaming", cls="chrome",
-                 style="display:inline-flex;align-items:center;gap:7px"),
+        # data-run-state is flipped to "done" by STREAM_STATE_JS when the stream closes.
+        # Without it the pulse and the word "streaming" outlived the run they described.
+        Div(Span(Span(cls="pulse-dot"), Span(" streaming", data_run_label="1"), cls="chrome",
+                 style="display:inline-flex;align-items:center;gap:7px",
+                 data_run_state="streaming"),
             Span(f"model · {model}", cls="chrome"), Span("retrieval · hybrid", cls="chrome"),
             Span("↻ replay", cls="btn-d ghost", style="margin-left:auto;cursor:pointer",
                  hx_get=f"/ask/run?q={quote(q)}", hx_target="#run", hx_swap="innerHTML"),
@@ -107,9 +110,12 @@ def render_event(ev: dict):
                      Div(ev.get("message", ""), cls="answer-body", style="border-color:var(--vermilion)"))
     if kind == "done":
         u = ev.get("usage", {}) or {}
+        # data-run-done is what STREAM_STATE_JS watches for to stop the "streaming"
+        # pulse — a marker in the DOM survives whether or not htmx fires sseClose.
         return Div(f"{ev.get('turns','?')} turns · {u.get('totalTokens','?')} tokens · "
                    f"${u.get('estimatedCostUsd','?')} · {ev.get('totalMs','?')}ms",
-                   cls="chrome", style="margin-top:16px;padding-left:18px")
+                   cls="chrome", style="margin-top:16px;padding-left:18px",
+                   data_run_done="1")
     return None
 
 
