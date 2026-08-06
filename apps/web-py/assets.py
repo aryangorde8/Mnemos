@@ -94,7 +94,11 @@ cells.forEach(function(c,i){c.addEventListener('click',function(){select(c.getAt
 var q=document.querySelector('input[type=search][name=q]');
 if(q){var armed=true;
 q.addEventListener('focus',function(){if(armed){armed=false;q.select();}});
-q.addEventListener('blur',function(){armed=true;});}
+q.addEventListener('blur',function(){armed=true;});
+/* autofocus fires while the document is still parsing, before this script exists, so
+   the listener above never sees it. Landing on the page and typing straight away — the
+   case this is here to fix — would still have appended. Catch it up by hand. */
+if(document.activeElement===q){armed=false;q.select();}}
 })();
 """
 
