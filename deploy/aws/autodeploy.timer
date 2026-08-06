@@ -1,0 +1,12 @@
+# Install to /etc/systemd/system/mnemos-autodeploy.timer
+[Unit]
+Description=Poll origin/main for Mnemos deploys
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=2min
+AccuracySec=15s
+Unit=mnemos-autodeploy.service
+
+[Install]
+WantedBy=timers.target
