@@ -100,7 +100,11 @@ cells.forEach(function(c,i){c.addEventListener('click',function(){select(c.getAt
 # because the prompt head arrives by htmx swap, after this script has run.
 STREAM_STATE_JS = """
 (function(){
-function settle(state){var el=document.querySelector('[data-run-state]');if(!el)return;
+var obs=null;
+function settle(state){
+var el=document.querySelector('[data-run-state]');
+if(!el||el.getAttribute('data-run-state')!=='streaming')return;  // idempotent: see below
+if(obs){obs.disconnect();obs=null;}
 var dot=el.querySelector('.pulse-dot');if(dot)dot.classList.remove('pulse-dot');
 el.setAttribute('data-run-state',state);
 var lbl=el.querySelector('[data-run-label]');if(lbl)lbl.textContent=state==='error'?' failed':' complete';}
@@ -108,8 +112,19 @@ document.addEventListener('htmx:sseClose',function(){settle('done');});
 document.addEventListener('htmx:sseError',function(){settle('error');});
 // sseClose is not fired by every htmx/extension build, so the run-stats fragment the
 // agent sends last is the backstop: if it is in the DOM, the run is over regardless.
-new MutationObserver(function(){if(document.querySelector('[data-run-done]'))settle('done');})
-  .observe(document.body,{childList:true,subtree:true});
+//
+// settle() writes to the DOM, so an observer that called it unguarded would re-trigger
+// itself on its own mutation and spin forever — which is exactly what it did, hanging
+// the tab. Two brakes: the guard above makes settle a no-op once the state has left
+// "streaming", and the observer disconnects the moment it fires. It also watches #run
+// rather than document.body, so unrelated page mutations never wake it.
+function watch(){
+var root=document.getElementById('run');if(!root)return;
+if(obs)obs.disconnect();
+obs=new MutationObserver(function(){if(document.querySelector('[data-run-done]'))settle('done');});
+obs.observe(root,{childList:true,subtree:true});}
+document.addEventListener('htmx:afterSwap',function(e){
+if(e.target&&e.target.id==='run')watch();});
 })();
 """
 
